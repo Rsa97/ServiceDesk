@@ -1,0 +1,11 @@
+<?php
+session_start();
+error_reporting(E_ALL);
+include_once("functions.php");
+$dbhost="localhost";
+$dbuser="root";
+$dbpass="Rthtyrb$";
+$dbname="sd";
+$mainFirmID=2;
+connectToDB();
+?>

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv='Content-Language' content='ru'>
+    <meta http-equiv='Content-Type' content='text/html; charset=utf-8'>
+	  <link rel='stylesheet' type='text/css' href='css/flick/jquery-ui-1.10.4.custom.css'>
+	  <link rel='stylesheet' type='text/css' href='css/admin.css'>
+    <title>Служба технической поддержки, Компания Содействие - рабочий стол</title>
+    <script src='js/modernizr.js'></script>
+  	<script src='js/jquery.js'></script>
+    <script src='js/jquery.placeholder.min.js'></script>
+    <script src='js/jquery-ui.js'></script>
+    <script src='js/admin.js'></script>
+  </head>
+  <body>
+    <div id='header'>
+      <img src='/img/logo.png' width='230px' height='48px'><div id='user'><span id='name'> </span><button id='logout'>Выйти</button>&nbsp;<button id="desktop">Заявки</button></div>
+    </div>
+  	<div id='mainPage'>
+  		<div id='leftMenu'>
+  			<ul>
+  				<li>Справочники
+  					<ul>
+  						<li class='menuLink' data-page='calendar'>Рабочий календарь
+  						<li class='menuLink' data-page='eqtypes'>Типы оборудования
+  						<li class='menuLink' data-page='eqmodels'>Модели
+<!--  						<li class='menuLink' data-page='slas'>SLA --></li>
+<!--  						<li class='menuLink' data-page='levels'>Критичность --></li>
+  						<li class='menuLink' data-page='services'>Услуги
+  						<li class='menuLink' data-page='partners'>Партнёры
+  						<li class='menuLink' data-page='contragents'>Контрагенты
+  						<li class='menuLink' data-page='divisionTypes'>Типы филиалов
+  						<li class='menuLink' data-page='users'>Пользователи
+  					</ul>
+  				<li>Договоры
+  					<ul>
+  						<li class='menuLink' data-page='contracts'>Договоры
+  						<li class='menuLink' data-page='divisions'>Филиалы
+<!--  						<li class='menuLink' data-page='contsrvs'>Услуги по договору -->
+  						<li class='menuLink' data-page='contsla'>SLA по договору
+<!--  						<li class='menuLink' data-page='divslas'>SLA по филиалам -->
+  						<li class='menuLink' data-page='divpartners'>Партнёры по филиалам
+  						<li class='menuLink' data-page='divequip'>Оборудование филиалов
+<!--  						<li class='menuLink' data-page='conteqsla'>SLA по оборудованию -->
+  					</ul>
+  			</ul>
+  		</div>
+  		<div id='content'> </div>
+	</div>
+  	<div id='bottomDiv'>
+  		Содействие 2013-2014
+  	</div>
+  	<div id='moveSubTypeDlg'>
+  		Переместить подтип '<span class='opt' id='moveSubType' data-id='0'> </span>'<br>
+  		&nbsp;&nbsp;&nbsp;из типа '<span class='opt' id='moveFromType' data-id='0'> </span>'<br>
+  		&nbsp;&nbsp;&nbsp;в тип <select class='opt' id='moveToType'> </select>
+  	</div>
+  	<div id='selector'> </div>
+  </body>
+</html>

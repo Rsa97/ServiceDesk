@@ -1,0 +1,310 @@
+body {
+    font-size: 12px;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+::-ms-clear {
+	display: none;
+}
+
+#mainPage, #header {
+    min-width: 1024px;
+    width: 95%;
+    margin: 0 auto;
+}
+
+#header {
+    height: 52px;
+}
+
+#user {
+    position: float;
+    float: right;
+    padding: 5px 0;
+}
+
+#name {
+    margin: 0 10px;
+    font-size: 1.1em;
+    color: green;
+}
+
+#sidebar {
+    position: absolute;
+    z-index: 1;
+    right: 10px;
+    top: 5px;
+}
+
+#sidebar label {
+    font-size: 1.1em;
+}
+
+#ticketNum {
+    padding: 0.4em 0.1em;
+}
+
+#filter select {
+    padding: 0.4em 0.1em;
+    width: 100%;
+    margin: 5px 0 10px 10px;
+}
+
+#chkMyTickets {
+    width: 100%;
+    text-align: center;
+}
+
+.oper button {
+    margin-right: 10px;
+}
+
+abbr {
+    text-decoration: none;
+    border-bottom-width: 0;
+}
+
+table {
+    width: 100%;
+    border: 1px solid #e0e0e0;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+th, td {
+    border: 1px solid #e0e0e0;
+}
+
+th {
+    background-color: #909090;
+    color: white;
+}
+
+tr.odd {
+    background-color: #f0f0f0;
+}
+
+tr:hover {
+    background-color: rgb(0, 115, 234);
+    color: white;
+}
+
+.list td:hover {
+    cursor: pointer;
+}
+
+td, th {
+    padding: 2px 5px;
+}
+
+.list .cell9 {
+    text-align: center;
+}
+
+.list .cell1 {
+    text-align: left;
+    width: 60px;
+}
+
+.list td.cell2 {
+    text-align: right;
+}
+
+.timeSlider {
+    height: 1.2em;
+    padding: 1px 0;
+}
+
+.timeSlider div {
+    height: 0.3em;
+    margin: 1px 0;
+}
+
+.cardField {
+    display: inline-block;
+    width: 280px;
+    padding: 5px 5px 0 5px;
+}
+
+.ileft {
+    margin-right: 15px;
+}
+
+.ifull {
+    width: 590px;
+}
+
+.cardInput {
+    width: 100%;
+   padding: 5px 10px;
+}
+
+.ui-search {
+    position: relative;
+    display: inline-block;
+    overflow: hidden;
+    padding: 0;
+    vertical-align: middle;
+}
+
+.ui-search input, .ui-search textarea, .ui-search select {
+    border: medium none;
+    background: none repeat scroll 0 0 transparent;
+    color: inherit;
+    padding: 0.1em 0.3em;
+    vertical-align: middle;
+    font-size: 1.1em;
+    width: 100%;
+    overflow: hidden;
+}
+
+.ui-search-button {
+    height: 100%;
+    padding: 0;
+    margin: 0;
+    top: 0;
+    width: 2em;
+    text-align: center;
+    position: absolute;
+    display: block;
+    overflow: hidden;
+    right: 0px;
+    border: medium none !important;
+}
+
+textarea {
+    resize: none;
+} 
+
+#card {
+    width: 655px;
+    padding: 5px;
+}
+
+#cardMain, #cardComments, #cardDocums, 
+.ui-dialog, .ui-dialog-buttonpane {
+    background: #f7f7f7 !important;
+}
+
+#comments {
+  height: 400px;
+  width: 580px;
+  overflow-y: scroll;
+  padding: 5px;
+  white-space: pre-wrap;
+}
+
+.no-close .ui-dialog-titlebar-close {
+    display: none;
+}
+
+.logDate {
+    margin: 0;
+    color: #8080ff;
+}
+
+.logDateComm {
+    margin: 0;
+    color: #ff80ff;
+}
+
+.logMain, .logComment {
+    margin: 0 0 0.7em 20px;
+}
+
+.logMain {
+    font-weight: bold;
+}
+
+.logComment {
+    font-weight: normal;
+    display: block;
+}
+
+#cardDocWrap {
+    height: 410px;
+    width: 590px;
+    overflow-y: scroll;
+    margin: 5px;
+    padding: 0;
+}
+
+#cardDocTbl {
+    margin: 0;
+    border-collapse: collapse;
+}
+
+#cardDocTbl .cell1 {
+    width: 30px;
+}
+
+#cardDocTbl .cell4 {
+    text-align: right;
+}
+
+.logMain a {
+  text-decoration: underline;
+  color: blue; 
+  cursor: pointer;
+  font-weight: normal;
+}
+
+.active {
+    color: #ef0000;
+}
+
+td .ui-icon {
+    display: inline-block;
+}
+
+#bottomDiv {
+	text-align: center;
+}
+
+#selectEqSelect {
+	width: 630px;
+	margin: 0 auto;
+}
+
+#selectEqSelect div {
+	width: 550px;
+}
+
+#selectEq {
+	padding-right: 0px;
+}
+
+.ui-icon {
+	display: inline-block;
+}
+
+#selectEq li {
+	cursor: pointer;
+	list-style: none;
+}
+
+#selectEqList {
+	font-size: 1.1em;
+	height: 50vh;
+	overflow: hidden;
+	overflow-y: scroll;
+}
+
+#selectEqList>ul>li {
+	font-weight: bold;
+}	
+
+#selectEqList>ul>li>ul {
+	font-weight: normal;
+}	
+
+#selectEqList>ul>li>ul>li:hover {
+	background-color: #0073EA;
+	color: white;
+}	
+
+.timeIsOut {
+	color: #C00000;
+}

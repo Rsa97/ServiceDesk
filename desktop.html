@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv='Content-Language' content='ru'>
+    <meta http-equiv='Content-Type' content='text/html; charset=utf-8'>
+	  <link rel='stylesheet' type='text/css' href='css/flick/jquery-ui-1.10.4.custom.css'>
+	  <link rel='stylesheet' type='text/css' href='css/desktop.css'>
+    <title>Служба технической поддержки, Компания Содействие - рабочий стол</title>
+    <script src='js/modernizr.js'></script>
+  	<script src='js/jquery.js'></script>
+    <script src='js/jquery.placeholder.min.js'></script>
+    <script src='js/jquery-ui.js'></script>
+    <script src='js/desktop.js'></script>
+  </head>
+  <body>
+    <div id='header'>
+      <img src='/img/logo.png' width='230px' height='48px'><div id='user'><span id='name'> </span><button id='logout'>Выйти</button></div>
+    </div>
+  	<div id='mainPage'>
+	  	<div id='topDiv'> </div>
+      <div id='workflow'>
+        <div id='sidebar'>
+          <label for='ticketNum'>Номер заявки: </label>
+          <span class='inpbtn'><input type='search' class='ui-widget ui-corner-all ui-widget-content' id='ticketNum'>
+          <button id='searchTicket' data-icon=''>Найти</button></span>
+          <button id='showFilter' data-icon=''>Фильтр</button>
+          <button id='refresh' data-icon='ui-icon-refresh'>Обновить</button>
+        </div>
+        <ul class='navi'>
+  		    <li><a href='#wfTicketsRcv'>Новые (<span id='receivedNum'></span>)</a></li>
+  		    <li><a href='#wfTicketsAcc'>В работе (<span id='acceptedNum'></span>)</a></li>
+  		    <li><a href='#wfTicketsToCls'>Ждут закрытия (<span id='toCloseNum'></span>)</a></li>
+  		    <li><a href='#wfTicketsCls'>Выполненные (<span id='closedNum'></span>)</a></li>
+  		    <li><a href='#wfTicketsCan'>Отмененные (<span id='canceledNum'></span>)</a></li>
+  		    <li><a href='#wfTicketsPln'>Плановые (<span id='plannedNum'></span>)</a></li>
+  	    </ul>
+        <div id='wfTicketsRcv' class='tab0'>
+          <div id='receivedOpers' class='oper'></div>
+          <div id='receivedList' class='list'></div>
+        </div>
+        <div id='wfTicketsAcc' class='tab1'>
+          <div id='acceptedOpers' class='oper'></div>
+          <div id='acceptedList' class='list'></div>
+        </div>
+        <div id='wfTicketsToCls' class='tab2'>
+          <div id='toCloseOpers' class='oper'></div>
+          <div id='toCloseList' class='list'></div>
+        </div>
+        <div id='wfTicketsPln' class='tab3'>
+          <div id='plannedOpers' class='oper'></div>
+          <div id='plannedList' class='list'></div>
+        </div>
+        <div id='wfTicketsCls' class='tab4'>
+          <div id='closedOpers' class='oper'></div>
+          <div id='closedList' class='list'></div>
+        </div>
+        <div id='wfTicketsCan' class='tab5'>
+          <div id='canceledOpers' class='oper'></div>
+          <div id='canceledList' class='list'></div>
+        </div>
+      </div>
+      <div id='filter'>
+        <label for='fltByDiv'>Заказчик:</label>
+        <div id='fltByDivPlace'></div>
+        <label for='fltBySrv'>Группа работ: </label>
+        <div id='fltBySrvPlace'></div>
+        <div id='chkMyTickets'>
+          <input type='radio' id='ticketsAll' name='chkMyTickets' value='0' checked><label for='ticketsAll'>Все</label>
+          <input type='radio' id='ticketsMy' name='chkMyTickets' value='1'><label for='ticketsMy'>Только мои</label>
+        </div>
+        </div>
+        <div id='card'>
+          <div id='cardTabs'>
+            <ul class='navi'>
+      		    <li><a href='#cardMain'>Основное</a></li>
+      		    <li><a href='#cardComments'>Журнал</a></li>
+      		    <li><a href='#cardSolution'>Решение</a></li>
+      		    <li><a href='#cardDocums'>Документы</a></li>
+            </ul>
+            <div id='cardMain'>
+              <span class='cardField ifull'>
+                <label for='contact'>Заказчик:</label>
+                <div class='cardInput ui-search ui-widget ui-widget-content ui-corner-all'>
+                  <select id='division' class='ui-search-input'></select>
+                </div>
+              </span>
+              <span class='cardField ileft'>
+                <label for='service'>Услуга:</label>
+                <div class='cardInput ui-search ui-widget ui-widget-content ui-corner-all'>
+                  <select id='service' type='text' class='ui-search-input ro'></select>
+                </div>
+              </span>
+              <span class='cardField iright'>
+                <label for='level'>Уровень критичности:</label>
+                <div class='cardInput ui-search ui-widget ui-widget-content ui-corner-all'>
+                  <select id='level' type='text' class='ui-search-input ro'></select>
+                </div>
+              </span>
+              <span class='cardField ifull'>
+                <label for='problem'>Описание проблемы:</label>
+                <div class='cardInput ui-search ui-widget ui-widget-content ui-corner-all'>
+                  <textarea id='problem' type='text' class='ui-search-input ro' rows='5' cols=''></textarea>
+                </div>
+              </span>
+              <span class='cardField ileft'>
+                <label for='servNum'>Индивидуальный сервисный номер:</label>
+                <div class='cardInput ui-search ui-widget ui-widget-content ui-corner-all'>
+                  <input id='servNum' type='text' class='withBtn ui-search-input' maxlength='20' readonly required>
+                  <button id='lookServNum' class='ui-search-button' data-icon='ui-icon-search'></button>
+                </div>
+              </span>
+              <input type='hidden' id='createTime'>
+              <span class='cardField iright'>
+                <label for='SN'>Серийный номер:</label>
+                <div class='cardInput ui-search ui-widget ui-widget-content ui-corner-all'><input id='SN' type='text' class='ui-search-input' readonly></div>
+              </span>
+              <span class='cardField ifull'>
+                <label for='eqType'>Тип оборудования:</label>
+                <div class='cardInput ui-search ui-widget ui-widget-content ui-corner-all' ><input id='eqType' type='text' class='ui-search-input' readonly></div>
+              </span>
+              <span class='cardField ileft'>
+                <label for='manufacturer'>Производитель:</label>
+                <div class='cardInput ui-search ui-widget ui-widget-content ui-corner-all'><input id='manufacturer' type='text' class='ui-search-input' readonly></div>
+              </span>
+              <span class='cardField iright'>
+                <label for='model'>Модель:</label>
+                <div class='cardInput ui-search ui-widget ui-widget-content ui-corner-all'><input id='model' type='text' class='ui-search-input' readonly></div>
+              </span>
+              <span class='cardField ileft'>
+                <label for='createdAt'>Дата регистрации:</label>
+                <div class='cardInput ui-search ui-widget ui-widget-content ui-corner-all'><input id='createdAt' type='text' class='ui-search-input' readonly></div>
+              </span>
+              <span class='cardField iright'>
+                <label for='repairBefore'>Срок исполнения:</label>
+                <div class='cardInput ui-search ui-widget ui-widget-content ui-corner-all'><input id='repairBefore' type='text' class='ui-search-input' readonly></div>
+              </span>
+<!--              <span class='cardField ileft'>
+                <label for='division'>Заказчик:</label>
+                <div class='cardInput ui-search ui-widget ui-widget-content ui-corner-all'><input id='division' type='text' class='ui-search-input' readonly></div>
+         	  </span> -->
+              <span class='cardField ileft
+              '>
+                <label for='contact'>Ответственное лицо:</label>
+                <div class='cardInput ui-search ui-widget ui-widget-content ui-corner-all'>
+                  <select id='contact' class='ui-search-input ro'></select>
+                </div>
+              </span>
+              <span class='cardField ileft'>
+                <label for='email'>Адрес электронной почты:</label>
+                <div class='cardInput ui-search ui-widget ui-widget-content ui-corner-all'><input id='email' type='text' class='ui-search-input' readonly></div>
+              </span>
+              <span class='cardField iright'>
+                <label for='phone'>Телефон:</label>
+                <div class='cardInput ui-search ui-widget ui-widget-content ui-corner-all'><input id='phone' type='text' class='ui-search-input' readonly></div>
+              </span>
+              <span class='cardField ifull'>
+                <label for='address'>Адрес нахождения оборудования:</label>
+                <div class='cardInput ui-search ui-widget ui-widget-content ui-corner-all'><input id='address' type='text' class='ui-search-input' readonly></div>
+              </span>
+            </div>
+            <div id='cardComments'>
+              <span class='cardField ifull'>
+                <div id='comments' class='ui-widget ui-widget-content ui-corner-all'></div>
+              </span>
+              <span class='cardField ifull'>
+                <label for='addComment'>Добавить комментарий:</label>
+                <div class='cardInput ui-search ui-widget ui-widget-content ui-corner-all' >
+                  <input id='addComment' type='text' class='withBtn ui-search-input'>
+                  <button id='addComm' class='ui-search-button' data-icon='ui-icon-check'></button>
+                </div>
+              </span>
+            </div>
+	        <div id='cardSolution'>
+              <span class='cardField ifull'>
+	  	        <label for='cardSolProblem'>Обнаруженная проблема:</label>
+                <div class='cardInput ui-search ui-widget ui-widget-content ui-corner-all'>
+                  <textarea id='cardSolProblem' type='text' class='ui-search-input' rows='5' cols='' readonly></textarea>
+                </div>
+	  	      </span>
+              <span class='cardField ifull'>
+	  	        <label for='cardSolSolution'>Решение:</label>
+                <div class='cardInput ui-search ui-widget ui-widget-content ui-corner-all'>
+                  <textarea id='cardSolSolution' type='text' class='ui-search-input' rows='7' cols='' readonly></textarea>
+                </div>
+	  	      </span>
+              <span class='cardField ifull'>
+	  	        <label for='cardSolRecomendation'>Рекомендации клиенту:</label>
+                <div class='cardInput ui-search ui-widget ui-widget-content ui-corner-all'>
+                  <textarea id='cardSolRecomendation' type='text' class='ui-search-input' rows='7' cols='' readonly></textarea>
+                </div>
+	  	      </span>
+	        </div> 
+            <div id='cardDocums'>
+              <span id='cardDocWrap' class='cardField ifull ui-widget ui-widget-content ui-corner-all'>
+                <table id='cardDocTbl' class=''></table>
+              </span>
+              <span class='cardField ifull'>
+                <label for='addComment'>Добавить файл:</label>
+                <div class='cardInput ui-search ui-widget ui-widget-content ui-corner-all'>
+                  <input id='file' type='file' class='withBtn ui-search-input'>
+                  <button id='addFile' class='ui-search-button' data-icon='ui-icon-plusthick'></button></div>
+                </div>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+	  <div id='selectEq'>
+	  	<div id='selectEqServ' class='cardField ifull'>
+	  	  <label for='selectServNum'>Сервисный номер:</label>
+	  	  <input id='selectServNum' type='text' class='ui-search-input ui-widget ui-widget-content ui-corner-all'>
+		</div>
+	  	<div id='selectEqList'> </div> 
+	  </div>
+	  <div id='solution'>
+        <span class='cardField ifull'>
+	  	  <label for='solProblem'>Обнаруженная проблема:</label>
+          <div class='cardInput ui-search ui-widget ui-widget-content ui-corner-all'>
+            <textarea id='solProblem' type='text' class='ui-search-input ro' rows='5' cols=''></textarea>
+          </div>
+	  	</span>
+        <span class='cardField ifull'>
+	  	  <label for='solSolution'>Решение:</label>
+          <div class='cardInput ui-search ui-widget ui-widget-content ui-corner-all'>
+            <textarea id='solSolution' type='text' class='ui-search-input ro' rows='7' cols=''></textarea>
+          </div>
+	  	</span>
+        <span class='cardField ifull'>
+	  	  <label for='solRecomendation'>Рекомендации клиенту:</label>
+          <div class='cardInput ui-search ui-widget ui-widget-content ui-corner-all'>
+            <textarea id='solRecomendation' type='text' class='ui-search-input ro' rows='7' cols=''></textarea>
+          </div>
+	  	</span>
+	  </div>
+	  <div id='newCardDiv' style='visibility:hidden'> </div>
+	  <div id='workflowDiv'></div>
+	  <div id='bottomDiv'>© Содействие 2013-2014</div>
+	  </div>
+  </body>
+</html>
+
+

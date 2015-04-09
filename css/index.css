@@ -1,0 +1,59 @@
+body {
+    font: 14px tahoma;
+}
+
+.head {
+    width: 400px;
+    margin: 0 auto;
+}
+
+img {
+    width: 386px;
+    margin: 10px auto 0px;
+}
+
+h1, h2, h3 {
+    text-align: center;
+    font-weight: normal;
+}
+
+h1 {
+    color: #3D8DFD;
+    font-size: 1.6em;
+}
+
+h2 {
+    font-size: 1.2em;
+}
+
+h3 {
+    color: red;
+    font-size: 1.2em;
+    margin: 0px;
+}
+
+.login {
+    width: 300px;
+    margin: 0 auto;
+    padding: 5px 15px 10px;
+    background-color: #F0F0F0;
+}
+
+label>span {
+    display: inline-block;
+    width: 80px;
+    padding: 3px 0;
+}
+
+label>input {
+    width: 210px;
+    border: 1px solid red;
+}
+
+.login>input {
+    display: block;
+    width: 80px;
+    margin: 2px 0 0 212px;
+    border: 1px solid red;
+    background: white;
+}

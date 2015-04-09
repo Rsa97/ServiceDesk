@@ -1,0 +1,248 @@
+body {
+    font-size: 10px;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+
+}
+
+#mainPage, #header {
+    min-width: 1024px;
+    width: 95%;
+    margin: 0 auto;
+}
+
+#header {
+    height: 52px;
+}
+
+#user {
+    position: float;
+    float: right;
+    padding: 5px 0;
+}
+
+#name {
+    margin: 0 10px;
+    font-size: 1.1em;
+    color: green;
+}
+
+#bottomDiv {
+	text-align: center;
+}
+
+#mainPage {
+	padding-top: 10px;
+}
+
+#leftMenu {
+    position: float;
+	float: left;
+	padding: 0 10px 0 0;
+	width: 250px;
+	background-color: #F0F0F0;
+	padding: 5px;
+}
+
+#leftMenu ul, .eqType, #models {
+	list-style: none;
+	font-size: 1.5em;
+	padding-left: 0px;
+	margin: 0;
+}
+
+#leftMenu ul ul, .eqType ul {
+	list-style: none;
+	font-size: 0.9em; 
+	padding-left: 15px;
+}
+
+.menuLink, .ui-icon {
+	color: blue;
+	cursor: pointer;  
+}
+.menuLink:hover, .ui-icon:hover {
+	text-decoration: underline;
+}
+
+.menuActive {
+	color: red;
+}
+
+.menuActive:after {
+	content: ' ▸';
+}
+
+#content {
+	min-height: calc(100vh - 100px);
+	padding-left:280px;
+}
+
+.ui-icon {
+	display: inline-block;
+}
+
+.no-close .ui-dialog-titlebar-close {
+	display: none;
+}
+
+.opt {
+	color: blue;
+}
+
+table {
+	font-size: 1.5em;
+    border: 1px solid #e0e0e0;
+    border-collapse: collapse;
+}
+
+th, td {
+    border: 1px solid #e0e0e0;
+    padding: 0.2em 0.5em;
+}
+
+th {
+    background-color: #909090;
+    color: white;
+}
+
+tr:nth-child(2n) {
+    background-color: #f0f0f0;
+}
+
+tr:hover {
+    background-color: rgb(0, 115, 234);
+    color: white;
+}
+
+.slaTbl td:nth-child(2) {
+	text-align: left;
+}
+
+table textarea, table input, table select {
+	width: 99%;
+	padding: 0;
+	margin: 0;
+}
+
+.slaTbl,
+.slaLvlTbl td:nth-child(1),
+.slaLvlTbl td:nth-child(2),
+.servTbl td:nth-child(1),
+.partnerTbl td:nth-child(1),
+.caTbl td:nth-child(1),
+.divsTbl td:nth-child(10),
+.contSlaTbl td:nth-child(9), 
+.contSlaTbl td:nth-child(10), 
+.contSlaTbl td:nth-child(11), 
+.contSlaTbl td:nth-child(12),
+.contSlaTbl td:nth-child(13) {
+	text-align: center;
+}
+
+.usersTbl, .contractsTbl, .divsTbl, .contEqSlaTbl {
+	font-size: 1.2em;
+} 
+
+.usersTbl td:nth-child(1) {
+	width: 32px;
+	text-align: center;
+}
+
+tr.ldap, tr.offService {
+	color: #666;
+}
+
+tr.locked {
+	color: #999;
+}
+
+.contractsTbl td,
+.divsTbl td {
+	text-align: left;
+}
+
+table ul {
+	margin: 0;
+	padding: 0;
+}
+
+table ul li {
+	list-style: none;	
+}
+
+.checklist {
+	height: 5em;
+	overflow-y: scroll;
+	font-size: 0.8em;
+}
+
+input[type='checkbox'] {
+	width: auto;
+	vertical-align: bottom;
+}
+
+abbr {
+	text-decoration: none;
+	border: none;
+}
+
+textarea {
+	font-size: 0.9em;
+}
+
+table select {
+	max-width: 200px;
+}
+
+.divEqTbl #mfg, .divEqTbl #model {
+	width: auto !important;
+} 
+
+.contEqSlaTbl {
+	text-align: center;
+}
+
+.contEqSlaTbl td:nth-child(1) {
+	text-align: left;
+}
+
+.eqTypeRow {
+	font-weight: bold;
+}
+
+.ui-autocomplete {
+    max-height: 300px;
+    overflow: hidden;
+    overflow-y: scroll;
+}
+
+.weekend {
+	color: #FF0000;
+}
+
+.monthTbl td {
+	cursor: pointer;
+	text-align: right;
+}
+
+.calMonth {
+	display: inline-block;
+	padding: 10px;
+}
+
+#calendar {
+	width: 100%;
+	font-size: 2em;
+}
+
+.calMonthName {
+	width: 100%;
+	font-size: 1.6em;
+	text-align: center;
+}
+
+.shiftYear {
+	cursor: pointer;
+}
