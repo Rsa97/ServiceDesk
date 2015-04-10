@@ -248,9 +248,9 @@ function calcTime($div, $serv, $sla, $sql) {
 								"FROM `users` AS `u` ".
 								"LEFT JOIN `userContracts` AS `uc` ON `uc`.`users_id` = `u`.`id` ".
 								"LEFT JOIN `contractDivisions` AS `cd` ON `cd`.`contracts_id` = `uc`.`contracts_id` ".
-								"WHERE `cd`.`id` = 40 ".
+								"WHERE `cd`.`id` = ? ".
 								  "AND `u`.`rights` = 'client'"); 
-	  $req->bind_param('i', $divMatch[1]);
+	  $req->bind_param('ii', $divMatch[1], $divMatch[1]);
 	  $req->bind_result($contId, $contGN, $contLN, $contMN, $contEmail, $contPhone, $contAddress);
 	  if (!$req->execute()) { 
  		sendJson(array('error' => 'Внутренняя ошибка сервера'));
