@@ -1,9 +1,8 @@
 *.class
 *.pyc
 *.pyo
-/files/*
-/config/*
 .gitignore
 .project
-/.settings/*
 files
+config
+.settings
