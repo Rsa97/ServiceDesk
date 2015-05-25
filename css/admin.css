@@ -1,15 +1,19 @@
 body {
-    font-size: 10px;
+    font-size: 12px;
     -moz-box-sizing: border-box;
     -webkit-box-sizing: border-box;
     box-sizing: border-box;
-
 }
+
 
 #mainPage, #header {
     min-width: 1024px;
     width: 95%;
     margin: 0 auto;
+}
+
+#mainPage {
+	display: table;
 }
 
 #header {
@@ -37,19 +41,20 @@ body {
 }
 
 #leftMenu {
-    position: float;
-	float: left;
-	padding: 0 10px 0 0;
+	display: table-cell;
 	width: 250px;
-	background-color: #F0F0F0;
 	padding: 5px;
 }
 
-#leftMenu ul, .eqType, #models {
+#leftMenu>ul, .eqType, #models {
 	list-style: none;
-	font-size: 1.5em;
-	padding-left: 0px;
+	font-size: 1.2em;
 	margin: 0;
+}
+
+#leftMenu>ul {
+	padding: 10px; 
+	background-color: #F0F0F0;
 }
 
 #leftMenu ul ul, .eqType ul {
@@ -74,9 +79,10 @@ body {
 	content: ' ▸';
 }
 
-#content {
+#content, #contracts {
 	min-height: calc(100vh - 100px);
-	padding-left:280px;
+	padding-left:30px;
+	display: table-cell;
 }
 
 .ui-icon {
@@ -92,9 +98,9 @@ body {
 }
 
 table {
-	font-size: 1.5em;
     border: 1px solid #e0e0e0;
     border-collapse: collapse;
+    width: 100%;
 }
 
 th, td {
@@ -106,10 +112,13 @@ th {
     background-color: #909090;
     color: white;
 }
-
 tr:nth-child(2n) {
     background-color: #f0f0f0;
 }
+
+.last {
+	background-color: #FFFFE0;
+} 
 
 tr:hover {
     background-color: rgb(0, 115, 234);
@@ -188,10 +197,6 @@ abbr {
 	border: none;
 }
 
-textarea {
-	font-size: 0.9em;
-}
-
 table select {
 	max-width: 200px;
 }
@@ -234,7 +239,7 @@ table select {
 
 #calendar {
 	width: 100%;
-	font-size: 2em;
+	font-size: 1.7em;
 }
 
 .calMonthName {
@@ -245,4 +250,145 @@ table select {
 
 .shiftYear {
 	cursor: pointer;
+}
+
+.pager {
+	font-size: 1.2em;
+	padding: 3px 0;
+	text-align: right;
+}
+
+.page, .curPage {
+	display: inline-block;
+	padding: 0 3px;
+	border: 1px solid #E0E0FF;
+	background: 1px #F0F0FF;
+	margin: 0 3px;
+}
+
+.curPage {
+	color: red;
+}
+
+.page {
+	color: blue;
+	cursor: pointer;
+}
+
+table.invis {
+	border: none;
+	font-size: inherit;
+}
+
+table.invis td {
+	border: none;
+}
+td.listIcon {
+	width: 16px !important;
+	vertical-align: top;
+	padding: 0;
+}
+
+.total, .selected {
+	width: 100%;
+	height: 300px;
+	max-width: 500px;
+}
+
+#listEdit td {
+	width: 47%;
+	font-size: 0.9em;
+}
+
+#listEdit td:nth-child(2) {
+	width: 6%;
+	text-align: center;
+}
+
+#listEdit tr:hover {
+    background-color: inherit;
+    color: inherit;
+}
+
+.red {
+	color: #F00; 
+}
+
+.green {
+	color: #0D0; 
+}
+
+.gray {
+	color: #888;
+}
+
+ul.simple {
+	font-weight: bold;
+}
+
+ul.simple li li {
+	font-weight: normal;
+	padding-left: 1.6em;
+}
+
+.icons3 {
+	display: inline-block;
+	width: 50px;	
+}
+
+.icons2 {
+	display: inline-block;
+	width: 33px;	
+}
+
+.eqTypes li {
+	cursor: pointer;
+}
+
+#selContragent, #selDivision, #selDivisionIn {
+	width: 45%;
+}
+
+#selContract, #selContractIn {
+	width: 15%;
+}
+
+label {
+	color: blue;
+}
+
+label.full, label.half {
+	display: inline-block;
+	width: 10%;
+	padding: 2px 0;
+}
+span.full {
+	display: inline-block;
+	width: 86%;
+}
+
+span.half {
+	display: inline-block;
+	width: 38%;
+}
+
+span.full input,
+span.full select {
+	width: 99%;
+} 
+span.half input,
+span.half select {
+	width: 96%;
+}
+
+#division>select {
+	margin: 5px;
+}
+
+#division>label {
+	padding: 0 0 0 10px;
+}
+
+#contMain  input.date {
+	max-width: 120px;
 }

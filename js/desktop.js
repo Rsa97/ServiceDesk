@@ -286,7 +286,7 @@ $(function() {
   });
   
   $('#user').on('click', '#admin', function() {
-  	location.replace('admin.html');
+  	location.replace('newadmin.html');
   });
 
   $('#contact').change(function() {

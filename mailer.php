@@ -34,7 +34,7 @@ if ($mysqli->connect_error) {
 $mysqli->query("SET NAMES utf8");
 
 // Сброс статуса отправки всех событий! Только для разработки!
-// $mysqli->query("UPDATE `requestEvents` SET `mailed` = 0");
+//$mysqli->query("UPDATE `requestEvents` SET `mailed` = 0");
 //$mysqli->query("UPDATE `request` SET `alarm` = 0");
 
 // Получаем список администраторов, операторов, инженеров и партнёров
@@ -111,7 +111,7 @@ while ($mysqli->query("UPDATE `requestEvents` SET `mailed` = 1 WHERE `mailed` = 
 	    			 	"Оборудование: {$eq}<br>".
 	    			 	"Проблема: {$problem}";
 	    		$isOpened[] = $reqId;
-	    		break;
+				break;
 			case 'changeState'.'accepted':
 				$text = "- {$users[$authorId]['name']} принял".($users[$authorId]['gender'] >= 0 ? '' : 'а')." заявку к исполнению\r\n";
 				$html = "<li>{$users[$authorId]['name']} принял".($users[$authorId]['gender'] >= 0 ? '' : 'а')." заявку к исполнению";
@@ -321,16 +321,14 @@ foreach ($msgList as $reqId => $msgs) {
 				case 'engeneers':
 				case 'operators':
 				case 'admins':
-					print_r($userRights[$to]);
-					if (!isset($userRights[$to]))
+					if (!isset($users[$to]))
 						break;
-					foreach ($userRights[$to] as $uid) {
+					foreach ($users[$to] as $uid) {
 						if (!isset($mails[$uid][$reqId]))
 							$mails[$uid][$reqId] = array('text' => '', 'html' => '');
 						$mails[$uid][$reqId]['text'] .= $msg['text'];
 						$mails[$uid][$reqId]['html'] .= $msg['html'];
 					}
-					print_r($mails);
 					break;
 				case 'partners':
 					$divId = $msg['divId'];

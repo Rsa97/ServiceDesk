@@ -95,9 +95,8 @@
   }
 
   if (isset($_POST['op']))
-    switch ($_POST['op']) {
+    switch $_POST['op'] {
       case 'addComment':
-		  break;
     }
   if (!$req->execute()) { 
     trigger_error("Ошибка чтения из базы данных ({$mysqli->errno})  {$mysqli->error}");

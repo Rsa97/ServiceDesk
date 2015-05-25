@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv='Content-Language' content='ru'>
+    <meta http-equiv='Content-Type' content='text/html; charset=utf-8'>
+	  <link rel='stylesheet' type='text/css' href='css/flick/jquery-ui-1.10.4.custom.css'>
+	  <link rel='stylesheet' type='text/css' href='css/admin.css'>
+    <title>Служба технической поддержки, Компания Содействие - рабочий стол</title>
+    <script src='js/modernizr.js'></script>
+  	<script src='js/jquery.js'></script>
+    <script src='js/jquery.placeholder.min.js'></script>
+    <script src='js/jquery-ui.js'></script>
+    <script src='js/newadmin.js'></script>
+  </head>
+  <body>
+    <div id='header'>
+      <img src='/img/logo.png' width='230px' height='48px'><div id='user'><span id='name'> </span><button id='logout'>Выйти</button>&nbsp;<button id="desktop">Заявки</button></div>
+    </div>
+  	<div id='mainPage'>
+  		<div id='leftMenu'>
+  			<ul>
+  				<li>Справочники
+  					<ul>
+  						<li class='menuLink' data-page='calendar'>Рабочий календарь
+  						<li class='menuLink' data-page='eqmodels'>Типы и модели
+  						<li class='menuLink' data-page='services'>Услуги
+  						<li class='menuLink' data-page='partners'>Партнёры
+  						<li class='menuLink' data-page='contragents'>Контрагенты
+  						<li class='menuLink' data-page='divisionTypes'>Типы филиалов
+  						<li class='menuLink' data-page='users'>Пользователи
+  					</ul>
+  				<li>Договоры
+  					<ul>
+  						<li class='menuLink' data-page='contracts'>Договоры
+  					</ul>
+  			</ul>
+  		</div>
+  		<div id='content'></div>
+  		<div id='contracts' style="display:none">
+  			<label for='selContragent'>Контрагент: </label><select id='selContragent'></select>&nbsp;&nbsp;&nbsp;
+			<label for='selContract'>Договор: </label><select id='selContract'></select><input class='hideonstart' id='selContractIn'> <span class='icons3 contractIcons'></span>
+			<div id='contract'>
+        		<ul id='contNavi'>
+	  				<li><a href='#contMain'>Основное</a>
+	  				<li><a href='#contSLA'>SLA</a>
+	  				<li><a href='#contDivs'>Филиалы</a>
+  	   			</ul>
+				<div id='contMain' class='contTab0'>
+					<label class='half' for='cStart'>Начало действия:</label> <span class='half'><span class='edit date' id='cStart'></span><input class='date hideonstart' id='cStartIn'></span>
+					<label class='half' for='cEnd'>Конец действия:</label> <span class='half'><span class='edit date' id='cEnd'></span><input class='date hideonstart' id='cEndIn'></span><br>
+					<label class='half' for='cTel'>Телефон:</label> <span class='half'><span class='edit' id='cTel'></span><input class='hideonstart' id='cTelIn'></span>
+					<label class='half' for='cEmail'>E-mail:</label> <span class='half'><span class='edit' id='cEmail'></span><input class='hideonstart' id='cEmailIn'></span><br>
+					<label class='full' for='cAddr'>Почтовый адрес:</label> <span class='full'><span class='edit' id='cAddr'></span><input class='hideonstart' id='cAddrIn'></span><br>
+					<label class='full' for='cYurAddr'>Юридический адрес:</label> <span class='full'><span class='edit' id='cYurAddr'></span><input class='hideonstart' id='cYurAddrIn'></span><br>
+					<label class='full' for='cUsers'>Ответственные: </label><span id='editCUsers' class='ui-icon'></span><span class='full' id='cUsers'></span>
+					<input type='hidden' id='cStartInt'><input type='hidden' id='cEndInt'>
+				</div>
+				<div id='contSLA' class='contTab1'>
+				</div>
+	    		<div id='contDivs' class='contTab2'>
+					<label for='selDivision'>Филиал: </label><select id='selDivision'></select><input class='hideonstart' id='selDivisionIn'> <span class='icons3 divisionIcons'></span>
+					<div id='division'>
+        				<ul id='divNavi'>
+			  				<li><a href='#divMain'>Основное</a>
+	  						<li><a href='#divEquip'>Оборудование</a>
+  	   					</ul>
+        				<div id='divMain' class='divTab0'>
+							<label class='half' for='dContragent'>Контрагент:</label> <span class='half'><span class='edit list' id='dContragent'></span><select class='hideonstart' id='dContragentIn'></select></span>
+							<label class='half' for='dType'>Тип филиала:</label> <span class='half'><span class='edit list' id='dType'></span><select class='hideonstart' id='dTypeIn'></select></span><br>
+							<label class='half' for='dTel'>Телефон:</label> <span class='half'><span class='edit' id='dTel'></span><input class='hideonstart' id='dTelIn'></span>
+							<label class='half' for='dEmail'>E-mail:</label> <span class='half'><span class='edit' id='dEmail'></span><input class='hideonstart' id='dEmailIn'></span><br>
+							<label class='full' for='dAddr'>Почтовый адрес:</label> <span class='full'><span class='edit' id='dAddr'></span><input class='hideonstart' id='dAddrIn'></span><br>
+							<label class='full' for='dYurAddr'>Юридический адрес:</label> <span class='full'><span class='edit' id='dYurAddr'></span><input class='hideonstart' id='dYurAddrIn'></span><br>
+							<label class='full' for='dUsers'>Ответственные:</label> <span id='editDUsers' class='ui-icon'></span><span class='full' id='dUsers'></span><br>
+							<label class='full' for='dPartners'>Партнёры:</label> <span id='editDPartners' class='ui-icon'></span><span class='full' id='dPartners'></span>
+        				</div>	
+        				<div id='divEquip' class='divTab1'>
+        				</div>
+        			</div>
+        		</div>
+        	</div>
+		</div>
+	</div>
+  	<div id='bottomDiv'>
+  		Содействие 2013-2015
+  	</div>
+  </body>
+</html>

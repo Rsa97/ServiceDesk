@@ -115,15 +115,15 @@ function login($user, $pass, $newpass) {
     
     // Заносим найденного пользователя в MySQL
     $req = $mysqli->prepare("INSERT INTO `users` (`firstName`, `secondName`, `middleName`, `login`, `passwordHash`, `isDisabled`, `rights`, `email`, `phone`, ".
-                                                 "`partner_id`, `loginDB`) VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?, 0, 'ldap')".
+                                                 "`loginDB`) VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?, 'ldap')".
                             "ON DUPLICATE KEY UPDATE `firstName` = VALUES(`firstName`), `secondName` = VALUES(`secondName`), `middleName` = VALUES(`middleName`), ".
                                                     "`login` = VALUES(`login`), `passwordHash` = VALUES(`passwordHash`), `isDisabled` = 0, `rights` = VALUES(`rights`), ".
-                                                    "`email` = VALUES(`email`), `phone` = VALUES(`phone`), `partner_id` = 0, `loginDB` = 'ldap'");
+                                                    "`email` = VALUES(`email`), `phone` = VALUES(`phone`), `partner_id` = NULL, `loginDB` = 'ldap'");
     $newHash = md5($pass.$user."reppep");
     $req->bind_param('ssssssss', $ret['firstName'], $ret['lastName'], $ret['middleName'], $user, $newHash, $ret['rights'], $ret['mail'], $phone);
     if (!$req->execute()) {
-      $req->close();
       $err = "MySQL error ({$mysqli->errno}) {$mysqli->error}";
+      $req->close();
       $mysqli->close();
       return array('error' => $err);
     }
@@ -140,10 +140,10 @@ function login($user, $pass, $newpass) {
   $req->bind_param('ssss', $user, $pass, $oldHash, $newHash);
   $req->bind_result($id, $fName, $lName, $mName, $rights, $email, $phone, $address, $partner, $hash);
   if (!$req->execute()) {
+    $err = "MySQL error ({$mysqli->errno}) {$mysqli->error}";
     $req->close();
-      $err = "MySQL error ({$mysqli->errno}) {$mysqli->error}";
-      $mysqli->close();
-      return array('error' => $err);
+    $mysqli->close();
+    return array('error' => $err);
   }
   if (!$req->fetch()) {
     $req->close();
@@ -213,11 +213,10 @@ function login($user, $pass, $newpass) {
   	  }
       $ret = login($_POST['user'], $pass, $newpass);
       if (isset($ret['error'])) {
-        trigger_error($ret['error']);
         if (isset($ret['msg']))
           echo json_encode(array('error' => $ret['msg']));
         else
-          echo json_encode(array('error' => 'Внутренняя ошибка сервера. Попробуйте перезагрузить страницу через некоторое время.'));
+          echo json_encode(array('error' => 'Внутренняя ошибка сервера. Попробуйте перезагрузить страницу через некоторое время.', 'orig' => $ret['error']));
         exit;
       }
       $_SESSION['user'] = $ret['user'];

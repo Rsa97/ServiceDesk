@@ -1,3 +1,3 @@
 <?php
-$fileStorage = '/var/www/files';
+$fileStorage = '/var/www-dev/files';
 ?>
