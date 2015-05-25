@@ -304,7 +304,7 @@ function calcTime($div, $serv, $sla, $sql) {
 			  $isSel = 1;
   		  	$level = "<option value='{$slaLevel}'".($isDefault == 1 ? " selected" : "").">{$slaLevels[$slaLevel]}";
 		  }
-		  $levels .= "<option value='{$slaLevel}'".($isSel == 1 ? "" : " selected").">{$slaLevels[$slaLevel]}";
+		  $levels .= "<option value='{$slaLevel}'".($isDefault != 1 && $isSel == 1 ? "" : " selected").">{$slaLevels[$slaLevel]}";
 		  $result['level'] = $levels;
 		  sendJson($result);
 		} else 
