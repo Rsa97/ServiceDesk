@@ -6,5 +6,9 @@
 files
 .settings
 config
+<<<<<<< HEAD
+=======
+.settings
+>>>>>>> Dev
 img/logo.png
 img/color_web.jpg
