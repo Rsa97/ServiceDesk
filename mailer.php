@@ -379,7 +379,7 @@ foreach ($mails as $uid => $requests) {
 			$subj = "Открыта новая заявка №{$reqId}";
 		else 
 			$subj = "События по заявке №{$reqId}";
-//		smtpmail($users[$uid]['email'], $users[$uid]['name'], $subj, $msg['body'], $msg['header']);
+		smtpmail($users[$uid]['email'], $users[$uid]['name'], $subj, $msg['body'], $msg['header']);
 		print "{$users[$uid]['email']} - {$users[$uid]['name']} - {$reqId}\n";
 	}	
 }
