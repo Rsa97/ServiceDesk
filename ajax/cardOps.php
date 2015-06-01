@@ -13,7 +13,9 @@
 		if ($str == '')
 			$str = ' ';
 		$ret = '';
+		$str = preg_replace('/\n/', '\par ', $str);
 		$win = iconv('UTF-8', 'CP1251', $str);
+		
 		foreach (str_split($win) as $char)
 			if ($char >= ' ' && $char <= '~')
 				$ret .= $char;
