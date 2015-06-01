@@ -211,16 +211,18 @@
 			break;
 		case 'update':
 			if (!isset($_REQUEST['id']) || ($id = $_REQUEST['id']) < 0 ||
-				!isset($_REQUEST['name']) || ($name = $_REQUEST['name']) == '') {
+				!isset($_REQUEST['name']) || ($name = trim($_REQUEST['name'])) == '' ||
+				!isset($_REQUEST['address'])) {
 				returnJson(array('error' => 'Ошибка в параметрах.'));
 				exit;
 			}
+			$address = trim($_REQUEST['address']);
 			if ($id == 0) {
-				$req = $mysqli->prepare("INSERT IGNORE INTO `partner` (`name`) VALUES (?)");
-				$req->bind_param('s', $name);
+				$req = $mysqli->prepare("INSERT IGNORE INTO `partner` (`name`, `address`) VALUES (?)");
+				$req->bind_param('ss', $name, $address);
 			} else {
-				$req = $mysqli->prepare("UPDATE IGNORE `partner` SET `name` = ? WHERE `id` = ?");
-				$req->bind_param('si', $name, $id);
+				$req = $mysqli->prepare("UPDATE IGNORE `partner` SET `name` = ?, `address` = ? WHERE `id` = ?");
+				$req->bind_param('ssi', $name, $address, $id);
 			}
 			if (!$req->execute()) {
 				returnJson(array('error' => 'Внутренняя ошибка сервера.'));
@@ -254,8 +256,8 @@
 			returnJson(array('error' => 'Ошибка в параметрах.'));
 			exit;
 	}
-	$req = $mysqli->prepare("SELECT `id`, `name` FROM `partner` ORDER BY `name`");
-	$req->bind_result($servId, $name);
+	$req = $mysqli->prepare("SELECT `id`, `name`, `address` FROM `partner` ORDER BY `name`");
+	$req->bind_result($servId, $name, $address);
 	$req1 =  $mysqli->prepare("SELECT `firstName`, `secondName`, `middleName` ".
 								"FROM `users` ".
 								"WHERE `partner_id` = ? AND `isDisabled` = 0 ".
@@ -310,7 +312,7 @@
 		if (count($divs) > 0)
 			$contracts[] = '<li>'.$lastContract.'<ul><li>'.join('<li>', $divs).'</ul>';
 		$contracts = '<ul class="simple"><li>'.join('<li>', $contracts).'</ul>';
-		$row = array('id' => $servId, 'fields' => array(htmlspecialchars($name), $users, $contracts));
+		$row = array('id' => $servId, 'fields' => array(htmlspecialchars($name), htmlspecialchars($address), $users, $contracts));
 		if ($servId == $lastId) {
 			$row['last'] = 1;
 			$last = $i;

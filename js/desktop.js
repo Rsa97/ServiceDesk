@@ -3,7 +3,11 @@ var cardMode, openCard, servNumStore;
 var servNumLookupTimeout, timeoutSet = 0;
 
 // Кнопки карточки заявки в режиме просмотра
-var cardBtnLook = [{text: 'Закрыть', 
+var cardBtnLook = [ {text: 'Сервисный лист',
+					 click: function() {
+					 			document.location = '/ajax/cardOps.php?op=serviceList&n='+openCard;
+					 		}},
+					{text: 'Закрыть', 
                     click: function() { 
                              $('#card button').removeProp('disabled');
                              $(this).dialog("close");
