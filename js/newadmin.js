@@ -30,9 +30,10 @@ var tableDefs = {
 	partners: {
 		hasIcons: ['a','d','e'],
 		fields: [
-			{name: 'name', header: 'Партнёр', type: 'text', test: /\S+/, val: /^\s*(\S.*\S)\s*$/, width: '25%'},
-			{name: 'users', header: 'Работники', type: 'multilist', width: '20%'},
-			{name: 'contracts', header: 'Обслуживаемые договоры', type: 'multilist', width: '50%'}
+			{name: 'name', header: 'Партнёр', type: 'text', test: /\S+/, val: /^\s*(\S.*\S)\s*$/, width: '20%'},
+			{name: 'address', header: 'Адрес', type: 'multitext', width: '20%', val: /^\s*(\S.*\S)\s*$/},
+			{name: 'users', header: 'Работники', type: 'multilist', width: '15%'},
+			{name: 'contracts', header: 'Обслуживаемые договоры', type: 'multilist', width: '40%'}
 		],
 		ajax: 'ajax/adm_partners.php',
 		pageSize: 20
