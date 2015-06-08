@@ -15,10 +15,7 @@ var cardBtnLook = [ {text: 'Сервисный лист',
                   ];
 
 // Кнопки карточки заявки в режиме обмена с базой
-var cardBtnWait = [{text: 'Идёт запрос', 
-                    click: function() {
-                           }}
-                  ];
+var cardBtnWait = [{text: 'Идёт запрос'}];
 
 // Кнопки карточки заявки в режиме создания
 var cardBtnNew = [{text: 'Отменить', 
@@ -94,6 +91,24 @@ var selectEqBtn = [{text: 'Отменить',
                             $(this).dialog("close");
                           }}
                  ];
+                 
+// Кнопки добавления задач в плановые
+var addProblemBtn = [{text: 'Отменить', 
+                      click: function() { 
+                            $('#addProblem button').removeProp('disabled');
+                            $(this).dialog("close");
+                          }},
+	                 {text: 'Сохранить',
+	                  click: function() {
+						$('#addProblem').dialog('option', 'buttons', cardBtnWait);
+	                  	myPostJson('/ajax/addProblem.php', {op: 'setProblem', cId: $('#apContract').val(), divId: $('#apDivision').val(),
+	                  				problem: $('#apProblem').val().trim()},	null, null, function() { 
+							$('#addProblem').dialog('option', 'buttons', addProblemBtn);
+							$('#addProblem').dialog('close');
+						});
+	                  }} 
+                    ];
+       
 
 // Кнопки решения
 var solutionBtn = [{text: 'Отменить', 
@@ -141,6 +156,8 @@ function myPostJson(url, param, onReady, onError, onAlways) {
       if (data !== null) {
         if (typeof data.error !== 'undefined') {
           alert(data.error);
+	      if (typeof onError === 'function')
+    	   	onError();
         } else {
           for (var key in data)
             if(data.hasOwnProperty(key)) {
@@ -277,6 +294,15 @@ $(function() {
                                                           }}
                                 ]
                 });
+  $('#addProblem').dialog({autoOpen: false,
+  					 title: 'Добавить задание в плановый выезд',
+                     resizable: false,
+                     dialogClass: 'no-close',
+                     width: 660,
+                     modal: true,
+                     draggable: false,
+                     buttons: addProblemBtn
+              });
   
   myPostJson('/ajax/buildFilter.php', {}, function() {
     $('.oper button').each(function() {
@@ -419,12 +445,15 @@ $(function() {
     timeoutSet = 1;      
   });
 
-  $('#workflow').on('click', '.btnAccept, .btnFixed, .btnClose', function() {
+  $('#workflow').on('click', '.btnAccept, .btnFixed, .btnClose, .btnDoNow', function() {
     var cmd = $(this).data('cmd');
     var list = '';
+    console.log('.tab'+$('#workflow').tabs('option', 'active')+' :checked');
+    console.log($('.tab'+$('#workflow').tabs('option', 'active')+' :checked'));
     $('.tab'+$('#workflow').tabs('option', 'active')+' :checked').each(function() {
       list += $(this).parents('tr').attr('id')+',';
     });
+    console.log('list = '+list);
     if (list == '')
       return;
     $('button').prop('disabled', 'disabled');
@@ -488,6 +517,8 @@ $(function() {
 
   $('.list').on('click', 'td', function() {
     if ($(this).hasClass('cell1'))
+      return;
+    if ($(this).parents('table').hasClass('planned'))
       return;
     openCard = +($(this).parents('tr').attr('id').substr(1));
     if (openCard != 0) {
@@ -609,9 +640,9 @@ $(function() {
 
 	$('body').on('change', '.checkAll', function() {  
     if ($(this).prop('checked'))
-      $(this).parents('table').first().find('.checkOne').prop('checked', 'checked');
+      $(this).parents('table').first().find('.checkOne').not(':disabled').prop('checked', 'checked');
     else
-      $(this).parents('table').first().find('.checkOne').removeProp('checked');
+      $(this).parents('table').first().find('.checkOne').not(':disabled').removeProp('checked');
 	});	
 
 	$('#workflowDiv').on('change', '#selectDivision, #chkMyTickets', function() {
@@ -684,4 +715,42 @@ $(function() {
 		$(this).children('ul').hide();
 		$(this).removeClass('open').addClass('collapsed');
 	});
+	
+	$('#workflow').on('click', '.btnAddProblem', function() {
+		$('#addProblem').dialog('open');
+		$('#addProblem').dialog('option', 'buttons', cardBtnWait);
+		myPostJson('/ajax/addProblem.php', {op: 'getContragents'}, function() {
+			$('#addProblem').dialog('option', 'buttons', addProblemBtn);
+			$('#apContragent').trigger('change');
+		}, function() {
+			$('#addProblem').dialog('option', 'buttons', addProblemBtn);
+		});
+	});
+
+	$('#apContragent').change(function() {
+		$('#addProblem').dialog('option', 'buttons', cardBtnWait);
+		myPostJson('/ajax/addProblem.php', {op: 'getContracts', caId: $('#apContragent').val()}, function() {
+			$('#addProblem').dialog('option', 'buttons', addProblemBtn);
+			$('#apContract').trigger('change');
+		}, function() {
+			$('#addProblem').dialog('option', 'buttons', addProblemBtn);
+		});
+	});
+
+	$('#apContract').change(function() {
+		$('#addProblem').dialog('option', 'buttons', cardBtnWait);
+		myPostJson('/ajax/addProblem.php', {op: 'getDivisions', cId: $('#apContract').val()}, function() {
+			$('#addProblem').dialog('option', 'buttons', addProblemBtn);
+			$('#apDivision').trigger('change');
+		}, function() {
+			$('#addProblem').dialog('option', 'buttons', addProblemBtn);
+		});
+	});
+
+	$('#apDivision').change(function() {
+		$('#addProblem').dialog('option', 'buttons', cardBtnWait);
+		myPostJson('/ajax/addProblem.php', {op: 'getProblem', cId: $('#apContract').val(), divId: $('#apDivision').val()},
+					null, null, function() { $('#addProblem').dialog('option', 'buttons', addProblemBtn); });
+	});
+	
 });

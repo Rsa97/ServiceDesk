@@ -8,3 +8,4 @@ config
 .settings
 img/logo.png
 img/color_web.jpg
+mysqldiff

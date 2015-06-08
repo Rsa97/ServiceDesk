@@ -22,8 +22,8 @@
 	  	<div id='topDiv'> </div>
       <div id='workflow'>
         <div id='sidebar'>
-          <label for='ticketNum'>Номер заявки: </label>
-          <span class='inpbtn'><input type='search' class='ui-widget ui-corner-all ui-widget-content' id='ticketNum'>
+<!--          <label for='ticketNum'>Номер заявки: </label> -->
+          <span class='inpbtn'><input type='search' class='ui-widget ui-corner-all ui-widget-content' id='ticketNum' placeholder='Номер заявки'>
           <button id='searchTicket' data-icon=''>Найти</button></span>
           <button id='showFilter' data-icon=''>Фильтр</button>
           <button id='refresh' data-icon='ui-icon-refresh'>Обновить</button>
@@ -48,17 +48,17 @@
           <div id='toCloseOpers' class='oper'></div>
           <div id='toCloseList' class='list'></div>
         </div>
-        <div id='wfTicketsPln' class='tab3'>
-          <div id='plannedOpers' class='oper'></div>
-          <div id='plannedList' class='list'></div>
-        </div>
-        <div id='wfTicketsCls' class='tab4'>
+        <div id='wfTicketsCls' class='tab3'>
           <div id='closedOpers' class='oper'></div>
           <div id='closedList' class='list'></div>
         </div>
-        <div id='wfTicketsCan' class='tab5'>
+        <div id='wfTicketsCan' class='tab4'>
           <div id='canceledOpers' class='oper'></div>
           <div id='canceledList' class='list'></div>
+        </div>
+        <div id='wfTicketsPln' class='tab5'>
+          <div id='plannedOpers' class='oper'></div>
+          <div id='plannedList' class='list'></div>
         </div>
       </div>
       <div id='filter'>
@@ -233,6 +233,32 @@
             <textarea id='solRecomendation' type='text' class='ui-search-input ro' rows='7' cols=''></textarea>
           </div>
 	  	</span>
+	  </div>
+	  <div id='addProblem'> 
+        <span class='cardField ifull'>
+          <label for='apContragent'>Заказчик:</label>
+          <div class='cardInput ui-search ui-widget ui-widget-content ui-corner-all'>
+            <select id='apContragent' class='ui-search-input'></select>
+          </div>
+          </span>
+        <span class='cardField ileft'>
+          <label for='apContract'>Договор:</label>
+          <div class='cardInput ui-search ui-widget ui-widget-content ui-corner-all'>
+            <select id='apContract' type='text' class='ui-search-input ro'></select>
+          </div>
+        </span>
+        <span class='cardField iright'>
+          <label for='apDivision'>Филиал:</label>
+          <div class='cardInput ui-search ui-widget ui-widget-content ui-corner-all'>
+            <select id='apDivision' type='text' class='ui-search-input ro'></select>
+          </div>
+        </span>
+        <span class='cardField ifull'>
+          <label for='apProblem'>Дополнительные задачи:</label>
+          <div class='cardInput ui-search ui-widget ui-widget-content ui-corner-all' >
+            <textarea id='apProblem' rows="5" class='withBtn ui-search-input'></textarea>
+          </div>
+        </span>
 	  </div>
 	  <div id='newCardDiv' style='visibility:hidden'> </div>
 	  <div id='workflowDiv'></div>
