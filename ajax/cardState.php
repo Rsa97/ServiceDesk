@@ -180,7 +180,7 @@ function sendJson($data) {
   if ($_REQUEST['op'] == 'DoNow') {
 	$req = $mysqli->prepare(
     	   "SELECT DISTINCT `pr`.`id`, `pr`.`contractDivisions_id`, `pr`.`service_id`, `pr`.`slaLevel`, `pr`.`problem`, `u`.`users_id`, ".
-    	   					" `div`.`addProblem`, `c`.`addProblem`, `cu`.`users_id` ".
+    	   					" `div`.`addProblem`, `cu`.`users_id` ".
         	"FROM `plannedRequest` AS `pr` ".
             	"LEFT JOIN `contractDivisions` AS `div` ON `pr`.`contractDivisions_id` = `div`.`id` ".
             	"LEFT JOIN `contracts` AS `c` ON `c`.`id` = `div`.`contracts_id` ".
@@ -193,7 +193,7 @@ function sendJson($data) {
           	"WHERE `pr`.`id` IN ({$list}) ".
           		"AND `pr`.`nextDate` <= DATE_ADD(NOW(), INTERVAL `pr`.`preStart` DAY) ".
             	"AND (NOW() BETWEEN `c`.`contractStart` AND `c`.`contractEnd`)");
-	$req->bind_result($id, $divId, $srvId, $slaLevel, $problem, $clientId, $divProblem, $contProblem, $contUser);
+	$req->bind_result($id, $divId, $srvId, $slaLevel, $problem, $clientId, $divProblem, $contUser);
 	$req1 = $mysqli->prepare(
 		"INSERT INTO `request` (`problem`, `createdAt`, `reactBefore`, `fixBefore`, `repairBefore`, ".
 				"`currentState`, `contactPersons_id`, `contractDivisions_id`, `slaLevel`, ".
