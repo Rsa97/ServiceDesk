@@ -81,7 +81,7 @@ function calcTime($div, $serv, $sla, $sql) {
 
 	$req = $mysqli->prepare(
     	   "SELECT DISTINCT `pr`.`id`, `pr`.`contractDivisions_id`, `pr`.`service_id`, `pr`.`slaLevel`, `pr`.`problem`, `u`.`users_id`, ".
-    	   					" `div`.`addProblem`, `c`.`addProblem` ".
+    	   					" `div`.`addProblem` ".
         	"FROM `plannedRequest` AS `pr` ".
             	"LEFT JOIN `contractDivisions` AS `div` ON `pr`.`contractDivisions_id` = `div`.`id` ".
             	"LEFT JOIN `contracts` AS `c` ON `c`.`id` = `div`.`contracts_id` ".
@@ -90,14 +90,15 @@ function calcTime($div, $serv, $sla, $sql) {
             	") AS `u` ON `u`.`contractDivisions_id` = `div`.`id` ".
           	"WHERE `pr`.`nextDate` <= NOW() ".
             	"AND (NOW() BETWEEN `c`.`contractStart` AND `c`.`contractEnd`)");
-	$req->bind_result($id, $divId, $srvId, $slaLevel, $problem, $clientId, $divProblem, $contProblem);
+	print $mysqli->error;
+	$req->bind_result($id, $divId, $srvId, $slaLevel, $problem, $clientId, $divProblem);
 	$req1 = $mysqli->prepare(
 		"INSERT INTO `request` (`problem`, `createdAt`, `reactBefore`, `fixBefore`, `repairBefore`, ".
 				"`currentState`, `contactPersons_id`, `contractDivisions_id`, `slaLevel`, ".
 				"`equipment_id`, `service_id`, `toReact`, `toFix`, `toRepair`) ".
 			"VALUES (?, ?, ?, ?, ?, 'received', ?, ?, ?, NULL, ?, ?, ?, ?)");
 	$req2 = $mysqli->prepare("INSERT INTO `requestEvents` (`event`, `request_id`, `users_id`) VALUES('open', ?, 1)");
-    $req2->bind_param('ii', $reqId);
+    $req2->bind_param('i', $reqId);
     $req3 = $mysqli->prepare("UPDATE `plannedRequest` SET `nextDate` = `nextDate` + INTERVAL `intervalYears` YEAR + ".
     								"INTERVAL `intervalMonths` MONTH + INTERVAL `intervalWeeks` WEEK + INTERVAL `intervalDays` DAY ".
 									"WHERE `id` = ?");
@@ -113,7 +114,7 @@ function calcTime($div, $serv, $sla, $sql) {
 		$req1->bind_param('sssssiisiiii', $problem, $time['createdAt'], $time['reactBefore'], $time['fixBefore'], 
 										$time['repairBefore'], $clientId, $divId, $slaLevel, $srvId, 
 										$time['toReact'], $time['toFix'], $time['toRepair']);
-		$problem .= "\n".$divProblem."\n".$contProblem;
+		$problem .= "\n".$divProblem;
 		if (!$req1->execute()) { 
 			$mysqli->query("ROLLBACK");
 		    die ('Внутренняя ошибка сервера');
