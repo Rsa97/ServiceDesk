@@ -12,11 +12,12 @@
   $btnText = array('New' => 'Создать', 'Accept' => 'Принять', 'Cancel' => 'Отменить', 'SetTo' => 'Назначить', 'Dload' => 'Выгрузить',
                    'UpForm' => 'Загрузить форму', 'Close' => 'Закрыть', 'CheckForm' => 'Форма обследования', 'UnCancel' => 'Открыть повторно',
                    'Delete' => 'Удалить', 'Edit' => 'Изменить', 'Fixed' => 'Восстановлено', 'Repaired' => 'Завершено', 'Wait' => 'Ожидание',
-                   'UnClose' => 'Отказать');
+                   'UnClose' => 'Отказать', 'DoNow' => 'Выполнить сейчас', 'AddProblem' => 'Добавить примечание');
   $btnIco = array('New' => 'ui-icon-document', 'Accept' => 'ui-icon-plus', 'Cancel' => 'ui-icon-cancel', 'SetTo' => 'ui-icon-seek-next', 
                   'Dload' => 'ui-icon-circle-arrow-s', 'UpForm' => 'ui-icon-circle-arrow-n', 'Close' => 'ui-icon-closethick', 
                   'CheckForm' => 'ui-icon-clipboard', 'UnCancel' => 'ui-icon-notice', 'Delete' => 'ui-icon-trash', 'Edit' => 'ui-icon-pencil',
-                  'Fixed' => 'ui-icon-wrench', 'Repaired' => 'ui-icon-check', 'Wait' => 'ui-icon-clock', 'UnClose' => 'ui-icon-alert');
+                  'Fixed' => 'ui-icon-wrench', 'Repaired' => 'ui-icon-check', 'Wait' => 'ui-icon-clock', 'UnClose' => 'ui-icon-alert',
+				  'DoNow' => 'ui-icon-extlink', 'AddProblem' => 'ui-icon-info');
 
   $buttons = array('received' => array('admin' => array('New', 'Accept', 'Cancel'),
                                        'client' => array('New', 'Cancel'),
@@ -33,11 +34,11 @@
                                        'operator' => array('UnClose', 'Close'),
                                        'engeneer' => array(),
                                        'partner' => array()),
-                   'planned' => array( 'admin' => array('New', 'Edit', 'Delete'),
+                   'planned' => array( 'admin' => array('DoNow', 'AddProblem'),
                                        'client' => array(),
-                                       'operator' => array(),
-                                       'engeneer' => array(),
-                                       'partner' => array()),
+                                       'operator' => array('AddProblem'),
+                                       'engeneer' => array('DoNow', 'AddProblem'),
+                                       'partner' => array('DoNow', 'AddProblem')),
                    'closed' => array(  'admin' => array(),
                                        'client' => array(),
                                        'operator' => array(),

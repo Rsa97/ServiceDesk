@@ -16,8 +16,7 @@
                        'fixed' => 'accepted',
                        'repaired' => 'toClose',
                        'closed' => 'closed',
-                       'canceled' => 'canceled',
-                       'planned' => 'planned');
+                       'canceled' => 'canceled');
                     
 
   $statusIcons = array('received' => 'ui-icon-mail-closed',
@@ -26,7 +25,7 @@
                        'repaired' => 'ui-icon-help',
                        'closed' => 'ui-icon-check',
                        'canceled' => 'ui-icon-cancel',
-                       'planned' => 'ui-icon-calerndar',
+                       'planned' => 'ui-icon-calendar',
                        'onWait' => 'ui-icon-clock');
 
   $statusNames = array('received' => 'Получена',
@@ -161,7 +160,8 @@
             "AND (? = 0 OR `div`.`contragents_id` = ?) ".
             "AND (? = 0 OR `ucd`.`users_id` = ? OR `uc`.`users_id` = ?) ".
             "AND (? = 0 OR `ac`.`partner_id` = ?) ".
-            "AND (? = 0 OR `rq`.`service_id` = ?)");
+            "AND (? = 0 OR `rq`.`service_id` = ?) ".
+			"ORDER BY `rq`.`id`");
   $req->bind_param('iiiiiiiiiiiiiii', $byContrTime, $onlyMy, $userId, $userId, $byDiv, $divFilter, $byCntrAgent, $divFilter, $byClient, $userId, $userId, $byPartner, $partnerId, $byService, $srvFilter);
   $req->bind_result($id, $state, $stateTime, $srvSName, $srvName, $createdAt, $reactBefore, 
                     $fixBefore, $repairBefore, $div, $contragent, $engLN, $engGN, $engMN, $engEmail, 
@@ -170,7 +170,6 @@
                     $reactedAt, $fixedAt, $repairedAt, $slaLevel,
 					$timeToReact, $timeToFix, $timeToRepair, $times);
   if (!$req->execute()) { 
-    trigger_error("Ошибка чтения из базы данных ({$mysqli->errno})  {$mysqli->error}");
     echo json_encode(array('error' => 'Внутренняя ошибка сервера'));
     $req->close();
     $mysqli->close();
@@ -237,6 +236,7 @@
  		"</abbr>";
     $counts[$statusGroup[$state]]++;
   }
+  $req->close();
   foreach ($tables as $state => $table) {
     if ($table == '')
       $result["{$state}List"] = "<h2>Заявок не найдено</h2>";
@@ -259,6 +259,60 @@
     if ($count > 0)
       $result[$state.'Num'] = $count.'/'.$result[$state.'Num'];
   }
+
+  // Готовим таблицу плановых заявок
+  $req = $mysqli->prepare(
+  		"SELECT DISTINCT `pr`.`id`, `pr`.`slaLevel`, `s`.`shortname`, `s`.`name`, `pr`.`nextDate`, `ca`.`name`, ".
+  				"`div`.`name`, `pr`.`problem`, `pr`.`nextDate` <= DATE_ADD(NOW(), INTERVAL `pr`.`preStart` DAY) ".
+  			"FROM `plannedRequest` AS `pr` ".
+            "LEFT JOIN `contractDivisions` AS `div` ON `pr`.`contractDivisions_id` = `div`.`id` ".
+            "LEFT JOIN `contracts` AS `c` ON `c`.`id` = `div`.`contracts_id` ".
+            "LEFT JOIN `contragents` AS `ca` ON `ca`.`id` = `div`.`contragents_id` ".
+            "LEFT JOIN `userContractDivisions` AS `ucd` ON `pr`.`contractDivisions_id` = `ucd`.`contractDivisions_id` ".
+            "LEFT JOIN `userContracts` AS `uc` ON `uc`.`contracts_id` = `div`.`contracts_id` ".
+            "LEFT JOIN `allowedContracts` AS `ac` ON `pr`.`contractDivisions_id` =`ac`.`contractDivisions_id` ".
+            "LEFT JOIN `services` AS `s` ON `s`.`id` = `pr`.`service_id` ".
+   			"WHERE (? = 0 OR (NOW() BETWEEN `c`.`contractStart` AND `c`.`contractEnd`)) ".
+            	"AND (? = 0 OR `pr`.`contractDivisions_id` = ?) ".
+            	"AND (? = 0 OR `div`.`contragents_id` = ?) ".
+            	"AND (? = 0 OR `ucd`.`users_id` = ? OR `uc`.`users_id` = ?) ".
+            	"AND (? = 0 OR `ac`.`partner_id` = ?) ".
+            	"AND (? = 0 OR `pr`.`service_id` = ?)".
+            	"AND `pr`.`nextDate` < DATE_ADD(NOW(), INTERVAL 1 MONTH) ".
+            "ORDER BY `pr`.`nextDate`");
+  $req->bind_param('iiiiiiiiiiii', $byContrTime, $byDiv, $divFilter, $byCntrAgent, $divFilter, $byClient, $userId, $userId, $byPartner, $partnerId, $byService, $srvFilter);
+  $req->bind_result($id, $slaLevel, $srvSName, $srvName, $nextDate, $contragent, $div, $problem, $canPreStart);
+  if (!$req->execute()) { 
+    echo json_encode(array('error' => 'Внутренняя ошибка сервера'));
+    $req->close();
+    $mysqli->close();
+    exit;
+  }
+  $table = '';
+  $count = 0;
+  while ($req->fetch()) {
+  	$table .= 
+      "<tr id='t{$id}'>".
+        "<td><input type='checkbox' class='checkOne'".($canPreStart == 0 ? ' disabled' : '').">".
+        "<abbr title='".$statusNames['planned']."'><span class='ui-icon ".$statusIcons['planned']."'></span></abbr>".
+        "<td>{$slaLevels[$slaLevel]}".
+        "<td><abbr title='{$srvName}\n{$problem}'>{$srvSName}</abbr>".
+        "<td>".date_format(date_create($nextDate), 'd.m.Y').
+		"<td><abbr title='{$div}'>{$contragent}</abbr>";
+    $count++;
+  }
+  if ($table == '')
+      $result['plannedList'] = "<h2>Заявок не найдено</h2>";
+    else
+      $result['plannedList'] = "<table class='planned'><tr id='n0'>".
+                                "<th><input type='checkbox' class='checkAll'>".
+                                "<th>Уровень".
+                                "<th>Услуга".
+                                "<th>Дата".
+                                "<th>Заказчик".
+                                $table.
+                                "</table>";
+  $result['plannedNum'] = $count;
 
   echo json_encode($result);
   $req->close();

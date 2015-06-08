@@ -197,9 +197,9 @@ abbr {
 	border: none;
 }
 
-table select {
+/* table select {
 	max-width: 200px;
-}
+} */
 
 .divEqTbl #mfg, .divEqTbl #model {
 	width: auto !important;

@@ -308,3 +308,7 @@ td .ui-icon {
 .timeIsOut {
 	color: #C00000;
 }
+
+table.planned .cell2 {
+    text-align: left;
+}

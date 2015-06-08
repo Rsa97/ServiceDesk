@@ -35,7 +35,7 @@
 		case 'init':
 			break;
 		case 'update':
-			if (!isset($_REQUEST['id']) || ($id = $_REQUEST['id']) <= 0 ||
+			if (!isset($_REQUEST['id']) || ($id = $_REQUEST['id']) < 0 ||
 				!isset($_REQUEST['name']) || ($name = $_REQUEST['name']) == '' ||
 				!isset($_REQUEST['shortName']) || ($shortname = $_REQUEST['shortName']) == '') {
 				returnJson(array('error' => 'Ошибка в параметрах.'));
@@ -58,7 +58,23 @@
 				exit;
 			}
 			$req->close();
-			break;			
+			break;	
+		case 'setCheck':
+			if (!isset($_REQUEST['id']) || ($id = $_REQUEST['id']) <= 0 ||
+				!isset($_REQUEST['field']) || ($field = $_REQUEST['field']) != 'utility' ||
+				!isset($_REQUEST['value']) || (($val = $_REQUEST['value']) != 0 && $val != 1)) {
+				returnJson(array('error' => 'Ошибка в параметрах.'));
+				exit;
+			}
+			$req = $mysqli->prepare("UPDATE IGNORE `services` SET `utility` = ? WHERE `id` = ?");
+			$req->bind_param('ii', $val, $id);
+			if (!$req->execute() || $mysqli->affected_rows <= 0) {
+				returnJson(array('error' => 'Внутренняя ошибка сервера.'));
+				exit;
+			}
+			returnJson(array('ok' => 1));
+			exit;
+			break; 		
 		case 'del':
 			if (!isset($_REQUEST['id']) || ($id = $_REQUEST['id']) <= 0) {
 				returnJson(array('error' => 'Ошибка в параметрах.'));
@@ -80,14 +96,14 @@
 			returnJson(array('error' => 'Ошибка в параметрах.'));
 			exit;
 	}
-	$req = $mysqli->prepare("SELECT `s`.`id`, `s`.`name`, `s`.`shortname`, ".
+	$req = $mysqli->prepare("SELECT `s`.`id`, `s`.`name`, `s`.`shortname`, `s`.`utility`, ".
 								"IFNULL(`cs`.`services_id`, IFNULL(`dss`.`service_id`, `r`.`service_id`)) ".
 								"FROM `services` AS `s` ".
 								"LEFT JOIN (SELECT DISTINCT `services_id` FROM `contractServices`) AS `cs` ON `cs`.`services_id` = `s`.`id` ".
 								"LEFT JOIN (SELECT DISTINCT `service_id` FROM `divServicesSLA`) AS `dss` ON `dss`.`service_id` = `s`.`id` ".
 								"LEFT JOIN (SELECT DISTINCT `service_id` FROM `request`) AS `r` ON `r`.`service_id` = `s`.`id` ".
 								"ORDER BY `s`.`name`");
-	$req->bind_result($id, $name, $shortname, $inUse);
+	$req->bind_result($id, $name, $shortname, $utility, $inUse);
 	if (!$req->execute()) {
 		returnJson(array('error' => 'Внутренняя ошибка сервера.'));
 		exit;
@@ -96,7 +112,7 @@
 	$last = 0;
 	$i = 0;
 	while ($req->fetch()) {
-		$row = array('id' => $id, 'fields' => array(htmlspecialchars($name), htmlspecialchars($shortname)));
+		$row = array('id' => $id, 'fields' => array(htmlspecialchars($name), htmlspecialchars($shortname), $utility));
 		if ($id == $lastId) {
 			$row['last'] = 1;
 			$last = $i;

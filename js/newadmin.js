@@ -21,8 +21,9 @@ var tableDefs = {
 	services: {
 		hasIcons: ['a','d','e'],
 		fields: [
-			{name: 'name', header: 'Название', type: 'text', test: /\S+/, val: /^\s*(\S.*\S)\s*$/, placeholder: 'Название услуги', width: '70%'},
-			{name: 'shortName', header: 'Сокращение', type: 'text', test: /\S+/, val: /^\s*(\S.*\S)\s*$/, width: '25%'}
+			{name: 'name', header: 'Название', type: 'text', test: /\S+/, val: /^\s*(\S.*\S)\s*$/, placeholder: 'Название услуги', width: '60%'},
+			{name: 'shortName', header: 'Сокращение', type: 'text', test: /\S+/, val: /^\s*(\S.*\S)\s*$/, width: '25%'},
+			{name: 'utility', header: 'Служебная', type: 'check', width: '10%'}
 		],
 		ajax: 'ajax/adm_services.php',
 		pageSize: 20
@@ -201,6 +202,33 @@ var tableDefs = {
 				opt.text(opt.data('text')+' '+data.count);
 			}
 		}
+	},
+	divisionPlanned: {
+		hasIcons: ['a','d','e'],
+		fields: [
+			{name: 'service', header: 'Услуга', type: 'list', width: '20%', onChange: function() {
+				inp = $(this).parent('td').next().children('select');
+				var val = inp.data('val');
+				inp.html('');
+				myJson($(this).parents('table').data('def').ajax, {call: 'getlists', id: $(this).parents('tr').data('id'), 
+						field: 'sla', service: $(this).val()}, function(data) {
+					for (var i = 0; i < data.options.length; i++) {
+						inp.append('<option value="'+data.options[i].id+'"'+
+							(data.options[i].name == val ? ' selected' : '')+
+							(typeof data.options[i].mark !== 'undefined' ? ' class="'+data.options[i].mark+'"' : '')+
+							'>'+data.options[i].name);
+					}
+					inp.trigger('change');
+				});
+			}},
+			{name: 'sla', header: 'Уровень', type: 'list', width: '15%', externalFill: true},
+			{name: 'problem', header: 'Задача', type: 'multitext', width: '25%'},
+			{name: 'nextDate', header: 'Следующий выезд', type: 'date', width: '10%'},
+			{name: 'interval', header: 'Интервал', type: 'text', test: /(\d+\s+y)?\s*(\d+\s+m)?\s*(\d+\s+w)?\s*(\d+\s+d)?/, val: /^\s*(\S.*\S)\s*$/, width: '10%', placeholder: '## y ## m ## w ## d'},
+			{name: 'preStart', header: 'Ранний выезд, дней', type: 'text', test: /\d+/, val: /(\d+)/, width: '10%'}				
+		],
+		ajax: 'ajax/adm_divisionPlanned.php',
+		pageSize: 20
 	}
 };
 
@@ -289,15 +317,22 @@ function makeRowEditable(row, from) {
 				case 'list':
 					$(this).html('<select class="dynTableInput"></select>');
 					var inp = $(this).children('select');
+					if (typeof def.fields[i-1].onChange === 'function') {
+						inp.change(def.fields[i-1].onChange);
+					}
 					inp.width($(this).width-4);
-					myJson(def.ajax, {call: 'getlists', id: $(this).parents('tr').data('id'), field: def.fields[i-1].name}, function(data) {
-						for (var i = 0; i < data.options.length; i++) {
-							inp.append('<option value="'+data.options[i].id+'"'+
-								(data.options[i].name == val ? ' selected' : '')+
-								(typeof data.options[i].mark !== 'undefined' ? ' class="'+data.options[i].mark+'"' : '')+
-								'>'+data.options[i].name);
-						}
-					});
+					inp.data('val', val);
+					inp.html('');
+					if (typeof def.fields[i-1].externalFill === 'undefined' || !def.fields[i-1].externalFill)
+						myJson(def.ajax, {call: 'getlists', id: $(this).parents('tr').data('id'), field: def.fields[i-1].name}, function(data) {
+							for (var i = 0; i < data.options.length; i++) {
+								inp.append('<option value="'+data.options[i].id+'"'+
+									(data.options[i].name == val ? ' selected' : '')+
+									(typeof data.options[i].mark !== 'undefined' ? ' class="'+data.options[i].mark+'"' : '')+
+									'>'+data.options[i].name);
+							}
+							inp.trigger('change');
+						});
 					break;
 				case 'multitext':
 					$(this).html('<textarea class="dynTableInput" rows="'+def.fields[i-1].rows+'">');
@@ -1380,6 +1415,8 @@ $(function() {
 		});
 		tableDefs['divisionEquipment'].ajax = 'ajax/adm_divisionEq.php?divId='+$(this).val();
 		initTable(tableDefs['divisionEquipment'], '#divEquip');
+		tableDefs['divisionPlanned'].ajax = 'ajax/adm_divisionPlanned.php?divId='+$(this).val();
+		initTable(tableDefs['divisionPlanned'], '#divPlanned');
 	});
 	
 	$('.divisionIcons').on('click', '.'+iconClass.edit+',.'+iconClass.add, function() {

@@ -291,7 +291,7 @@
                   '_eqType' => (($eqType == "" || $eqSubType == "") ? "{$eqType}{$eqSubType}" : "{$eqType} / {$eqSubType}"),
                   '_manufacturer' => $eqMfg,
                   '_model' => $eqName,
-                  '_problem' => htmlspecialchars($problem, ENT_COMPAT, 'UTF-8'),
+                  '_problem' => $problem,
                   'service' => "<option value='n0' selected>{$srvName}",
                   'level' => "<option value='{$slaLevel}' selected>{$slaLevels[$slaLevel]}",
                   '_createdAt' => date_format(date_create($createdAt), 'd.m.Y H:i'),

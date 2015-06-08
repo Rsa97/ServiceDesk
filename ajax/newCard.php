@@ -223,7 +223,7 @@ function calcTime($div, $serv, $sla, $sql) {
   								"FROM `contractDivisions` AS `cd` ".
   								"JOIN `divServicesSLA` AS `dss` ON `dss`.`contract_id` = `cd`.`contracts_id` AND `dss`.`divType_id` = `cd`.`type_id` ".
   								"JOIN `services` AS `srv` ON `srv`.`id` = `dss`.`service_id` ".
-  								"WHERE `cd`.`id` = ? ".
+  								"WHERE `cd`.`id` = ? AND `srv`.`utility` = 0 ".
   								"ORDER BY `srv`.`name`");
 	  $req->bind_param('i', $divMatch[1]);
 	  $req->bind_result($servId, $servName);
