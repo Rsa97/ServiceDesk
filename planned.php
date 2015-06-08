@@ -90,7 +90,6 @@ function calcTime($div, $serv, $sla, $sql) {
             	") AS `u` ON `u`.`contractDivisions_id` = `div`.`id` ".
           	"WHERE `pr`.`nextDate` <= NOW() ".
             	"AND (NOW() BETWEEN `c`.`contractStart` AND `c`.`contractEnd`)");
-	print $mysqli->error;
 	$req->bind_result($id, $divId, $srvId, $slaLevel, $problem, $clientId, $divProblem);
 	$req1 = $mysqli->prepare(
 		"INSERT INTO `request` (`problem`, `createdAt`, `reactBefore`, `fixBefore`, `repairBefore`, ".
