@@ -197,11 +197,14 @@
       $timeToFix *= 60;
       $timeToRepair *= 60;
 	  $times = split(',', $times);
-      if (($reactPercent = $times[0]/$timeToReact) > 1)
+	  $reactPercent = ($timeToReact == 0 ? 1 : $times[0]/$timeToReact);
+      if ($reactPercent > 1)
 	    $reactPercent = 1;
-      if (($fixPercent = $times[1]/$timeToFix) > 1)
+	  $fixPercent = ($timeToFix == 0 ? 1 : $times[1]/$timeToFix);
+      if ($fixPercent > 1)
         $fixPercent = 1;
-      if (($repairPercent = $times[2]/$timeToRepair) > 1)
+	  $repairPercent = ($timeToRepair == 0 ? 1 : $times[2]/$timeToRepair);
+      if ($repairPercent > 1)
         $repairPercent = 1;
       $reactColor = ($reactedAt == '' ? ('rgb('.floor(255*$reactPercent).','.floor(255*(1-$reactPercent)).',0)') : '#808080');
       $fixColor = ($fixedAt == '' ? ('rgb('.floor(255*$fixPercent).','.floor(255*(1-$fixPercent)).',0)') : '#808080');

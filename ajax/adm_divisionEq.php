@@ -34,6 +34,8 @@
 	$setService = 0;
 	switch($_REQUEST['call']) {
 		case 'init':
+			if (isset($_REQUEST['last']) && $_REQUEST['last'] > 0)
+				$lastId = $_REQUEST['last'];   
 			break;
 		case 'getlists':
 			if (!isset($_REQUEST['field']) || !isset($_REQUEST['id']) ||($id = $_REQUEST['id']) < 0) {
@@ -51,6 +53,22 @@
 					$list = array();
 					while ($req->fetch()) {
 						$list[] = array('id' => $servId, 'name' => $servName);
+					}
+					returnJson(array('options' => $list));
+					exit;
+					break;
+				case 'workplace':
+					$req = $mysqli->prepare("SELECT `id`, `name` FROM `divisionWorkplaces` WHERE `divisions_id` = ? ORDER BY `name`");
+					$req->bind_param('i', $divId);
+					$req->bind_result($wpId, $wpName);
+					if (!$req->execute()) {
+						returnJson(array('error' => 'Внутренняя ошибка сервера.'));
+						exit;
+					}
+					$list = array();
+					$list[] = array('id' => 0, 'name' => '-- Нет --');
+					while ($req->fetch()) {
+						$list[] = array('id' => $wpId, 'name' => $wpName);
 					}
 					returnJson(array('options' => $list));
 					exit;
@@ -78,7 +96,8 @@
 			if (!isset($_REQUEST['id']) || ($id = $_REQUEST['id']) < 0 ||
 				!isset($_REQUEST['serviceNum']) || ($serviceNum = $_REQUEST['serviceNum']) <= 0 ||
 				!isset($_REQUEST['serial']) || !isset($_REQUEST['model']) || 
-				!isset($_REQUEST['warrEnd']) || !isset($_REQUEST['comment'])) {
+				!isset($_REQUEST['warrEnd']) || !isset($_REQUEST['comment']) || 
+				!isset($_REQUEST['workplace']) || ($workplace = $_REQUEST['workplace']) < 0) {
 				returnJson(array('error' => 'Ошибка в параметрах.'));
 				exit;
 			}
@@ -102,16 +121,18 @@
 				exit;
 			}
 			$req->close();
+			if ($workplace == 0)
+				$workplace = null;
 			if ($id == 0) {
 				$req = $mysqli->prepare("INSERT IGNORE INTO `equipment` (`serviceNumber`, `serialNumber`, `warrantyEnd`, ".
-												"`equipmentModels_id`, `contractDivisions_id`, `rem`) ".
-												"VALUES (?, ?, ?, ?, ?, ?)");
-				$req->bind_param('issiis', $serviceNum, $serial, $_REQUEST['warrEnd'], $model, $divId, $comment);
+												"`equipmentModels_id`, `contractDivisions_id`, `rem`, `workplace_id`) ".
+												"VALUES (?, ?, ?, ?, ?, ?, ?)");
+				$req->bind_param('issiisi', $serviceNum, $serial, $_REQUEST['warrEnd'], $model, $divId, $comment, $workplace);
 			} else {
 				$req = $mysqli->prepare("UPDATE IGNORE `equipment` SET `serviceNumber` = ?, `serialNumber` = ?, `warrantyEnd` = ?, ".
-												"`equipmentModels_id` = ?, `contractDivisions_id` = ?, `rem` = ? ".
+												"`equipmentModels_id` = ?, `contractDivisions_id` = ?, `rem` = ?, `workplace_id` = ? ".
 												"WHERE `serviceNumber` = ?");
-				$req->bind_param('issiisi', $serviceNum, $serial, $_REQUEST['warrEnd'], $model, $divId, $comment, $id);
+				$req->bind_param('issiisii', $serviceNum, $serial, $_REQUEST['warrEnd'], $model, $divId, $comment, $workplace, $id);
 			}
 			if (!$req->execute()) {
 				returnJson(array('error' => 'Внутренняя ошибка сервера.'));
@@ -164,7 +185,7 @@
 			exit;
 	}
 	$req = $mysqli->prepare("SELECT `eq`.`serviceNumber`, `eq`.`serialNumber`, IFNULL(DATE(`eq`.`warrantyEnd`), ''), `eq`.`onService`, `m`.`name`, ".
-								"`mfg`.`name`, `eq`.`rem`, `t`.`sn` ".
+								"`mfg`.`name`, `eq`.`rem`, `t`.`sn`, `wp`.`name` ".
 								"FROM `equipment` AS `eq` ".
 								"JOIN `equipmentModels` AS `m` ON `m`.`id` = `eq`.`equipmentModels_id` ".
 								"JOIN `equipmentManufacturers` AS `mfg` ON `mfg`.`id` = `m`.`equipmentManufacturers_id` ".
@@ -173,10 +194,11 @@
 									"UNION SELECT DISTINCT `equipment_serviceNumber` AS `sn` FROM `replacement` ".
 									"UNION SELECT DISTINCT `equipment_id` AS `sn` FROM `request` ".
 								") AS `t` ON `t`.`sn` = `eq`.`serviceNumber` ".
+								"LEFT JOIN `divisionWorkplaces` AS `wp` ON `wp`.`id` = `eq`.`workplace_id` ".
 								"WHERE `eq`.`contractDivisions_id` = ? ".
 								"ORDER BY `eq`.`serviceNumber`");
 	$req->bind_param('i', $divId);
-	$req->bind_result($servNum, $serial, $warrEnd, $onService, $model, $mfg, $rem, $inUse);
+	$req->bind_result($servNum, $serial, $warrEnd, $onService, $model, $mfg, $rem, $inUse, $workplace);
 	if (!$req->execute()) {
 		returnJson(array('error' => 'Внутренняя ошибка сервера.'));
 		exit;
@@ -189,7 +211,7 @@
 	while ($req->fetch()) {
 		$row = array('id' => $servNum, 
 					 'fields' => array(htmlspecialchars($servNum), htmlspecialchars($serial), htmlspecialchars($mfg.' '.$model),
-										$warrEnd, htmlspecialchars($rem)),
+										$warrEnd, htmlspecialchars($workplace), htmlspecialchars($rem)),
 					  'onService' => $onService);
 		if ($onService == 0)
 			$row['mark'] = 'gray';

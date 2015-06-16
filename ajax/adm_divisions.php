@@ -107,7 +107,7 @@
 			exit;
 			break;
 		case 'getlists':
-			if (!isset($_REQUEST['field']) || !isset($_REQUEST['id']) ||($id = $_REQUEST['id']) <= 0) {
+			if (!isset($_REQUEST['field']) || !isset($_REQUEST['id']) ||($id = $_REQUEST['id']) < 0) {
 				returnJson(array('error' => 'Ошибка в параметрах.'));
 				exit;
 			}
@@ -368,9 +368,10 @@
 				exit;
 			}
 			$req->close();
+			returnJson(array('ok' => 1));
 			break;			 
 		default:
 			returnJson(array('error' => 'Ошибка в параметрах.'));
-			exit;
+			break;
 	}
 ?>
