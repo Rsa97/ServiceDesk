@@ -279,7 +279,7 @@
 						$req->bind_param('sii', $name, $parent, $mfgId);
 					} else {
 						$req = $mysqli->prepare("UPDATE IGNORE `equipmentModels` SET `name`= ?, `equipmentManufacturers_id` = ? WHERE `id` = ?");
-						$req->bind_param('si', $name, $mfgId, $id);
+						$req->bind_param('ssi', $name, $mfgId, $id);
 					}
 					$err = 'Такое название оборудования уже есть в данном подтипе';
 					break; 
