@@ -251,7 +251,7 @@
 					break;
 				case 'model':
 					if (!isset($_REQUEST['mfg']) || ($mfg = trim($_REQUEST['mfg'])) == '' ||
-						!isset($_REQUEST['model']) || ($mfg = trim($_REQUEST['model'])) == '') {
+						!isset($_REQUEST['model']) || ($model = trim($_REQUEST['model'])) == '') {
 						returnJson(array('error' => 'Ошибка в параметрах.'));
 						exit;
 					}
@@ -281,7 +281,8 @@
 						$req = $mysqli->prepare("UPDATE IGNORE `equipmentModels` SET `name`= ?, `equipmentManufacturers_id` = ? WHERE `id` = ?");
 						$req->bind_param('si', $name, $mfgId, $id);
 					}
-					$err = 'Такое название оборудования уже есть в данном подтипе'; 
+					$err = 'Такое название оборудования уже есть в данном подтипе';
+					break; 
 				default:
 					returnJson(array('error' => 'Ошибка в параметрах.'));
 					exit;
