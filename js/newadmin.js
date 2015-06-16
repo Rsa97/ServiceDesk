@@ -190,9 +190,10 @@ var tableDefs = {
 		fields: [
 			{name: 'serviceNum', header: 'Сервисный номер', type: 'text', test: /\S+/, val: /^\s*(\S.*\S)\s*$/, width: '10%'},
 			{name: 'serial', header: 'Серийный номер', type: 'text', width: '15%'},
-			{name: 'model', header: 'Модель', type: 'autocomplete', ajax: 'ajax/ac_model', width: '30%', limitToList: true},
+			{name: 'model', header: 'Модель', type: 'autocomplete', ajax: 'ajax/ac_model', width: '20%', limitToList: true},
 			{name: 'warrEnd', header: 'Окончание гарантии', type: 'date', width: '10%'},
-			{name: 'comment', header: 'Комментарий', type: 'text', width: '30%'}
+			{name: 'workplace', header: 'Рабочее место', type: 'list', width: '20%'},
+			{name: 'comment', header: 'Комментарий', type: 'text', width: '20%'}
 		],
 		ajax: 'ajax/adm_divisionEq.php',
 		pageSize: 20,
@@ -201,6 +202,8 @@ var tableDefs = {
 				var opt = $('#selDivision option:selected');
 				opt.text(opt.data('text')+' '+data.count);
 			}
+			var tbl = $('#divWorkplaces').children('table');
+			initTable(tbl.data('def'), '#divWorkplaces', tbl.find('tr.last').data('id'));
 		}
 	},
 	divisionPlanned: {
@@ -229,7 +232,22 @@ var tableDefs = {
 		],
 		ajax: 'ajax/adm_divisionPlanned.php',
 		pageSize: 20
+	},
+	divisionWorkplaces: {
+		hasIcons: ['a','d','e'],
+		fields: [
+			{name: 'name', header: 'Название', type: 'text', test: /\S+/, val: /^\s*(\S.*\S)\s*$/, width: '30%'},
+			{name: 'description', header: 'Примечание', type: 'text', width: '30%'},
+			{name: 'equipment', header: 'Оборудование', type: 'multilist', width: '35%'}
+		],
+		ajax: 'ajax/adm_divisionWorkplaces.php',
+		pageSize: 20,
+		onUpdate: function(data) {
+			var tbl = $('#divEquip').children('table');
+			initTable(tbl.data('def'), '#divEquip', tbl.find('tr.last').data('id'));
+		}
 	}
+
 };
 
 function myJson(url, param, onReady, onError, onAlways) {
@@ -755,6 +773,8 @@ function drawTable(data, def, parentSelector, page) {
 							  field: field, list: list}, function(data) {
             	var pageSize = (typeof def.pageSize !== 'undefined' ? def.pageSize : 100);
 				var page = (typeof data.last === 'undefined' ? 0 : Math.floor(data.last/pageSize));
+				if (typeof def.onUpdate == 'function')
+					def.onUpdate(data);
 				drawTable(data.table, def, parentSelector, page);
 			});
 		});
@@ -766,8 +786,10 @@ function drawTable(data, def, parentSelector, page) {
   	});
 }
 
-function initTable(def, parentSelector) {
-	myJson(def.ajax, {call: 'init'}, function(data) {
+function initTable(def, parentSelector, lastId) {
+	if (typeof lastId === 'undefined')
+		lastId = 0;
+	myJson(def.ajax, {call: 'init', last: lastId}, function(data) {
 		drawTable(data.table, def, parentSelector, 0);
 	});
 }
@@ -1417,12 +1439,14 @@ $(function() {
 		initTable(tableDefs['divisionEquipment'], '#divEquip');
 		tableDefs['divisionPlanned'].ajax = 'ajax/adm_divisionPlanned.php?divId='+$(this).val();
 		initTable(tableDefs['divisionPlanned'], '#divPlanned');
+		tableDefs['divisionWorkplaces'].ajax = 'ajax/adm_divisionWorkplaces.php?divId='+$(this).val();
+		initTable(tableDefs['divisionWorkplaces'], '#divWorkplaces');
 	});
 	
 	$('.divisionIcons').on('click', '.'+iconClass.edit+',.'+iconClass.add, function() {
 		$('#contract').tabs('option', 'disabled', true);
 		$('#division').tabs('option', 'active', 0);
-		$('#division').tabs('option', 'disabled', [1]);
+		$('#division').tabs('option', 'disabled', [1,2,3]);
 		$('#selContragent').prop('disabled', 'disabled');
 		$('#selContract').prop('disabled', 'disabled');
 		var add = $(this).hasClass(iconClass.add);
@@ -1434,12 +1458,15 @@ $(function() {
 		$('#selDivisionIn').data('add', add);
 		$('#selDivision').hide();
 		$('#selDivisionIn').val(val).show();
+		var id = 0;
+		if ($(this).hasClass(iconClass.edit))
+			id = $('#selDivision').val();
 		$('#divMain span.edit').each(function() {
 			val = (add ? '' : $(this).text());
 			var inp;
 			if ($(this).hasClass('list')) {
 				inp = $(this).siblings('select');
-				myJson('ajax/adm_divisions', {call: 'getlists', id: $('#selDivision').val(), field: $(this).attr('id')}, function(data) {
+				myJson('ajax/adm_divisions', {call: 'getlists', id: id, field: $(this).attr('id')}, function(data) {
 					var opt = '';
 					for (var i = 0; i < data.list.length; i++)
 						opt += '<option value="'+data.list[i].id+'"'+(typeof data.list[i].cur !== 'undefined' ? ' selected' : '')+
@@ -1505,7 +1532,7 @@ $(function() {
 	$('.divisionIcons').on('click', '.'+iconClass.del, function() {
 		if (!confirm('Удалить филиал?'))
 			return;
-		myJson('ajax/adm_contracts', {call: 'del', id: $('#selDivision').val()}, function(data) {
+		myJson('ajax/adm_divisions', {call: 'del', id: $('#selDivision').val()}, function(data) {
 			if (typeof data.ok !== 'undefined' && data.ok == 1) {
 				$('#selDivision option:selected').remove();
 				$('#selDivision').trigger('change');
