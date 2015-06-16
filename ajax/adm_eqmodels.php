@@ -276,10 +276,10 @@
 							exit;
 						}
 						$req = $mysqli->prepare("INSERT IGNORE INTO `equipmentModels` (`name`, `equipmentSubTypes_id`, `equipmentManufacturers_id`) VALUES (?, ?, ?)");
-						$req->bind_param('sii', $name, $parent, $mfgId);
+						$req->bind_param('sii', $model, $parent, $mfgId);
 					} else {
 						$req = $mysqli->prepare("UPDATE IGNORE `equipmentModels` SET `name`= ?, `equipmentManufacturers_id` = ? WHERE `id` = ?");
-						$req->bind_param('sii', $name, $mfgId, $id);
+						$req->bind_param('sii', $model, $mfgId, $id);
 					}
 					$err = 'Такое название оборудования уже есть в данном подтипе';
 					break; 
