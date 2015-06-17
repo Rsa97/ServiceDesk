@@ -36,7 +36,7 @@ function calcTime($div, $serv, $sla, $sql) {
   $req->bind_param('iis', $div, $serv, $sla);
   $req->bind_result($toReact, $toFix, $toRepair, $startDayTime, $endDayTime, $day);
   if (!$req->execute()) {
-	return array('error' => 'Внутренняя ошибка сервера');
+	return array('error' => 'Внутренняя ошибка сервера 1');
   }
   $secs = 0;
   $okReact = 0;
@@ -76,7 +76,7 @@ function calcTime($div, $serv, $sla, $sql) {
 }
   $mysqli = new mysqli($dbHost, $dbUser, $dbPass, $dbName);
   if ($mysqli->connect_error)
-    die ('Внутренняя ошибка сервера');
+    die ('Внутренняя ошибка сервера 2');
   $mysqli->query("SET NAMES utf8");
 
 	$req = $mysqli->prepare(
@@ -105,7 +105,7 @@ function calcTime($div, $serv, $sla, $sql) {
 	$req4 = $mysqli->prepare("UPDATE `contractDivisions` SET `addProblem` = '' WHERE `id` = ?"); 
 	$req4->bind_param('i', $divId);
 		if (!$req->execute()) 
-	    die ('Внутренняя ошибка сервера');
+	    die ('Внутренняя ошибка сервера 3');
 	$req->store_result();
 	while ($req->fetch()) {
 		$time = calcTime($divId, $srvId, $slaLevel, 1);
@@ -116,14 +116,22 @@ function calcTime($div, $serv, $sla, $sql) {
 		$problem .= "\n".$divProblem;
 		if (!$req1->execute()) { 
 			$mysqli->query("ROLLBACK");
-		    die ('Внутренняя ошибка сервера');
+		    die ('Внутренняя ошибка сервера 4');
     	}
     	$reqId = $mysqli->insert_id;
-		if (!$req2->execute() || !$req3->execute() || !$req4->execute()) {
+		if (!$req2->execute()) {
 			$mysqli->query("ROLLBACK");
-		    die ('Внутренняя ошибка сервера');
+		    die ('Внутренняя ошибка сервера 5');
     	}
-		$mysqli->query("COMMIT");
+		if (!$req3->execute()) {
+			$mysqli->query("ROLLBACK");
+		    die ('Внутренняя ошибка сервера 6');
+    	}
+    	if (!$req4->execute()) {
+			$mysqli->query("ROLLBACK");
+		    die ('Внутренняя ошибка сервера 7');
+    	}
+    	$mysqli->query("COMMIT");
 	}
 	$mysqli->close();
 ?>
