@@ -497,18 +497,23 @@ function editMultiList(ajax, field, rowId, confirm) {
                      modal: true,
                      draggable: false
     	});
-    	$('#listEdit .'+iconClass.moveRight).click(function() {
+    	$('#listEdit .'+iconClass.moveRight).click(function(event) {
+    		event.stopPropagation();
     		listsMove($('#listEdit .total'), $('#listEdit .selected'));
+    		return false;
     	});
     	
-    	$('#listEdit .'+iconClass.moveLeft).click(function() {
-    		console.log('left');
+    	$('#listEdit .'+iconClass.moveLeft).click(function(event) {
+    		event.stopPropagation();
     		listsMove($('#listEdit .selected'), $('#listEdit .total'));
+    		return false;
     	});
    		$('#listEdit').on('click', 'option', function(event) {
    			event.stopPropagation();
+   			return false;
    		});
-   		$('#listEdit').on('click', 'optgroup', function() {
+   		$('#listEdit').on('click', 'optgroup', function(event) {
+   			event.stopPropagation();
    			if ($(this).hasClass('collapsed')) {
    				$(this).attr('label', '−'+$(this).attr('label').substr(1)).removeClass('collapsed').addClass('expanded');
    				$(this).children('option').show();
@@ -516,6 +521,7 @@ function editMultiList(ajax, field, rowId, confirm) {
    				$(this).attr('label', '+'+$(this).attr('label').substr(1)).removeClass('expanded').addClass('collapsed');
    				$(this).children('option').hide();
    			}
+   			return false;
    		});
 	}
 	$('#listEdit').dialog('option', 'buttons', [
@@ -529,8 +535,10 @@ function editMultiList(ajax, field, rowId, confirm) {
            	$(this).dialog("close");
 		}},
         {text: 'Отменить', 
-			click: function() { 
+			click: function(event) {
+				event.stopPropagation(); 
             	$(this).dialog("close");
+            	return false;
 		}}]);
 	if ($('#listEdit').dialog('isOpen'))
 		return;
@@ -692,7 +700,8 @@ function drawTable(data, def, parentSelector, page) {
 			var canChange = '';
 			if (typeof def.fields[fieldNum].canChange == 'function')
 				canChange = def.fields[fieldNum].canChange;
-			$(parentSelector+' .'+def.fields[fieldNum].name+'Check').change(function() {
+			$(parentSelector+' .'+def.fields[fieldNum].name+'Check').change(function(event) {
+				event.stopPropagation();
 				if (typeof canChange !== 'function' || canChange(this)) {
 					var check = !$(this).prop('checked');
 					var self = this;
@@ -713,13 +722,15 @@ function drawTable(data, def, parentSelector, page) {
 									$(self).removeProp('checked');
 							});
 				}
+				return false;
 			});
 		}
 	}
 
 	if (typeof def.customIcons !== 'undefined') {
 		for (var i = 0; i < def.customIcons.length; i++) {
-			tbl.on('click', '.'+def.customIcons[i].icon, function() {
+			tbl.on('click', '.'+def.customIcons[i].icon, function(event) {
+				event.stopPropagation();
 				if ($(this).data('confirm') == '' || confirm($(this).data('confirm'))) {
 					var page = $('.curPage').first().text()-1;
 					var tbl = $(parentSelector+' table');
@@ -727,33 +738,43 @@ function drawTable(data, def, parentSelector, page) {
 						drawTable(data.table, def, parentSelector, page);
 					});
 				}
+				return false;
 			});
 		}
 	}
 	
-	tbl.on('click', '.'+iconClass.add+', .'+iconClass.edit, function() {
+	tbl.on('click', '.'+iconClass.add+', .'+iconClass.edit, function(event) {
+		event.stopPropagation();
 		if ($(parentSelector+' .'+iconClass.cancel).length == 0)
 			makeRowEditable($(this).parents('tr'), $(this).parents('tr'));
+		return false;
 	});
 
-	tbl.on('click', '.'+iconClass.copy, function() {
+	tbl.on('click', '.'+iconClass.copy, function(event) {
+		event.stopPropagation();
 		if ($(parentSelector+' .'+iconClass.cancel).length > 0)
-			return;
+			return false;
 		makeRowEditable($(this).parents('tr').siblings().last(), $(this).parents('tr'));
+		return false;
 	});
 
-	tbl.on('click', '.'+iconClass.apply, function() {
+	tbl.on('click', '.'+iconClass.apply, function(event) {
+		event.stopPropagation();
 		updateRow($(this).parents('tr'), parentSelector);
+		return false;
 	});
 
-	tbl.on('click', '.'+iconClass.cancel, function() {
+	tbl.on('click', '.'+iconClass.cancel, function(event) {
+		event.stopPropagation();
 		var tbl = $(parentSelector+' table');
 		drawTable(tbl.data('data'), tbl.data('def'), parentSelector, $('.curPage').first().text()-1);
+		return false;
 	});
 
-	tbl.on('click', '.'+iconClass.del, function() {
+	tbl.on('click', '.'+iconClass.del, function(event) {
+		event.stopPropagation();
 		if (!confirm("Удалить?"))
-			return;
+			return false;
 		var page = $('.curPage').first().text()-1;
 		var tbl = $(parentSelector+' table');
 		myJson(def.ajax, {call: 'del', id: $(this).parents('tr').data('id')}, function(data) {
@@ -761,11 +782,13 @@ function drawTable(data, def, parentSelector, page) {
 				def.onUpdate(data);
 			drawTable(data.table, def, parentSelector, page);
 		});
+		return false;
 	});
 	
-	tbl.on('click', '.'+iconClass.doc, function() {
+	tbl.on('click', '.'+iconClass.doc, function(event) {
+		event.stopPropagation();
 		if ($(parentSelector+' .'+iconClass.cancel).length != 0)
-			return;
+			return false;
 		var field = $(this).data('field');
 		var rowId = $(this).parents('table').parents('tr').data('id'); 
 		editMultiList(def.ajax, field, rowId, function(list) {
@@ -778,11 +801,14 @@ function drawTable(data, def, parentSelector, page) {
 				drawTable(data.table, def, parentSelector, page);
 			});
 		});
+		return false;
 	});
 
-  	$('.pager').on('click', '.page', function() {
+  	$('.pager').on('click', '.page', function(event) {
+  		event.stopPropagation();
 		var tbl = $(parentSelector+' table');
   		drawTable(tbl.data('data'), tbl.data('def'), parentSelector, $(this).text()-1);
+  		return false;
   	});
 }
 
@@ -919,15 +945,17 @@ function initEqTree(data, parentSelector) {
 		$(this).removeClass(iconClass.expand).addClass(iconClass.collapse);
 		$(this).parents('li').first().removeClass('collapsed').addClass('expanded');
 		$(this).parent().siblings('ul').show();
+		return false;
 	});
 
 	$(parentSelector).on('click', '.eqTypes li .'+iconClass.collapse, function(event) {
 		event.stopPropagation();
 		if ($(this).parent().siblings('ul').find('.'+iconClass.cancel).length > 0)
-			return;
+			return false;
 		$(this).removeClass(iconClass.collapse).addClass(iconClass.expand);
 		$(this).parents('li').first().removeClass('expanded').addClass('collapsed');
 		$(this).parent().siblings('ul').hide();
+		return false;
 	});
 	
 	setEqTreeDragDrop(parentSelector);
@@ -1042,7 +1070,7 @@ function initEqTree(data, parentSelector) {
 		var icons = $(this).parent().siblings('.icons3');
 		if (name == '') {
 			alert('Не указан '+(li.hasClass('eqType') ? 'тип' : (li.hasClass('eqSubType') ? 'подтип' : 'производитель')));
-			return;
+			return false;
 		}
 		var name2 = '';
 		if (li.hasClass('eqMfgModel')) {
@@ -1050,7 +1078,7 @@ function initEqTree(data, parentSelector) {
 			var name2 = inp2.val().trim();
 			if (name2 == '') {
 				alert('Не указана модель');
-				return;
+				return false;
 			}
 		}
 		var req = {call: 'update', id: li.data('id')};
@@ -1137,6 +1165,7 @@ function initEqTree(data, parentSelector) {
 			if (typeof data.ok !== 'undefined' && data.ok == 1)
 				li.remove();
 		});
+		return false;
 	});
 }
 
@@ -1176,12 +1205,16 @@ $(function() {
 	});
 	$('#refresh').button('option', 'text', false);
 
-	$("#desktop").click(function() {
+	$("#desktop").click(function(event) {
+		event.stopPropagation();
 		location.replace('desktop.html');
+		return false;
 	});
 	
-	$('#logout').click(function() {
+	$('#logout').click(function(event) {
+		event.stopPropagation();
     	myJson('/ajax/login.php', {Op: 'out'});
+    	return false;
   	});
 
 	
@@ -1219,25 +1252,30 @@ $(function() {
 
 	myJson('ajax/userName.php', {});
 
-	$('#content').on('click', '.shiftYear', function() {
+	$('#content').on('click', '.shiftYear', function(event) {
+		event.stopPropagation();
 		myJson('ajax/adm_calendar.php', {call: 'setYear', year: $(this).data('year')}, function(data) {
 			if (typeof data.content !== 'undefined')
 				$('#content').html(data.content);
 		});
+		return false;
 	});
 
-	$('#content').on('click', '.monthTbl td', function() {
+	$('#content').on('click', '.monthTbl td', function(event) {
+		event.stopPropagation();
 		var self = this;
 		myJson('ajax/adm_calendar.php', {call: 'change', year: $("#calendar").data('year'),
 				month: $(this).parents('.calMonth').data('id'), day: $(this).text()}, function(data) {
 			if (typeof data.ok !== 'undefined')
 				$(self).removeClass('work').removeClass('weekend').addClass(data.ok);
 		});
+		return false;
 	});
 		
-	$('.menuLink').click(function() {
+	$('.menuLink').click(function(event) {
+		event.stopPropagation();
 		if ($('#contracts .'+iconClass.cancel).length > 0 || $('#content .'+iconClass.cancel).length > 0)
-			return;
+			return false;
 		$('.menuLink').removeClass('menuActive');
 		$(this).addClass('menuActive');
 		$('#content').hide();
@@ -1269,9 +1307,11 @@ $(function() {
 				initContracts();
 				break;
 		}
+		return false;
   	});
 
-	$('#selContragent').change(function() {
+	$('#selContragent').change(function(event) {
+		event.stopPropagation();
 		myJson('ajax/adm_contracts', {call: 'getlists', field: 'contracts', id: $(this).val()}, function(data) {
 			if (typeof data.list !== 'undefined') {
 				var opt = '';
@@ -1281,15 +1321,17 @@ $(function() {
 				$('#selContract').html(opt).trigger('change');
 			}
 		});
+		return false;
 	});
 	
-	$('#selContract').change(function() {
+	$('#selContract').change(function(event) {
+		event.stopPropagation();
 		$('#contract').tabs('option', 'active', 0);
 		if ($(this).children('option').length == 0) {
 			$('.contractIcons').html(icon.add);
 			$('#contMain span.edit').text('');
 			$('#contract').tabs('option', 'disabled', [1, 2]);
-			return;
+			return false;
 		}
 		$('#contract').tabs('option', 'disabled', false);
 		myJson('ajax/adm_contracts', {call: 'getlists', field: 'contract', id: $(this).val()}, function(data) {
@@ -1323,21 +1365,25 @@ $(function() {
 		});
 		tableDefs['contractSLA'].ajax = 'ajax/adm_contractSLA.php?contId='+$(this).val();
 		initTable(tableDefs['contractSLA'], '#contSLA');
+		return false;
 	}); 
 	
-	$('#editCUsers').click(function() {
+	$('#editCUsers').click(function(event) {
+		event.stopPropagation();
 		if ($('#contracts .'+iconClass.cancel).length > 0)
-			return;
+			return false;
 		editMultiList('ajax/adm_contracts', 'users', $('#selContract').val(), function(list) {
 			myJson('ajax/adm_contracts', {call: 'updatelists', field: 'users', id: $('#selContract').val(), list: list}, function(data) {
 				$('#cUsers').html(typeof data.cUsers !== 'undefined' ? data.cUsers : '');
 			});
 		});
+		return false;
 	});
 	
-	$('.contractIcons').on('click', '.'+iconClass.edit+',.'+iconClass.add, function() {
+	$('.contractIcons').on('click', '.'+iconClass.edit+',.'+iconClass.add, function(event) {
+		event.stopPropagation();
 		if ($('#contracts .'+iconClass.cancel).length > 0)
-			return;
+			return false;
 		$('#contract').tabs('option', 'active', 0);
 		$('#contract').tabs('option', 'disabled', [1, 2]);
 		$('#selContragent').prop('disabled', 'disabled');
@@ -1355,9 +1401,11 @@ $(function() {
 			inp.show().val(val);
 		});
 		$('.contractIcons').data('old', $('.contractIcons').html()).html(icon.apply+icon.cancel);
+		return false;
 	});
 
-	$('.contractIcons').on('click', '.'+iconClass.cancel, function() {
+	$('.contractIcons').on('click', '.'+iconClass.cancel, function(event) {
+		event.stopPropagation();
 		$('#contract').tabs('option', 'disabled', false);
 		$('#selContragent').removeProp('disabled');
 		$('#selContractIn').hide();
@@ -1366,18 +1414,20 @@ $(function() {
 		$('#contMain span.edit').show();
 		$('#cUsers').show();
 		$('.contractIcons').html($('.contractIcons').data('old'));
+		return false;
 	});
 
-	$('.contractIcons').on('click', '.'+iconClass.apply, function() {
+	$('.contractIcons').on('click', '.'+iconClass.apply, function(event) {
+		event.stopPropagation();
 		var num;
 		if ((num = $('#selContractIn').val().trim()) == '') {
 			alert('Не указан номер договора');
-			return;
+			return false;
 		}
 		var re = /\d\d\d\d-\d\d-\d\d/; 
 		if (!re.test($('#cStartInt').val()) || !re.test($('#cEndInt').val())) {
 			alert('Не указан срок действия договора');
-			return;
+			return false;
 		}
 		var data = {call: 'update', id: ($('#selContractIn').data('add') ? 0 : $('#selContract').val()), selContractIn: num, 
 					caId: $('#selContragent').val()};
@@ -1403,26 +1453,30 @@ $(function() {
 				$('#selContract').html(opt).trigger('change');
 			}
 		});
+		return false;
 	});
 
-	$('.contractIcons').on('click', '.'+iconClass.del, function() {
+	$('.contractIcons').on('click', '.'+iconClass.del, function(event) {
+		event.stopPropagation();
 		if (!confirm('Удалить договор?'))
-			return;
+			return false;
 		myJson('ajax/adm_contracts', {call: 'del', id: $('#selContract').val()}, function(data) {
 			if (typeof data.ok !== 'undefined' && data.ok == 1) {
 				$('#selContract option:selected').remove();
 				$('#selContract').trigger('change');
 			}
 		});
+		return false;
 	});
 	
-	$('#selDivision').change(function() {
+	$('#selDivision').change(function(event) {
+		event.stopPropagation();
 		$('#division').tabs('option', 'active', 0);
 		if ($(this).children('option').length == 0) {
 			$('.divisionIcons').html(icon.add);
 			$('#divMain span.edit').text('');
 			$('#division').tabs('option', 'disabled', [1]);
-			return;
+			return false;
 		}
 		$('#division').tabs('option', 'disabled', false);
 		myJson('/ajax/adm_divisions', {call: 'init', id: $(this).val()}, function(data) {
@@ -1441,9 +1495,11 @@ $(function() {
 		initTable(tableDefs['divisionPlanned'], '#divPlanned');
 		tableDefs['divisionWorkplaces'].ajax = 'ajax/adm_divisionWorkplaces.php?divId='+$(this).val();
 		initTable(tableDefs['divisionWorkplaces'], '#divWorkplaces');
+		return false;
 	});
 	
-	$('.divisionIcons').on('click', '.'+iconClass.edit+',.'+iconClass.add, function() {
+	$('.divisionIcons').on('click', '.'+iconClass.edit+',.'+iconClass.add, function(event) {
+		event.stopPropagation();
 		$('#contract').tabs('option', 'disabled', true);
 		$('#division').tabs('option', 'active', 0);
 		$('#division').tabs('option', 'disabled', [1,2,3]);
@@ -1480,9 +1536,11 @@ $(function() {
 			inp.show().val(val);
 		});
 		$('.divisionIcons').data('old', $('.divisionIcons').html()).html(icon.apply+icon.cancel);
+		return false;
 	});
 
-	$('.divisionIcons').on('click', '.'+iconClass.cancel, function() {
+	$('.divisionIcons').on('click', '.'+iconClass.cancel, function(event) {
+		event.stopPropagation();
 		$('#contract').tabs('option', 'disabled', false);
 		$('#division').tabs('option', 'disabled', false);
 		$('#selContragent').removeProp('disabled');
@@ -1494,13 +1552,15 @@ $(function() {
 		$('#divMain span.edit').siblings('input, select').hide();
 		$('#divMain span.edit').show();
 		$('.divisionIcons').html($('.divisionIcons').data('old'));
+		return false;
 	});
 
-	$('.divisionIcons').on('click', '.'+iconClass.apply, function() {
+	$('.divisionIcons').on('click', '.'+iconClass.apply, function(event) {
+		event.stopPropagation();
 		var num;
 		if ((num = $('#selDivisionIn').val().trim()) == '') {
 			alert('Не указано название филиала');
-			return;
+			return false;
 		}
 		var data = {call: 'update', id: ($('#selDivisionIn').data('add') ? 0 : $('#selDivision').val()), selDivisionIn: num,
 					cId: $('#selContract').val()};
@@ -1527,27 +1587,32 @@ $(function() {
 				$('#selDivision').html(opt).trigger('change');
 			}
 		});
+		return false;
 	});
 
-	$('.divisionIcons').on('click', '.'+iconClass.del, function() {
+	$('.divisionIcons').on('click', '.'+iconClass.del, function(event) {
+		event.stopPropagation();
 		if (!confirm('Удалить филиал?'))
-			return;
+			return false;
 		myJson('ajax/adm_divisions', {call: 'del', id: $('#selDivision').val()}, function(data) {
 			if (typeof data.ok !== 'undefined' && data.ok == 1) {
 				$('#selDivision option:selected').remove();
 				$('#selDivision').trigger('change');
 			}
 		});
+		return false;
 	});
 	
-	$('#editDUsers').click(function() {
+	$('#editDUsers').click(function(event) {
+		event.stopPropagation();
 		if ($('#contracts .'+iconClass.cancel).length > 0)
-			return;
+			return false;
 		editMultiList('ajax/adm_divisions', 'users', $('#selDivision').val(), function(list) {
 			myJson('ajax/adm_divisions', {call: 'updatelists', field: 'users', id: $('#selDivision').val(), list: list}, function(data) {
 				$('#dUsers').html(typeof data.dUsers !== 'undefined' ? data.dUsers : '');
 			});
 		});
+		return false;
 	});
 	
 	$('#editDPartners').click(function() {

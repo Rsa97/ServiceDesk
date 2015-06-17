@@ -293,7 +293,7 @@
 			}
 			$lastId = ($id == 0 ? $mysqli->insert_id : $id);
 			if (($id == 0 && $mysqli->insert_id <= 0) || ($id > 0 && $mysqli->affected_rows <= 0)) {
-				returnJson(array('error' => $err));
+				returnJson(array('error' => $err, 'id' => $id, 'insert_id' => $mysqli->insert_id, 'affected_rows' => $mysqli->affected_rows));
 				exit;
 			}
 			$req->close();
@@ -317,7 +317,7 @@
 					$err = 'В подтипе есть модели или ошибка в параметрах';
 					break;
 				case 'model': 
-					$req = $mysqli->prepare("DELETE IGNORE FROM `equipmentSubTypes` WHERE `id` = ?");
+					$req = $mysqli->prepare("DELETE IGNORE FROM `equipmentModels` WHERE `id` = ?");
 					$err = 'Модель используется у клиентов или ошибка в параметрах';
 					break;
 				default:

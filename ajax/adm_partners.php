@@ -218,7 +218,7 @@
 			}
 			$address = trim($_REQUEST['address']);
 			if ($id == 0) {
-				$req = $mysqli->prepare("INSERT IGNORE INTO `partner` (`name`, `address`) VALUES (?)");
+				$req = $mysqli->prepare("INSERT IGNORE INTO `partner` (`name`, `address`) VALUES (?, ?)");
 				$req->bind_param('ss', $name, $address);
 			} else {
 				$req = $mysqli->prepare("UPDATE IGNORE `partner` SET `name` = ?, `address` = ? WHERE `id` = ?");
@@ -311,7 +311,7 @@
 		}
 		if (count($divs) > 0)
 			$contracts[] = '<li>'.$lastContract.'<ul><li>'.join('<li>', $divs).'</ul>';
-		$contracts = '<ul class="simple"><li>'.join('<li>', $contracts).'</ul>';
+		$contracts = (count($contracts) == 0 ? '' : '<ul class="simple"><li>'.join('<li>', $contracts).'</ul>');
 		$row = array('id' => $servId, 'fields' => array(htmlspecialchars($name), htmlspecialchars($address), $users, $contracts));
 		if ($servId == $lastId) {
 			$row['last'] = 1;
