@@ -174,18 +174,18 @@ function login($user, $pass, $newpass) {
 // Основная часть
 //=====================================================================
   $err = "";
+  if (!isset($_SESSION['private']) || !isset($_SESSION['public'])) {
+	$config = array(
+	"private_key_bits" => 1024,
+	"private_key_type" => OPENSSL_KEYTYPE_RSA
+	);
+	$res = openssl_pkey_new($config);
+    openssl_pkey_export($res, $private);
+	$_SESSION['private'] = $private;
+	$public = openssl_pkey_get_details($res);
+	$_SESSION['public'] = $public['key'];
+  }
   if (!isset($_POST['Op'])) {
-    if (!isset($_SESSION['private']) || !isset($_SESSION['public'])) {
-	    $config = array(
-	      "private_key_bits" => 1024,
-	      "private_key_type" => OPENSSL_KEYTYPE_RSA
-      );
-	    $res = openssl_pkey_new($config);
-	    openssl_pkey_export($res, $private);
-	    $_SESSION['private'] = $private;
-    	$public = openssl_pkey_get_details($res);
-    	$_SESSION['public'] = $public['key'];
-    }
     echo json_encode(array('key' => $_SESSION['public']));
     exit;
   }
@@ -199,9 +199,13 @@ function login($user, $pass, $newpass) {
       $pass = '';
       if (isset($_POST['pass']))
    	    openssl_private_decrypt(base64_decode($_POST['pass']), $pass, $_SESSION['private']);
- 	    if ($pass == '') {
+ 	  if ($pass == '') {
+ 	    if (isset($_REQUEST['x']) && $_REQUEST['x'] == 1) {
           echo json_encode(array('error' => 'Не указан пароль.'));
           exit;
+		}
+		echo json_encode(array('retry' => $_SESSION['public']));
+		exit;
       }
 	  $newpass = '';
 	  if (isset($_REQUEST['change']) && $_REQUEST['change'] == 1 && isset($_REQUEST['newpass'])) {

@@ -1,6 +1,7 @@
 // После загрузки страницы запрашиваем крипто-ключ
 $(function() {
   $('#newpass').hide();
+  $('#key').data('try', 0);
   
   $.post('/ajax/login.php', {}, 'json')
     .done(function(data) {
@@ -60,12 +61,18 @@ $(function() {
   	  newpass = crypt.encrypt(newpass);
   	}
   	var encrypted = crypt.encrypt($('#password').val());
-  	$.post('/ajax/login.php', {Op: "in", user: $('#username').val(), pass: encrypted, change: change, newpass: newpass})
+  	$.post('/ajax/login.php', {Op: "in", user: $('#username').val(), pass: encrypted, change: change, newpass: newpass, x: $('#key').data('try')})
       .done(function(data){
         if (data !== null) {
           if (typeof data.redirect !== 'undefined') {
             location.replace(data.redirect);
             return;
+          }
+          if (typeof data.retry !== 'undefined') {
+          	$('#key').val(data.retry);
+          	$('#key').data('try', 1);
+          	$('#login').trigger('click');
+          	return;
           }
           if (typeof data.error !== 'undefined') {
             alert(data.error);
