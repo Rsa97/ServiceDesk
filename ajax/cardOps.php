@@ -77,7 +77,8 @@
                         "`e`.`phone`, `et`.`name`, `est`.`description`, `em`.`name`, `emf`.`name`, `eq`.`serviceNumber`, `eq`.`serialNumber`, ".
                         "`co`.`secondName`, `co`.`firstName`, `co`.`middleName`, `co`.`email`, `co`.`phone`, `rq`.`fixBefore`, `rq`.`repairBefore`, ".
                         "CAST(`rq`.`problem` AS CHAR(8192)), `rq`.`slaLevel`, `co`.`address`, ".
-                        "`rq`.`solutionProblem`, `rq`.`solution`,  `rq`.`solutionRecomendation`, `div`.`id`, `c`.`number`, `rq`.`repairedAt` ".
+                        "`rq`.`solutionProblem`, `rq`.`solution`,  `rq`.`solutionRecomendation`, `div`.`id`, `c`.`number`, `rq`.`repairedAt`, ".
+                        "`ca`.`id`, `c`.`id`, `c`.`number` ".
           "FROM `request` AS `rq` ".
             "LEFT JOIN `contractDivisions` AS `div` ON `rq`.`contractDivisions_id` = `div`.`id` ".
             "LEFT JOIN `contracts` AS `c` ON `c`.`id` = `div`.`contracts_id` ".
@@ -105,7 +106,7 @@
                                       $userId, $byPartner, $partnerId, $byService, $srvFilter);
 	$req->bind_result($id, $state, $stateTime, $srvSName, $srvName, $createdAt, $repairBefore, $div, $contragent, $engLN, $engGN, $engMN, $engEmail, $engPhone, 
                     $eqType, $eqSubType, $eqName, $eqMfg, $servNum, $serial, $contLN, $contGN, $contMN, $contEmail, $contPhone, $fixBefore, $repairBefore, $problem, 
-                    $slaLevel, $contAddress, $solProblem, $sol, $solRecomend, $divId, $contractNumber, $repairedAt);
+                    $slaLevel, $contAddress, $solProblem, $sol, $solRecomend, $divId, $contractNumber, $repairedAt, $caId, $cId, $cNum);
 	if (!$req->execute()) { 
 		sendJson(array('error' => 'Внутренняя ошибка сервера'));
 		$req->close();
@@ -292,11 +293,13 @@
                   '_manufacturer' => $eqMfg,
                   '_model' => $eqName,
                   '_problem' => $problem,
+                  'contragent' => "<option value='{$caId}'>".htmlspecialchars($contragent),
+                  'contract' => "<option value='{$cId}'>".htmlspecialchars($cNum),
                   'service' => "<option value='n0' selected>{$srvName}",
                   'level' => "<option value='{$slaLevel}' selected>{$slaLevels[$slaLevel]}",
                   '_createdAt' => date_format(date_create($createdAt), 'd.m.Y H:i'),
                   '_repairBefore' => date_format(date_create($repairBefore), 'd.m.Y H:i'),
-                  'division' => "<option value='{$divId}'>{$div}",
+                  'division' => "<option value='{$divId}'>".htmlspecialchars($div),
                   'contact' => "<option value='n0'>{$contLN} {$contGN} {$contMN}",
                   '_email' => $contEmail,
                   '_phone' => $contPhone,

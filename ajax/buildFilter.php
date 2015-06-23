@@ -65,11 +65,11 @@
  		case 'admin':
       $byActive = 0;
 		case 'engeneer':
-     case 'operator':
+     	case 'operator':
 			$byUser = 0;
 			break;
 		case 'partner':
-       $byAllowed = 1;
+       		$byAllowed = 1;
 		case 'client':
 			break;
 		}
@@ -119,14 +119,16 @@
     	$byDiv .= "<option value='d{$divisionId}'>&#160;&#160;&#160;&#160;{$divisionName}\n";
   }
   $byDiv .= "</select>";
-
+  $contragentIds = implode(',',$contragentIds);
+  if ($contragentIds != '')
+  	$contragentIds = "AND `c`.`contragents_id` IN ({$contragentIds}) ";
   // Строим фильтр по типам сервисов
 	$req = $mysqli->prepare("SELECT DISTINCT `s`.`id`, `s`.`name` ".
                             "FROM `contracts` AS `c` ".
                               "LEFT JOIN `contractServices` AS `cs` ON `cs`.`contract_id` = `c`.`id` ".
                               "LEFT JOIN `services` AS `s` ON `s`.`id` = `cs`.`services_id` ".
-                            "WHERE `c`.`contragents_id` IN (".implode(',', $contragentIds).") ".
-                        		  "AND (? = 0 OR (NOW() BETWEEN `c`.`contractStart` AND `c`.`contractEnd`))");
+                            "WHERE (? = 0 OR (NOW() BETWEEN `c`.`contractStart` AND `c`.`contractEnd`)) ".
+                            	$contragentIds);
   $req->bind_param('i', $byActive);
   $req->bind_result($id, $name);
   if (!$req->execute()) {

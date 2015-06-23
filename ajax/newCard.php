@@ -96,10 +96,10 @@ function calcTime($div, $serv, $sla, $sql) {
 
   $servNum = $match[1]; */
   
-  if ($_SESSION['user']['rights'] == 'partner') {
-    sendJson(array('error' => 'Недостаточно прав'));
-    exit;
-  }
+//  if ($_SESSION['user']['rights'] == 'partner') {
+//    sendJson(array('error' => 'Недостаточно прав'));
+//    exit;
+//  }
 
   $mysqli = new mysqli($dbHost, $dbUser, $dbPass, $dbName);
   if ($mysqli->connect_error) {
@@ -122,7 +122,7 @@ function calcTime($div, $serv, $sla, $sql) {
     sendJson(array('error' => 'Ошибка в параметрах'));
 	exit;
   }
-  if ($_REQUEST['op'] != 'divsList') {
+  if ($_REQUEST['op'] != 'contragentsList' && $_REQUEST['op'] != 'contractsList' && $_REQUEST['op'] != 'divsList') {
 	// Проверяем права
 	if ($_REQUEST['op'] == 'changeEq' || $_REQUEST['op'] == 'isChangeAllowed') {
       if (isset($_REQUEST['n']) && preg_match('~(\d+)~', $_REQUEST['n'], $reqMatch) && $reqMatch[1] != 0) {
@@ -173,46 +173,95 @@ function calcTime($div, $serv, $sla, $sql) {
 	}
   }
   switch($_REQUEST['op']) {
-	case 'divsList': 
-	  $req = $mysqli->prepare("SELECT DISTINCT `ca`.`id`, `div`.`id`, `ca`.`name`, `div`.`name`, `n`.`num` ".
+	case 'contragentsList':
+		$req = $mysqli->prepare("SELECT DISTINCT `ca`.`id`, `ca`.`name` ".
         	                    "FROM `contragents` AS `ca` ".
-								"LEFT JOIN `contractDivisions` AS `div` ON `div`.`contragents_id` = `ca`.`id` ".
+								"JOIN `contracts` AS `c` ON `ca`.`id` = `c`.`contragents_id` ".
+								"LEFT JOIN `contractDivisions` AS `div` ON `div`.`contracts_id` = `c`.`id` ".
 								"LEFT JOIN `userContractDivisions` AS `ucd` ON `ucd`.`contractDivisions_id` = `div`.`id` ".
-								"LEFT JOIN `contracts` AS `c` ON `ca`.`id` = `c`.`contragents_id` ".
 								"LEFT JOIN `userContracts` AS `uc` ON `uc`.`contracts_id` = `c`.`id` ".
-								"LEFT JOIN (SELECT `contracts_id`, COUNT(`contracts_id`) AS `num` ".
-                                	        "FROM `contractDivisions` ".
-                                            "GROUP BY `contracts_id`) ".
-	                                "AS `n` ON `n`.`contracts_id` = `c`.`id` ".
     	                        "WHERE (? = 0 OR `ucd`.`users_id` = ? OR `uc`.`users_id` = ?) ".
         	                		"AND (? = 0 OR (NOW() BETWEEN `c`.`contractStart` AND `c`.`contractEnd`)) ".
-                	            "ORDER BY `ca`.`name`, `div`.`name`");
- 	  $req->bind_param('iiii', $byUser, $userId, $userId, $byActive);
-	  $req->bind_result($contragentId, $divisionId, $contragentName, $divisionName, $divNum);
-	  if (!$req->execute()) { 
-		sendJson(array('error' => 'Внутренняя ошибка сервера'));
-		exit;
-	  }
-	  $prevContragent = 0;
-	  $divOk = 0;
-	  $curDiv = "";
-	  $byDiv = "";
-	  $numDivs = 0;
-	  while ($req->fetch()) {
-		if ($contragentId != $prevContragent) {
-		  $byDiv .= "<optgroup label='{$contragentName}'>";
-		  $prevContragent = $contragentId;
+                	            "ORDER BY `ca`.`name`");
+		$req->bind_param('iiii', $byUser, $userId, $userId, $byActive);
+		$req->bind_result($contragentId, $contragentName);
+		if (!$req->execute()) { 
+			sendJson(array('error' => 'Внутренняя ошибка сервера'));
+			exit;
+	  	}
+		$contragents = '';
+		$n = 0;
+		while ($req->fetch()) {
+			$contragents .= "<option value='{$contragentId}'>".htmlspecialchars($contragentName);
+			$n++;
 		}
-		if ($curDiv == $divisionId)
-		  $divOk = 1;
-		$byDiv .= "<option value='{$divisionId}'".($curDiv == $divisionId ? " selected" : "").">{$divisionName}";
-		$numDivs++;
-	  }
-	  $req->close();
-	  if (($numDivs > 1) && ($divOk == 0))
-		$byDiv = "<option value='0' selected>Выберите организацию".$byDiv;
-	  sendJson(array('division' => $byDiv));
-	  break;
+		$req->close();
+		if ($n > 1)
+			$contragents = "<option value='0'>-- Выберите контрагента --".$contragents;
+		sendJson(array('contragent' => $contragents));
+		break;
+	case 'contractsList':
+		if (!isset($_REQUEST['contragent']) || ($caId = $_REQUEST['contragent']) <= 0) {
+	  		sendJson(array('error' => 'Ошибка в параметрах'));
+			exit;
+	  	}
+		$req = $mysqli->prepare("SELECT DISTINCT `c`.`id`, `c`.`number` ".
+								"FROM `contracts` AS `c` ".
+								"JOIN `contractDivisions` AS `div` ON `div`.`contracts_id` = `c`.`id`".
+								"LEFT JOIN `userContractDivisions` AS `ucd` ON `ucd`.`contractDivisions_id` = `div`.`id` ".
+								"LEFT JOIN `userContracts` AS `uc` ON `uc`.`contracts_id` = `c`.`id` ".
+    	                        "WHERE `div`.`contragents_id` = ? ".
+    	                        	"AND (? = 0 OR `ucd`.`users_id` = ? OR `uc`.`users_id` = ?) ".
+        	                		"AND (? = 0 OR (NOW() BETWEEN `c`.`contractStart` AND `c`.`contractEnd`)) ".
+                	            "ORDER BY `c`.`number`");
+		$req->bind_param('iiiii', $caId, $byUser, $userId, $userId, $byActive);
+		$req->bind_result($contractId, $contractNum);
+		if (!$req->execute()) { 
+			sendJson(array('error' => 'Внутренняя ошибка сервера'));
+			exit;
+	  	}
+		$contracts = '';
+		$n = 0;
+		while ($req->fetch()) {
+			$contracts .= "<option value='{$contractId}'>".htmlspecialchars($contractNum);
+			$n++;
+		}
+		$req->close();
+		if ($n > 1)
+			$contracts = "<option value='0'>-- Выберите договор --".$contracts;
+		sendJson(array('contract' => $contracts));
+		break;
+	case 'divsList': 
+		if (!isset($_REQUEST['contract']) || ($cId = $_REQUEST['contract']) <= 0) {
+	  		sendJson(array('error' => 'Ошибка в параметрах'));
+			exit;
+	  	}
+		$req = $mysqli->prepare("SELECT DISTINCT `div`.`id`, `div`.`name` ".
+								"FROM `contracts` AS `c` ".
+								"JOIN `contractDivisions` AS `div` ON `div`.`contracts_id` = `c`.`id` ".
+								"LEFT JOIN `userContractDivisions` AS `ucd` ON `ucd`.`contractDivisions_id` = `div`.`id` ".
+								"LEFT JOIN `userContracts` AS `uc` ON `uc`.`contracts_id` = `c`.`id` ".
+    	                        "WHERE `c`.`id` = ? ".
+    	                        	"AND (? = 0 OR `ucd`.`users_id` = ? OR `uc`.`users_id` = ?) ".
+        	                		"AND (? = 0 OR (NOW() BETWEEN `c`.`contractStart` AND `c`.`contractEnd`)) ".
+                	            "ORDER BY `div`.`name`");
+ 	  	$req->bind_param('siiii', $cId, $byUser, $userId, $userId, $byActive);
+	  	$req->bind_result($divisionId, $divisionName);
+	  	if (!$req->execute()) { 
+			sendJson(array('error' => 'Внутренняя ошибка сервера'));
+			exit;
+	  	}
+		$divs = '';
+		$n = 0;
+		while ($req->fetch()) {
+			$divs .= "<option value='{$divisionId}'>".htmlspecialchars($divisionName);
+			$n++;
+		}
+		$req->close();
+		if ($n > 1)
+			$divs = "<option value='0'>-- Выберите подразделение --".$divs;
+		sendJson(array('division' => $divs));
+	  	break;
 	case 'fillNewCard1':
 	  $date = date_create();
 	  $result = array(

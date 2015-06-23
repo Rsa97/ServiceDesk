@@ -4,6 +4,7 @@
     <meta http-equiv='Content-Language' content='ru'>
     <meta http-equiv='Content-Type' content='text/html; charset=utf-8'>
 	<link rel='stylesheet' type='text/css' href='css/flick/jquery-ui-1.10.4.custom.css'>
+	<link rel='stylesheet' type='text/css' href='css/select2.min.css'>
 	<link rel='stylesheet' type='text/css' href='css/admin.css'>
     <link rel='shortcut icon' href='/favicon.ico' type='image/x-icon'>
     <link rel='icon' href='/favicon.ico' type='image/x-icon'>
@@ -12,6 +13,7 @@
   	<script src='js/jquery.js'></script>
     <script src='js/jquery.placeholder.min.js'></script>
     <script src='js/jquery-ui.js'></script>
+    <script src='js/select2.min.js'></script>
     <script src='js/newadmin.js'></script>
   </head>
   <body>
@@ -69,8 +71,8 @@
 	  						<li><a href='#divPlanned'>Плановые выезды</a>
   	   					</ul>
         				<div id='divMain' class='divTab0'>
-							<label class='half' for='dContragent'>Контрагент:</label> <span class='half'><span class='edit list' id='dContragent'></span><select class='hideonstart' id='dContragentIn'></select></span>
-							<label class='half' for='dType'>Тип филиала:</label> <span class='half'><span class='edit list' id='dType'></span><select class='hideonstart' id='dTypeIn'></select></span><br>
+							<label class='half' for='dContragent'>Контрагент:</label> <span class='half'><span class='edit list' id='dContragent'></span><select class='hideonstart' id='dContragentIn' style='width:100%'></select></span>
+							<label class='half' for='dType'>Тип филиала:</label> <span class='half'><span class='edit list' id='dType'></span><select class='hideonstart' id='dTypeIn' style='width:100%'></select></span><br>
 							<label class='half' for='dTel'>Телефон:</label> <span class='half'><span class='edit' id='dTel'></span><input class='hideonstart' id='dTelIn'></span>
 							<label class='half' for='dEmail'>E-mail:</label> <span class='half'><span class='edit' id='dEmail'></span><input class='hideonstart' id='dEmailIn'></span><br>
 							<label class='full' for='dAddr'>Почтовый адрес:</label> <span class='full'><span class='edit' id='dAddr'></span><input class='hideonstart' id='dAddrIn'></span><br>
