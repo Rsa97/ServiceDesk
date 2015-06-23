@@ -392,3 +392,7 @@ span.half select {
 #contMain  input.date {
 	max-width: 120px;
 }
+
+#dContragentIn {
+	width: 100%;
+}

@@ -361,12 +361,71 @@ $(function() {
 	$('#card textarea').val('');
 	$('#card .active').removeClass('active');
 	$('#lookServNum').hide();
-	$('#division').parent().prev().addClass('active');
     cardMode = 'new';
-	myPostJson('/ajax/newCard.php', {op: 'divsList'},
+	myPostJson('/ajax/newCard.php', {op: 'contragentsList'},
 	  function() {
 		$('#card').dialog('option', 'buttons', cardBtnNew);
-	  	$('#division').trigger('change');
+		if ($('#contragent').val() != 0)
+	  		$('#contragent').trigger('change');
+	  },
+	  function() {
+		alert('Ошибка связи с сервером');
+		$('#card').dialog('close');
+	  });
+  });
+
+  $('#card').on('change', '#contragent', function() {
+  	if (cardMode != 'new')
+  		return;
+	if ($('#contragent').val() == 0) {
+      $('#card .ro').removeProp('readonly');
+	  $('#servNum').val('');
+	  $('#card input').val('');
+	  $('#contract').html('');
+	  $('#division').html('');
+	  $('#service').html('');
+	  $('#level').html('');
+	  $('#contact').html('');
+	  $('#card textarea').val('');
+	  $('#card .active').removeClass('active');
+	  $('#lookServNum').hide();
+  	  return;
+    }
+   	$('#card').dialog('option', 'buttons', cardBtnWait);
+	myPostJson('/ajax/newCard.php', {op: 'contractsList', contragent: $('#contragent').val()},
+	  function() {
+		$('#card').dialog('option', 'buttons', cardBtnNew);
+		if ($('#contract').val() != 0)
+	  		$('#contract').trigger('change');
+	  },
+	  function() {
+		alert('Ошибка связи с сервером');
+		$('#card').dialog('close');
+	  });
+  });
+  
+  $('#card').on('change', '#contract', function() {
+  	if (cardMode != 'new')
+  		return;
+	if ($('#contract').val() == 0) {
+      $('#card .ro').removeProp('readonly');
+	  $('#servNum').val('');
+	  $('#card input').val('');
+	  $('#division').html('');
+	  $('#service').html('');
+	  $('#level').html('');
+	  $('#contact').html('');
+	  $('#card textarea').val('');
+	  $('#card .active').removeClass('active');
+	  $('#lookServNum').hide();
+  	  return;
+    }
+   	$('#card').dialog('option', 'buttons', cardBtnWait);
+	myPostJson('/ajax/newCard.php', {op: 'divsList', contract: $('#contract').val()},
+	  function() {
+		$('#card').dialog('option', 'buttons', cardBtnNew);
+		if ($('#division').val() != 0)
+	  		$('#division').trigger('change');
 	  },
 	  function() {
 		alert('Ошибка связи с сервером');
@@ -375,8 +434,20 @@ $(function() {
   });
   
   $('#card').on('change', '#division', function() {
-  	if ($('#division').val() == 0 || cardMode != 'new')
+  	if (cardMode != 'new')
+  		return;
+	if ($('#division').val() == 0) {
+      $('#card .ro').removeProp('readonly');
+	  $('#servNum').val('');
+	  $('#card input').val('');
+	  $('#service').html('');
+	  $('#level').html('');
+	  $('#contact').html('');
+	  $('#card textarea').val('');
+	  $('#card .active').removeClass('active');
+	  $('#lookServNum').hide();
   	  return;
+    }
   	$('#servNum').val('');
   	$('#SN').val('');
   	$('#eqType').val('');

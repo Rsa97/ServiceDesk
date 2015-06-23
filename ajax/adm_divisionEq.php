@@ -162,6 +162,7 @@
 				returnJson(array('error' => 'Ошибка в параметрах.'));
 				exit;
 			}
+			$lastId = $id;
 			break;			 
 		case 'del':
 			if (!isset($_REQUEST['id']) || ($id = $_REQUEST['id']) <= 0) {

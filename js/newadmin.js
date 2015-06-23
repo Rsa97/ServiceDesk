@@ -17,6 +17,8 @@ for (var i in iconClass) {
 	icon[i] = '<span class="ui-icon '+iconClass[i]+'"></span>';
 }
 
+var eqTreeInitialized = 0;
+
 var tableDefs = {
 	services: {
 		hasIcons: ['a','d','e'],
@@ -201,6 +203,7 @@ var tableDefs = {
 			if (typeof data.count !== 'undefined') {
 				var opt = $('#selDivision option:selected');
 				opt.text(opt.data('text')+' '+data.count);
+				$('#selDivision').select2();
 			}
 			var tbl = $('#divWorkplaces').children('table');
 			initTable(tbl.data('def'), '#divWorkplaces', tbl.find('tr.last').data('id'));
@@ -694,6 +697,7 @@ function drawTable(data, def, parentSelector, page) {
 	tbl = $(parentSelector+' table');
 	tbl.data('data', data);
 	tbl.data('def', def);
+	tbl.data('page', page);
 
 	for (var fieldNum in def.fields) {
 		if (def.fields[fieldNum].type == 'check') {
@@ -732,9 +736,10 @@ function drawTable(data, def, parentSelector, page) {
 			tbl.on('click', '.'+def.customIcons[i].icon, function(event) {
 				event.stopPropagation();
 				if ($(this).data('confirm') == '' || confirm($(this).data('confirm'))) {
-					var page = $('.curPage').first().text()-1;
-					var tbl = $(parentSelector+' table');
+					var page = tbl.data('page');
 					myJson(def.ajax, {call: $(this).data('call'), id: $(this).parents('tr').data('id')}, function(data) {
+						if (typeof def.onUpdate == 'function')
+							def.onUpdate(data);
 						drawTable(data.table, def, parentSelector, page);
 					});
 				}
@@ -767,7 +772,8 @@ function drawTable(data, def, parentSelector, page) {
 	tbl.on('click', '.'+iconClass.cancel, function(event) {
 		event.stopPropagation();
 		var tbl = $(parentSelector+' table');
-		drawTable(tbl.data('data'), tbl.data('def'), parentSelector, $('.curPage').first().text()-1);
+		var page = tbl.data('page');
+		drawTable(tbl.data('data'), tbl.data('def'), parentSelector, page);
 		return false;
 	});
 
@@ -775,8 +781,8 @@ function drawTable(data, def, parentSelector, page) {
 		event.stopPropagation();
 		if (!confirm("Удалить?"))
 			return false;
-		var page = $('.curPage').first().text()-1;
 		var tbl = $(parentSelector+' table');
+		var page = tbl.data('page');
 		myJson(def.ajax, {call: 'del', id: $(this).parents('tr').data('id')}, function(data) {
 			if (typeof def.onUpdate == 'function')
 				def.onUpdate(data);
@@ -807,7 +813,8 @@ function drawTable(data, def, parentSelector, page) {
   	$('.pager').on('click', '.page', function(event) {
   		event.stopPropagation();
 		var tbl = $(parentSelector+' table');
-  		drawTable(tbl.data('data'), tbl.data('def'), parentSelector, $(this).text()-1);
+		var page = $(this).text()-1;
+  		drawTable(tbl.data('data'), tbl.data('def'), parentSelector, page);
   		return false;
   	});
 }
@@ -940,7 +947,7 @@ function initEqTree(data, parentSelector) {
 	tree.append('<li class="eqType" data-id="0"><span class="icons3">'+icon.add+'</span> <span class="typeName">Добавить</span>');
 	tree.find('ul').hide();
 	
-	$(parentSelector).on('click', '.eqTypes li .'+iconClass.expand, function(event) {
+	tree.on('click', '.eqTypes li .'+iconClass.expand, function(event) {
 		event.stopPropagation();
 		$(this).removeClass(iconClass.expand).addClass(iconClass.collapse);
 		$(this).parents('li').first().removeClass('collapsed').addClass('expanded');
@@ -948,7 +955,7 @@ function initEqTree(data, parentSelector) {
 		return false;
 	});
 
-	$(parentSelector).on('click', '.eqTypes li .'+iconClass.collapse, function(event) {
+	tree.on('click', '.eqTypes li .'+iconClass.collapse, function(event) {
 		event.stopPropagation();
 		if ($(this).parent().siblings('ul').find('.'+iconClass.cancel).length > 0)
 			return false;
@@ -960,7 +967,7 @@ function initEqTree(data, parentSelector) {
 	
 	setEqTreeDragDrop(parentSelector);
 	
-	$(parentSelector).on('click', '.eqTypes li .'+iconClass.edit, function(event) {
+	tree.on('click', '.eqTypes li .'+iconClass.edit, function(event) {
 		event.stopPropagation();
 		if ($(parentSelector+' .'+iconClass.cancel).length > 0)
 			return false;
@@ -1004,7 +1011,7 @@ function initEqTree(data, parentSelector) {
 		return false;
 	});
 
-	$(parentSelector).on('click', '.eqTypes li .'+iconClass.add, function(event) {
+	tree.on('click', '.eqTypes li .'+iconClass.add, function(event) {
 		event.stopPropagation();
 		if ($(parentSelector+' .'+iconClass.cancel).length > 0)
 			return false;
@@ -1040,7 +1047,7 @@ function initEqTree(data, parentSelector) {
 		return false;
 	});
 	
-	$(parentSelector).on('click', '.eqTypes li .'+iconClass.cancel, function(event) {
+	tree.on('click', '.eqTypes li .'+iconClass.cancel, function(event) {
 		event.stopPropagation();
 		var li = $(this).parent().parent();
 		var name = $(this).parent().next();
@@ -1062,7 +1069,7 @@ function initEqTree(data, parentSelector) {
 		return false;
 	});
 
-	$(parentSelector).on('click', '.eqTypes li .'+iconClass.apply, function(event) {
+	tree.on('click', '.eqTypes li .'+iconClass.apply, function(event) {
 		event.stopPropagation();
 		var li = $(this).parent().parent();
 		var inp = $(this).parent().next().children('input');
@@ -1147,7 +1154,7 @@ function initEqTree(data, parentSelector) {
 		});
 	});
 	
-	$(parentSelector).on('click', '.eqTypes li .'+iconClass.del, function(event) {
+	tree.on('click', '.eqTypes li .'+iconClass.del, function(event) {
 		event.stopPropagation();
 		if ($(parentSelector+' .'+iconClass.cancel).length > 0)
 			return false;
@@ -1176,17 +1183,17 @@ function initContracts() {
 	$('.divisionIcons').html(icon.add+icon.edit+icon.del);
 	$('#editDUsers').addClass(iconClass.doc);
 	$('#editDPartners').addClass(iconClass.doc);
-						
+
 	myJson('ajax/adm_contracts', {call: 'getlists', field: 'contragents', id: 1}, function(data) {
 		if (typeof data.list !== 'undefined') {
-			var opt = '';
+			var opt = ''; 
 			for (var i = 0; i < data.list.length; i++) {
-				opt += '<option value="'+data.list[i].id+'"'+(i == 0 ? ' selected' : '')+'>'+data.list[i].name;
+				opt += '<option value="'+data.list[i].id+'"'+(i == 0 ? ' selected' : '')+'>'+data.list[i].name; 
 			}
 			$('#selContragent').html(opt).trigger('change');
 		}
 	});
-}	
+}
 
 $(function() {
 	$('.hideonstart').hide();
@@ -1390,7 +1397,7 @@ $(function() {
 		var add = $(this).hasClass(iconClass.add);
 		var val = (add ? '' : $('#selContract option:selected').text());
 		$('#selContractIn').data('add', add);
-		$('#selContract').hide();
+		$('#selContract').next().hide();
 		if (add)
 			$('#cUsers').hide();
 		$('#selContractIn').val(val).show();
@@ -1409,7 +1416,7 @@ $(function() {
 		$('#contract').tabs('option', 'disabled', false);
 		$('#selContragent').removeProp('disabled');
 		$('#selContractIn').hide();
-		$('#selContract').show();
+		$('#selContract').next().show();
 		$('#contMain span.edit').siblings('input').hide();
 		$('#contMain span.edit').show();
 		$('#cUsers').show();
@@ -1441,7 +1448,7 @@ $(function() {
 			if (typeof data.list !== 'undefined')	{
 				$('#selContragent').removeProp('disabled');
 				$('#selContractIn').hide();
-				$('#selContract').show();
+				$('#selContract').next().show();
 				$('#cUsers').show();
 				$('#contMain span.edit').siblings('input').hide();
 				$('#contMain span.edit').val('').show();
@@ -1475,7 +1482,9 @@ $(function() {
 		if ($(this).children('option').length == 0) {
 			$('.divisionIcons').html(icon.add);
 			$('#divMain span.edit').text('');
-			$('#division').tabs('option', 'disabled', [1]);
+			$('#division').tabs('option', 'disabled', [1,2,3]);
+			$('#dUsers').html('');
+			$('#dPartners').html('');
 			return false;
 		}
 		$('#division').tabs('option', 'disabled', false);
@@ -1512,7 +1521,7 @@ $(function() {
 			$('#dPartners').hide();
 		}
 		$('#selDivisionIn').data('add', add);
-		$('#selDivision').hide();
+		$('#selDivision').next().hide();
 		$('#selDivisionIn').val(val).show();
 		var id = 0;
 		if ($(this).hasClass(iconClass.edit))
@@ -1524,16 +1533,23 @@ $(function() {
 				inp = $(this).siblings('select');
 				myJson('ajax/adm_divisions', {call: 'getlists', id: id, field: $(this).attr('id')}, function(data) {
 					var opt = '';
-					for (var i = 0; i < data.list.length; i++)
+					var val = 0;
+					for (var i = 0; i < data.list.length; i++) {
 						opt += '<option value="'+data.list[i].id+'"'+(typeof data.list[i].cur !== 'undefined' ? ' selected' : '')+
 								(typeof data.list[i].mark !== 'undefined' ? ' class="'+data.list[i].mark+'"' : '')+'>'+data.list[i].name;
-					inp.html(opt);
+						if (typeof data.list[i].cur !== 'undefined')
+							val = data.list[i].id;
+					}
+					inp.html(opt).select2().trigger('change');
 				});
+				console.log(inp.next().css('width'));
+				inp.next().show().css('width', '100%').val(val);
+				console.log(inp.next().css('width'));
 			} else {
 				inp = $(this).siblings('input');
+				inp.show().val(val);
 			}
 			$(this).hide();
-			inp.show().val(val);
 		});
 		$('.divisionIcons').data('old', $('.divisionIcons').html()).html(icon.apply+icon.cancel);
 		return false;
@@ -1547,9 +1563,12 @@ $(function() {
 		$('#selContract').removeProp('disabled');
 		$('#dUsers').show();
 		$('#dPartners').show();
-		$('#selDivision').show();
+		$('#selDivision').next().show();
 		$('#selDivisionIn').hide();
-		$('#divMain span.edit').siblings('input, select').hide();
+		$('#divMain span.edit').siblings('input').hide();
+		$('#divMain span.edit').siblings('select').each(function() {
+			$(this).next().hide();
+		});
 		$('#divMain span.edit').show();
 		$('.divisionIcons').html($('.divisionIcons').data('old'));
 		return false;
@@ -1575,7 +1594,7 @@ $(function() {
 				$('#selContract').removeProp('disabled');
 				$('#dUsers').show();
 				$('#dPartners').show();
-				$('#selDivision').show();
+				$('#selDivision').next().show();
 				$('#selDivisionIn').hide();
 				$('#divMain span.edit').siblings('input, select').hide();
 				$('#divMain span.edit').show();
@@ -1624,5 +1643,12 @@ $(function() {
 			});
 		});
 	});
-	
+
+	$('select').each(function() {
+		$(this).select2({
+			width: $(this).css('width')
+		});
+		if ($(this).hasClass('hideonstart'))
+			$(this).next().hide();
+	});
 });

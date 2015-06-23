@@ -166,7 +166,7 @@
 					}
 					$list = array();
 					while ($req->fetch()) {
-						$list[] = array('id' => $divId, 'name' => $divName, 'count' => "($eqOnService / $eqTotal)");
+						$list[] = array('id' => $divId, 'name' => htmlspecialchars($divName), 'count' => "($eqOnService / $eqTotal)");
 					}
 					$req->close();
 					$ret['list'] = $list;
