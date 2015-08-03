@@ -107,11 +107,11 @@
 												"`c`.`contractStart` > CURDATE(), DATE(`c`.`contractEnd`), `c`.`contractEnd` < CURDATE(), `t`.`id` ".
 												"FROM `contracts` AS `c` ".
 												"LEFT JOIN ( ".
-													"SELECT DISTINCT `contract_id` AS `cid`, 1 AS `id` FROM `divServicesSLA` ".
-													"UNION SELECT `contracts_id` AS `cid`, 1 AS `id` FROM `replacement` ".
+													"SELECT DISTINCT `contract_id` AS `cid`, 1 AS `id` FROM `divServicesSLA` WHERE `contract_id` = ? ".
+													"UNION SELECT `contracts_id` AS `cid`, 1 AS `id` FROM `replacement` WHERE `contracts_id` = ? ".
 												") AS `t` ON `c`.`id` = `t`.`cid` ".  
 												"WHERE `c`.`id` = ? ");
-					$req->bind_param('i', $id);
+					$req->bind_param('iii', $id, $id, $id);
 					$req->bind_result($email, $phone, $address, $yurAddress, $start, $early, $end, $late, $notDel);
 					if (!$req->execute() || !$req->fetch()) {
 						returnJson(array('error' => 'Внутренняя ошибка сервера.'));
@@ -143,30 +143,36 @@
 					if ($notDel != '' || $names != '')
 						$ret['notDel'] = 1;
 					$ret['main']['cUsers'] = $names;
-					$req =  $mysqli->prepare("SELECT `d`.`id`, `d`.`name`, IFNULL(`eq`.`count`, 0), IFNULL(`os`.`count`, 0) ".
-												"FROM `contractDivisions` AS `d`".
+					$req =  $mysqli->prepare("SELECT `d`.`id`, `d`.`name`, IFNULL(`eq`.`total`, 0), IFNULL(`eq`.`onService`, 0), ".
+													"`d`.`isDisabled`, `f`.`free` ".
+												"FROM `contractDivisions` AS `d` ".
 												"LEFT JOIN ( ".
-												    "SELECT `contractDivisions_id`, COUNT(contractDivisions_id) AS `count` ".
+												    "SELECT `contractDivisions_id`, COUNT(contractDivisions_id) AS `total`, ".
+												    		"SUM(`onService`) AS `onService` ".
 												    "FROM `equipment` ".
 												    "GROUP BY `contractDivisions_id` ".
 												") AS `eq` ON `eq`.`contractDivisions_id` = `d`.`id` ".
 												"LEFT JOIN ( ".
-												    "SELECT `contractDivisions_id`, COUNT(contractDivisions_id) AS `count` ".
+												    "SELECT `contracts_id`, COUNT(contracts_id) AS `free` ".
 												    "FROM `equipment` ".
-												    "WHERE `onService` = 1 ".
-												    "GROUP BY `contractDivisions_id` ".
-												") AS `os` ON `os`.`contractDivisions_id` = `d`.`id` ".
+												    "WHERE `contractDivisions_id` IS NULL ".
+												    "GROUP BY `contracts_id` ".
+												") AS `f` ON `f`.`contracts_id` = `d`.`contracts_id` ".
 												"WHERE `d`.`contracts_id` = ? ".
 												"ORDER BY `d`.`name`");
 					$req->bind_param('i', $id);
-					$req->bind_result($divId, $divName, $eqTotal, $eqOnService);
+					$req->bind_result($divId, $divName, $eqTotal, $eqOnService, $disabled, $free);
 					if (!$req->execute()) {
 						returnJson(array('error' => 'Внутренняя ошибка сервера.'));
 						exit;
 					}
 					$list = array();
 					while ($req->fetch()) {
-						$list[] = array('id' => $divId, 'name' => htmlspecialchars($divName), 'count' => "($eqOnService / $eqTotal)");
+						$eqTotal += $free;
+						$div = array('id' => $divId, 'name' => htmlspecialchars($divName), 'count' => "");// 'count' => "($eqOnService / $eqTotal)");
+						if ($disabled == 1)
+							$div['mark'] = 'gray';
+						$list[] = $div;
 					}
 					$req->close();
 					$ret['list'] = $list;
@@ -180,11 +186,10 @@
 												"LEFT JOIN ( ".
 													"SELECT DISTINCT `users_id` FROM `userContracts` ".
 												") AS `t` ON `t`.`users_id` = `u`.`id` ".
-												"LEFT JOIN ( ".
-													"SELECT `users_id` FROM `userContracts` WHERE `contracts_id` = ? ". 
-												") AS `r` ON `r`.`users_id` = `u`.`id` ".
-												"WHERE `rights` = 'client' AND `isDisabled` = 0 AND `loginDB` = 'mysql' ".
-												"ORDER BY `secondName`, `firstName`, `middleName`");
+												"LEFT JOIN `userContracts` AS `r` ON `r`.`users_id` = `u`.`id` ".
+													"AND `contracts_id` = ? ".
+												"WHERE `u`.`rights` = 'client' AND `u`.`isDisabled` = 0 AND `u`.`loginDB` = 'mysql' ".
+												"ORDER BY `u`.`secondName`, `u`.`firstName`, `u`.`middleName`");
 					$req->bind_param('i', $id);
 					$req->bind_result($uid, $gn, $fn, $mn, $isFree, $isSelected);
 					if (!$req->execute()) {

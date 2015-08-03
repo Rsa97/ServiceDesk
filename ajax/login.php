@@ -200,11 +200,11 @@ function login($user, $pass, $newpass) {
       if (isset($_POST['pass']))
    	    openssl_private_decrypt(base64_decode($_POST['pass']), $pass, $_SESSION['private']);
  	  if ($pass == '') {
- 	    if (isset($_REQUEST['x']) && $_REQUEST['x'] == 1) {
-          echo json_encode(array('error' => 'Не указан пароль.'));
+ 	    if (isset($_REQUEST['x']) && $_REQUEST['x'] == 0) {
+		  echo json_encode(array('retry' => $_SESSION['public']));
           exit;
 		}
-		echo json_encode(array('retry' => $_SESSION['public']));
+        echo json_encode(array('error' => 'Не указан пароль.'));
 		exit;
       }
 	  $newpass = '';

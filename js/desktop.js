@@ -255,7 +255,12 @@ $(function() {
                      width: 660,
                      modal: true,
                      draggable: false,
-                     buttons: cardBtnWait
+                     buttons: cardBtnWait,
+                     close: function() {
+                     	$(this).find('select').each(function() {
+                     		$(this).select2("close");
+                     	});
+                     }
               });
   $('#selectEq').dialog({autoOpen: false,
     				 title: 'Выберите оборудование',
@@ -357,7 +362,7 @@ $(function() {
    	$('#card').dialog('option', 'buttons', cardBtnWait);
 	$('#servNum').val('');
 	$('#card input').val('');
-	$('#card select').html('');
+	$('#card select').html('').select2();
 	$('#card textarea').val('');
 	$('#card .active').removeClass('active');
 	$('#lookServNum').hide();
@@ -365,6 +370,7 @@ $(function() {
 	myPostJson('/ajax/newCard.php', {op: 'contragentsList'},
 	  function() {
 		$('#card').dialog('option', 'buttons', cardBtnNew);
+		$('#contragent').select2();
 		if ($('#contragent').val() != 0)
 	  		$('#contragent').trigger('change');
 	  },
@@ -381,9 +387,9 @@ $(function() {
       $('#card .ro').removeProp('readonly');
 	  $('#servNum').val('');
 	  $('#card input').val('');
-	  $('#contract').html('');
-	  $('#division').html('');
-	  $('#service').html('');
+	  $('#contract').html('').select2();
+	  $('#division').html('').select2();
+	  $('#service').html('').select2();
 	  $('#level').html('');
 	  $('#contact').html('');
 	  $('#card textarea').val('');
@@ -395,6 +401,7 @@ $(function() {
 	myPostJson('/ajax/newCard.php', {op: 'contractsList', contragent: $('#contragent').val()},
 	  function() {
 		$('#card').dialog('option', 'buttons', cardBtnNew);
+		$('#contract').select2();
 		if ($('#contract').val() != 0)
 	  		$('#contract').trigger('change');
 	  },
@@ -411,8 +418,8 @@ $(function() {
       $('#card .ro').removeProp('readonly');
 	  $('#servNum').val('');
 	  $('#card input').val('');
-	  $('#division').html('');
-	  $('#service').html('');
+	  $('#division').html('').select2();
+	  $('#service').html('').select2();
 	  $('#level').html('');
 	  $('#contact').html('');
 	  $('#card textarea').val('');
@@ -424,6 +431,7 @@ $(function() {
 	myPostJson('/ajax/newCard.php', {op: 'divsList', contract: $('#contract').val()},
 	  function() {
 		$('#card').dialog('option', 'buttons', cardBtnNew);
+		$('#division').select2();
 		if ($('#division').val() != 0)
 	  		$('#division').trigger('change');
 	  },
@@ -440,7 +448,7 @@ $(function() {
       $('#card .ro').removeProp('readonly');
 	  $('#servNum').val('');
 	  $('#card input').val('');
-	  $('#service').html('');
+	  $('#service').html('').select2();
 	  $('#level').html('');
 	  $('#contact').html('');
 	  $('#card textarea').val('');
@@ -465,6 +473,7 @@ $(function() {
 		$('#lookServNum').show();
 		$('#card').dialog('option', 'buttons', cardBtnNew);
 		$('#contact').trigger('change');
+	  	$('#service').select2();
 		$('#service').trigger('change');
 	  },
 	  function() {
@@ -601,7 +610,7 @@ $(function() {
       $('#card input, #card select, #card textarea').each(function() {
         $(this).parent().prev().removeClass('active');
       });
-      $('#card select').html('');
+      $('#card select').html('').select2({width: '100%'});
       $('#card button').prop('disabled', 'disabled');
       $('#card').dialog('open');
       cardMode = 'look';
@@ -610,6 +619,7 @@ $(function() {
           $('#cardDocTbl tr:nth-child(2n+1)').addClass('odd');
           $('#cardDocTbl td:nth-child(1)').addClass('cell1');
           $('#cardDocTbl td:nth-child(4)').addClass('cell4');
+          $('#card select').select2();
         },
         function() {
           alert('Ошибка связи с сервером');

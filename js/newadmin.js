@@ -12,9 +12,23 @@ var iconClass = {	expand:		'ui-icon-folder-collapsed',
 					serviceOn:	'ui-icon-gear',
 					serviceOff:	'ui-icon-cancel'
 };
+var iconAlt = {	expand:		'Развернуть',
+				collapse:	'Свернуть',
+				edit:		'Изменить',
+				del:		'Удалить',
+				add:		'Добавить',
+				apply:		'Принять',
+				cancel:		'Отменить',
+				moveRight:	'',
+				moveLeft:	'',
+				doc:		'',
+				copy:		'Копировать',
+				serviceOn:	'Активировать',
+				serviceOff:	'Запретить'
+};
 var icon = {};
 for (var i in iconClass) {
-	icon[i] = '<span class="ui-icon '+iconClass[i]+'"></span>';
+	icon[i] = '<abbr title="'+iconAlt[i]+'"><span class="ui-icon '+iconClass[i]+'"></span></abbr>';
 }
 
 var eqTreeInitialized = 0;
@@ -1180,7 +1194,7 @@ function initContracts() {
 	
 	$('.contractIcons').html(icon.add+icon.edit+icon.del);
 	$('#editCUsers').addClass(iconClass.doc);
-	$('.divisionIcons').html(icon.add+icon.edit+icon.del);
+	$('.divisionIcons').html(icon.add+icon.edit+icon.del+icon.serviceOff);
 	$('#editDUsers').addClass(iconClass.doc);
 	$('#editDPartners').addClass(iconClass.doc);
 
@@ -1489,10 +1503,14 @@ $(function() {
 		}
 		$('#division').tabs('option', 'disabled', false);
 		myJson('/ajax/adm_divisions', {call: 'init', id: $(this).val()}, function(data) {
-			if (typeof data.notDel !== 'undefined' && data.notDel == 1)
-				$('.divisionIcons').html(icon.add+icon.edit);
-			else 
-				$('.divisionIcons').html(icon.add+icon.edit+icon.del);
+			var icons = icon.add+icon.edit;
+			if (typeof data.notDel === 'undefined' || data.notDel == 0)
+				icons += icon.del;
+			if (typeof data.disabled !== 'undefined' && data.disabled == 1)
+				icons += icon.serviceOn;
+			else if (typeof data.notDisable === 'undefined' || data.onDisable == 0)
+				icons += icon.serviceOff;
+			$('.divisionIcons').html(icons);
 			for (var key in data.main)
             	if(data.main.hasOwnProperty(key)) {
            			$('#'+key).text(data.main[key]);
@@ -1596,7 +1614,10 @@ $(function() {
 				$('#dPartners').show();
 				$('#selDivision').next().show();
 				$('#selDivisionIn').hide();
-				$('#divMain span.edit').siblings('input, select').hide();
+				$('#divMain span.edit').siblings('input').hide();
+				$('#divMain span.edit').siblings('select').each(function() {
+					$(this).select2("close");
+				});
 				$('#divMain span.edit').show();
 				var opt = '';
 				for (var i = 0; i < data.list.length; i++)
@@ -1622,6 +1643,38 @@ $(function() {
 		return false;
 	});
 	
+	$('.divisionIcons').on('click', '.'+iconClass.serviceOn, function(event) {
+		event.stopPropagation();
+		var icon = $(this);
+		myJson('ajax/adm_divisions', {call: 'serviceOn', id: $('#selDivision').val()}, function(data) {
+			if (typeof data.ok !== 'undefined' && data.ok == 1) {
+				$('#selDivision option:selected').removeClass('gray');
+				icon.removeClass(iconClass.serviceOn).addClass(iconClass.serviceOff); 
+				$('#selDivision').select2({
+					templateResult: select2OptColor,
+					templateSelection: select2OptColor
+				});
+			}
+		});
+		return false;
+	});
+
+	$('.divisionIcons').on('click', '.'+iconClass.serviceOff, function(event) {
+		event.stopPropagation();
+		var icon = $(this);
+		myJson('ajax/adm_divisions', {call: 'serviceOff', id: $('#selDivision').val()}, function(data) {
+			if (typeof data.ok !== 'undefined' && data.ok == 1) {
+				$('#selDivision option:selected').addClass('gray');
+				icon.removeClass(iconClass.serviceOff).addClass(iconClass.serviceOn); 
+				$('#selDivision').select2({
+					templateResult: select2OptColor,
+					templateSelection: select2OptColor
+				});
+			}
+		});
+		return false;
+	});
+
 	$('#editDUsers').click(function(event) {
 		event.stopPropagation();
 		if ($('#contracts .'+iconClass.cancel).length > 0)
@@ -1644,9 +1697,19 @@ $(function() {
 		});
 	});
 
+	function select2OptColor(opt) {
+	 	if ($(opt.element).hasClass('gray')) {
+	 		var $opt = $('<span class="gray">'+opt.text+'</span>'); 
+	 		return $opt;
+	 	}
+	 	return opt.text;	
+	}
+
 	$('select').each(function() {
 		$(this).select2({
-			width: $(this).css('width')
+			width: $(this).css('width'),
+			templateResult: select2OptColor,
+			templateSelection: select2OptColor
 		});
 		if ($(this).hasClass('hideonstart'))
 			$(this).next().hide();

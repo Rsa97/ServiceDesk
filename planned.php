@@ -83,8 +83,8 @@ function calcTime($div, $serv, $sla, $sql) {
     	   "SELECT DISTINCT `pr`.`id`, `pr`.`contractDivisions_id`, `pr`.`service_id`, `pr`.`slaLevel`, `pr`.`problem`, `u`.`users_id`, ".
     	   					" `div`.`addProblem` ".
         	"FROM `plannedRequest` AS `pr` ".
-            	"LEFT JOIN `contractDivisions` AS `div` ON `pr`.`contractDivisions_id` = `div`.`id` ".
-            	"LEFT JOIN `contracts` AS `c` ON `c`.`id` = `div`.`contracts_id` ".
+            	"JOIN `contractDivisions` AS `div` ON `pr`.`contractDivisions_id` = `div`.`id` AND `div`.`isDisabled` = 0 ".
+            	"JOIN `contracts` AS `c` ON `c`.`id` = `div`.`contracts_id` ".
             	"LEFT JOIN ( ".
             	  "	SELECT `contractDivisions_id`, `users_id` FROM `userContractDivisions` GROUP BY `contractDivisions_id` ".
             	") AS `u` ON `u`.`contractDivisions_id` = `div`.`id` ".

@@ -58,7 +58,8 @@
 					"WHERE (? = 0 OR (NOW() BETWEEN `c`.`contractStart` AND `c`.`contractEnd`)) ".
             			"AND (? = 0 OR `div`.`id` = ?) ".
             			"AND (? = 0 OR `c`.`contragents_id` = ?) ".
-					"ORDER BY `ca`.`name` ");
+            			"AND `div`.`isDisabled` = 0 ".
+					"ORDER BY `ca`.`name`");
 			$req->bind_param('iiiii', $byContrTime, $byDiv, $divFilter, $byCntrAgent, $divFilter);
 			$req->bind_result($caId, $caName);
 			if (!$req->execute()) {
@@ -84,6 +85,7 @@
 					"WHERE (? = 0 OR (NOW() BETWEEN `c`.`contractStart` AND `c`.`contractEnd`)) ".
             			"AND (? = 0 OR `div`.`id` = ?) ".
             			"AND `c`.`contragents_id` = ? ".
+            			"AND `div`.`isDisabled` = 0 ".
 					"ORDER BY `c`.`number`");
 			$req->bind_param('iiii', $byContrTime, $byDiv, $divFilter, $_REQUEST['caId']);
 			$req->bind_result($cId, $cNum);
@@ -108,6 +110,7 @@
       				"FROM `contractDivisions` AS `div` ".
             		"WHERE (? = 0 OR `div`.`id` = ?) ".
             			"AND `div`.`contracts_id` = ? ".
+            			"AND `div`.`isDisabled` = 0 ".
 					"ORDER BY `div`.`name`");
 			$req->bind_param('iii', $byDiv, $divFilter, $_REQUEST['cId']);
 			$req->bind_result($divId, $divName);
@@ -150,7 +153,9 @@
 			}
 			$problem = trim($_REQUEST['problem']);
 			if ($_REQUEST['divId'] == 0) {
-				$req = $mysqli->prepare("UPDATE IGNORE `contractDivisions` SET `addProblem` = CONCAT(`addProblem`, IF(`addProblem` = '', '', '\n'), ?) WHERE `contracts_id` = ?");
+				$req = $mysqli->prepare("UPDATE IGNORE `contractDivisions` ".
+											"SET `addProblem` = CONCAT(`addProblem`, IF(`addProblem` = '', '', '\n'), ?) ".
+											"WHERE `contracts_id` = ? AND `isDisabled` = 0");
 				$req->bind_param('si', $problem, $_REQUEST['cId']);
 			} else {
 				$req = $mysqli->prepare("UPDATE IGNORE `contractDivisions` SET `addProblem` = ? WHERE `id` = ?");

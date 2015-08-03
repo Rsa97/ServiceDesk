@@ -9,7 +9,7 @@
 									"FROM `users` AS `u` ".
 									"JOIN `userContractDivisions` AS `ucd` ON `ucd`.`users_id` = `u`.`id` ".
 									"WHERE `ucd`.`contractDivisions_id` = ? ".
-									"ORDER BY `secondName`, `firstName`, `middleName`");
+									"ORDER BY `u`.`secondName`, `u`.`firstName`, `u`.`middleName`");
 		$req->bind_param('i', $divId);
 		$req->bind_result($gn, $fn, $mn);
 		if (!$req->execute()) {
@@ -77,7 +77,7 @@
 				exit;
 			}
 			$req = $mysqli->prepare("SELECT `d`.`name`, `d`.`email`, `d`.`phone`, `d`.`address`, `d`.`yurAddress`, `t`.`name`, ".
-										"`c`.`name`, `u`.`id` ".
+										"`c`.`name`, `u`.`id`, `d`.`isDisabled`, `o`.`id` ".
 										"FROM `contractDivisions` AS `d` ".
 										"LEFT JOIN `divisionTypes` AS `t` ON `t`.`id` = `d`.`type_id` ".
 										"LEFT JOIN `contragents` AS `c` ON `c`.`id` = `d`.`contragents_id` ". 
@@ -87,9 +87,14 @@
 											"UNION SELECT `contractDivisions_id` AS `id` FROM `equipment` ".
 											"UNION SELECT `contractDivisions_id` AS `id` FROM `request` ".
 										") AS `u` ON `u`.`id` = `d`.`id` ".
+										"LEFT JOIN ( ".
+											"SELECT DISTINCT `contractDivisions_id` AS `id` ". 
+												"FROM `request` ".
+												"WHERE `currentState` NOT IN ('closed','canceled') ".
+										") AS `o` ON `o`.`id` = `d`.`id` ".
 										"WHERE `d`.`id` = ?");
 			$req->bind_param('i', $id);
-			$req->bind_result($divName, $divEmail, $divTel, $divAddr, $divYurAddr, $divType, $contragent, $inUse);	
+			$req->bind_result($divName, $divEmail, $divTel, $divAddr, $divYurAddr, $divType, $contragent, $inUse, $disabled, $haveReq);	
 			if (!$req->execute() || !$req->fetch()) {
 				returnJson(array('error' => 'Внутренняя ошибка сервера.'));
 				exit;
@@ -103,6 +108,9 @@
 			$ret['main']['dPartners'] = $partners;
 			if ($inUse != '' || $names != '' || $partners != '')
 				$ret['notDel'] = 1;
+			if ($haveReq != '')
+				$ret['notDisable'] = 1;
+			$ret['disabled'] = $disabled;
 			returnJson($ret);
 			exit;
 			break;
@@ -163,11 +171,10 @@
 												"LEFT JOIN ( ".
 													"SELECT DISTINCT `users_id` FROM `userContractDivisions` ".
 												") AS `t` ON `t`.`users_id` = `u`.`id` ".
-												"LEFT JOIN ( ".
-													"SELECT `users_id` FROM `userContractDivisions` WHERE `contractDivisions_id` = ? ". 
-												") AS `r` ON `r`.`users_id` = `u`.`id` ".
-												"WHERE `rights` = 'client' AND `isDisabled` = 0 AND `loginDB` = 'mysql' ".
-												"ORDER BY `secondName`, `firstName`, `middleName`");
+												"LEFT JOIN `userContractDivisions` AS `r` ON `r`.`users_id` = `u`.`id` ". 
+													"AND `contractDivisions_id` = ? ".
+												"WHERE `u`.`rights` = 'client' AND `u`.`isDisabled` = 0 AND `u`.`loginDB` = 'mysql' ". 
+												"ORDER BY `u`.`secondName`, `u`.`firstName`, `u`.`middleName`");
 					$req->bind_param('i', $id);
 					$req->bind_result($uid, $gn, $fn, $mn, $isFree, $isSelected);
 					if (!$req->execute()) {
@@ -195,9 +202,8 @@
 												"LEFT JOIN ( ".
 													"SELECT DISTINCT `partner_id` FROM `allowedContracts` ".
 												") AS `t` ON `t`.`partner_id` = `p`.`id` ".
-												"LEFT JOIN ( ".
-													"SELECT `partner_id` FROM `allowedContracts` WHERE `contractDivisions_id` = ? ". 
-												") AS `r` ON `r`.`partner_id` = `p`.`id` ".
+												"LEFT JOIN `allowedContracts` AS `r` ON `r`.`partner_id` = `p`.`id` ". 
+													"AND `contractDivisions_id` = ? ". 
 												"ORDER BY `p`.`name`");
 					$req->bind_param('i', $id);
 					$req->bind_result($partnerId, $partnerName, $isFree, $isSelected);
@@ -325,19 +331,14 @@
 				exit;
 			}
 			$req->close();
-			$req =  $mysqli->prepare("SELECT `d`.`id`, `d`.`name`, IFNULL(`eq`.`count`, 0), IFNULL(`os`.`count`, 0) ".
+			$req =  $mysqli->prepare("SELECT `d`.`id`, `d`.`name`, IFNULL(`eq`.`total`, 0), IFNULL(`eq`.`onService`, 0) ".
 										"FROM `contractDivisions` AS `d`".
 										"LEFT JOIN ( ".
-										    "SELECT `contractDivisions_id`, COUNT(contractDivisions_id) AS `count` ".
+										    "SELECT `contractDivisions_id`, COUNT(contractDivisions_id) AS `total`, ".
+										    		"SUM(`onService`) AS `onService` ".
 										    "FROM `equipment` ".
 										    "GROUP BY `contractDivisions_id` ".
 										") AS `eq` ON `eq`.`contractDivisions_id` = `d`.`id` ".
-										"LEFT JOIN ( ".
-										    "SELECT `contractDivisions_id`, COUNT(contractDivisions_id) AS `count` ".
-										    "FROM `equipment` ".
-										    "WHERE `onService` = 1 ".
-										    "GROUP BY `contractDivisions_id` ".
-										") AS `os` ON `os`.`contractDivisions_id` = `d`.`id` ".
 										"WHERE `d`.`contracts_id` = ? ".
 										"ORDER BY `d`.`name`");
 			$req->bind_param('i', $contractId);
@@ -369,7 +370,55 @@
 			}
 			$req->close();
 			returnJson(array('ok' => 1));
-			break;			 
+			break;
+		case 'serviceOn':
+			if (!isset($_REQUEST['id']) || ($id = $_REQUEST['id']) <= 0) {
+				returnJson(array('error' => 'Ошибка в параметрах.'));
+				exit;
+			}
+			$req = $mysqli->prepare("UPDATE IGNORE `contractDivisions` SET `isDisabled` = 0 WHERE `id` = ?");
+			$req->bind_param('i', $id);
+			if (!$req->execute()) {
+				returnJson(array('error' => 'Внутренняя ошибка сервера.'));
+				exit;
+			}
+			if ($mysqli->affected_rows <= 0) {
+				returnJson(array('error' => 'Ошибка в параметрах.'));
+				exit;
+			}
+			$req->close();
+			returnJson(array('ok' => 1));
+			break;
+		case 'serviceOff':
+			if (!isset($_REQUEST['id']) || ($id = $_REQUEST['id']) <= 0) {
+				returnJson(array('error' => 'Ошибка в параметрах.'));
+				exit;
+			}
+			$req = $mysqli->prepare("SELECT `id` FROM `request` WHERE `contractDivisions_id` = ? AND `currentState` NOT IN ('closed','canceled') LIMIT 1");
+			$req->bind_param('i', $id);
+			$req->bind_result($tmp);
+			if (!$req->execute()) {
+				returnJson(array('error' => 'Внутренняя ошибка сервера.'));
+				exit;
+			}
+			if ($req->fetch()) {
+				returnJson(array('error' => 'По подразделению есть незакрытые заявки.'));
+				exit;
+			}
+			$req->close();
+			$req = $mysqli->prepare("UPDATE IGNORE `contractDivisions` SET `isDisabled` = 1 WHERE `id` = ?");
+			$req->bind_param('i', $id);
+			if (!$req->execute()) {
+				returnJson(array('error' => 'Внутренняя ошибка сервера.'));
+				exit;
+			}
+			if ($mysqli->affected_rows <= 0) {
+				returnJson(array('error' => 'Ошибка в параметрах.'));
+				exit;
+			}
+			$req->close();
+			returnJson(array('ok' => 1));
+			break;
 		default:
 			returnJson(array('error' => 'Ошибка в параметрах.'));
 			break;
