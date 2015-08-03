@@ -266,9 +266,9 @@
   // Готовим таблицу плановых заявок
   $req = $mysqli->prepare(
   		"SELECT DISTINCT `pr`.`id`, `pr`.`slaLevel`, `s`.`shortname`, `s`.`name`, `pr`.`nextDate`, `ca`.`name`, ".
-  				"`div`.`name`, `pr`.`problem`, `pr`.`nextDate` <= DATE_ADD(NOW(), INTERVAL `pr`.`preStart` DAY) ".
+  				"`div`.`name`, `pr`.`problem`, `pr`.`nextDate` <= DATE_ADD(NOW(), INTERVAL `pr`.`preStart` DAY), `div`.`addProblem` ".
   			"FROM `plannedRequest` AS `pr` ".
-            "LEFT JOIN `contractDivisions` AS `div` ON `pr`.`contractDivisions_id` = `div`.`id` ".
+            "LEFT JOIN `contractDivisions` AS `div` ON `pr`.`contractDivisions_id` = `div`.`id` AND `div`.`isDisabled` = 0 ".
             "LEFT JOIN `contracts` AS `c` ON `c`.`id` = `div`.`contracts_id` ".
             "LEFT JOIN `contragents` AS `ca` ON `ca`.`id` = `div`.`contragents_id` ".
             "LEFT JOIN `userContractDivisions` AS `ucd` ON `pr`.`contractDivisions_id` = `ucd`.`contractDivisions_id` ".
@@ -284,7 +284,7 @@
             	"AND `pr`.`nextDate` < DATE_ADD(NOW(), INTERVAL 1 MONTH) ".
             "ORDER BY `pr`.`nextDate`");
   $req->bind_param('iiiiiiiiiiii', $byContrTime, $byDiv, $divFilter, $byCntrAgent, $divFilter, $byClient, $userId, $userId, $byPartner, $partnerId, $byService, $srvFilter);
-  $req->bind_result($id, $slaLevel, $srvSName, $srvName, $nextDate, $contragent, $div, $problem, $canPreStart);
+  $req->bind_result($id, $slaLevel, $srvSName, $srvName, $nextDate, $contragent, $div, $problem, $canPreStart, $divProblem);
   if (!$req->execute()) { 
     echo json_encode(array('error' => 'Внутренняя ошибка сервера'));
     $req->close();
@@ -299,9 +299,10 @@
         "<td><input type='checkbox' class='checkOne'".($canPreStart == 0 ? ' disabled' : '').">".
         "<abbr title='".$statusNames['planned']."'><span class='ui-icon ".$statusIcons['planned']."'></span></abbr>".
         "<td>{$slaLevels[$slaLevel]}".
-        "<td><abbr title='{$srvName}\n{$problem}'>{$srvSName}</abbr>".
+        "<td>{$srvSName}".
         "<td>".date_format(date_create($nextDate), 'd.m.Y').
-		"<td><abbr title='{$div}'>{$contragent}</abbr>";
+		"<td>".($div == $contragent ? "" : "${div}, ")."${contragent}".
+		"<td>{$problem}".($divProblem == '' ? '' : "<br>".preg_replace('/\n/', '<br>', $divProblem));
     $count++;
   }
   if ($table == '')
@@ -313,6 +314,7 @@
                                 "<th>Услуга".
                                 "<th>Дата".
                                 "<th>Заказчик".
+                                "<th>Задача".
                                 $table.
                                 "</table>";
   $result['plannedNum'] = $count;

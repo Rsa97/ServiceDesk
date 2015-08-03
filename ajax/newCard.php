@@ -128,7 +128,7 @@ function calcTime($div, $serv, $sla, $sql) {
       if (isset($_REQUEST['n']) && preg_match('~(\d+)~', $_REQUEST['n'], $reqMatch) && $reqMatch[1] != 0) {
 	    $req = $mysqli->prepare("SELECT COUNT(*) ".
 	    						"FROM `request` AS `rq` ".
-	    						"LEFT JOIN `contractDivisions` AS `cd` ON `cd`.`id` = `rq`.`contractDivisions_id` ".
+	    						"LEFT JOIN `contractDivisions` AS `cd` ON `cd`.`id` = `rq`.`contractDivisions_id` AND `cd`.`isDisabled` = 0 ".
 	    						"LEFT JOIN `contracts` AS `c` ON `c`.`id` = `cd`.`contracts_id` ".
     	                        "WHERE (? = 0 OR (`rq`.`currentState` = 'received' AND `rq`.`contactPersons_id` = ?)) ".
     	                        	"AND (? = 0 OR (`rq`.`currentState` IN ('accepted','fixed') AND `rq`.`engeneer_id` = ?)) ".
@@ -143,7 +143,7 @@ function calcTime($div, $serv, $sla, $sql) {
       if (isset($_REQUEST['div']) && preg_match('~(\d+)~', $_REQUEST['div'], $divMatch) && $divMatch[1] != 0) {
 	    $req = $mysqli->prepare("SELECT COUNT(*) ".
 								"FROM `contractDivisions` AS `cd` ".
-								"LEFT JOIN `userContractDivisions` AS `ucd` ON `ucd`.`contractDivisions_id` = `cd`.`id` ".
+								"LEFT JOIN `userContractDivisions` AS `ucd` ON `ucd`.`contractDivisions_id` = `cd`.`id` AND `cd`.`isDisabled` = 0 ".
 								"LEFT JOIN `contracts` AS `c` ON `c`.`id` = `cd`.`contracts_id` ".
 								"LEFT JOIN `userContracts` AS `uc` ON `uc`.`contracts_id` = `c`.`id` ".
     	                        "WHERE (? = 0 OR `ucd`.`users_id` = ? OR `uc`.`users_id` = ?) ".
@@ -177,7 +177,7 @@ function calcTime($div, $serv, $sla, $sql) {
 		$req = $mysqli->prepare("SELECT DISTINCT `ca`.`id`, `ca`.`name` ".
         	                    "FROM `contragents` AS `ca` ".
 								"JOIN `contracts` AS `c` ON `ca`.`id` = `c`.`contragents_id` ".
-								"LEFT JOIN `contractDivisions` AS `div` ON `div`.`contracts_id` = `c`.`id` ".
+								"LEFT JOIN `contractDivisions` AS `div` ON `div`.`contracts_id` = `c`.`id` AND `div`.`isDisabled` = 0 ".
 								"LEFT JOIN `userContractDivisions` AS `ucd` ON `ucd`.`contractDivisions_id` = `div`.`id` ".
 								"LEFT JOIN `userContracts` AS `uc` ON `uc`.`contracts_id` = `c`.`id` ".
     	                        "WHERE (? = 0 OR `ucd`.`users_id` = ? OR `uc`.`users_id` = ?) ".
@@ -197,7 +197,7 @@ function calcTime($div, $serv, $sla, $sql) {
 		}
 		$req->close();
 		if ($n > 1)
-			$contragents = "<option value='0'>-- Выберите контрагента --".$contragents;
+			$contragents = "<option value='0' selected>-- Выберите контрагента --".$contragents;
 		sendJson(array('contragent' => $contragents));
 		break;
 	case 'contractsList':
@@ -207,7 +207,7 @@ function calcTime($div, $serv, $sla, $sql) {
 	  	}
 		$req = $mysqli->prepare("SELECT DISTINCT `c`.`id`, `c`.`number` ".
 								"FROM `contracts` AS `c` ".
-								"JOIN `contractDivisions` AS `div` ON `div`.`contracts_id` = `c`.`id`".
+								"JOIN `contractDivisions` AS `div` ON `div`.`contracts_id` = `c`.`id` AND `div`.`isDisabled` = 0 ".
 								"LEFT JOIN `userContractDivisions` AS `ucd` ON `ucd`.`contractDivisions_id` = `div`.`id` ".
 								"LEFT JOIN `userContracts` AS `uc` ON `uc`.`contracts_id` = `c`.`id` ".
     	                        "WHERE `div`.`contragents_id` = ? ".
@@ -228,7 +228,7 @@ function calcTime($div, $serv, $sla, $sql) {
 		}
 		$req->close();
 		if ($n > 1)
-			$contracts = "<option value='0'>-- Выберите договор --".$contracts;
+			$contracts = "<option value='0' selected>-- Выберите договор --".$contracts;
 		sendJson(array('contract' => $contracts));
 		break;
 	case 'divsList': 
@@ -238,7 +238,7 @@ function calcTime($div, $serv, $sla, $sql) {
 	  	}
 		$req = $mysqli->prepare("SELECT DISTINCT `div`.`id`, `div`.`name` ".
 								"FROM `contracts` AS `c` ".
-								"JOIN `contractDivisions` AS `div` ON `div`.`contracts_id` = `c`.`id` ".
+								"JOIN `contractDivisions` AS `div` ON `div`.`contracts_id` = `c`.`id` AND `div`.`isDisabled` = 0 ".
 								"LEFT JOIN `userContractDivisions` AS `ucd` ON `ucd`.`contractDivisions_id` = `div`.`id` ".
 								"LEFT JOIN `userContracts` AS `uc` ON `uc`.`contracts_id` = `c`.`id` ".
     	                        "WHERE `c`.`id` = ? ".
@@ -272,7 +272,7 @@ function calcTime($div, $serv, $sla, $sql) {
   								"FROM `contractDivisions` AS `cd` ".
   								"JOIN `divServicesSLA` AS `dss` ON `dss`.`contract_id` = `cd`.`contracts_id` AND `dss`.`divType_id` = `cd`.`type_id` ".
   								"JOIN `services` AS `srv` ON `srv`.`id` = `dss`.`service_id` ".
-  								"WHERE `cd`.`id` = ? AND `srv`.`utility` = 0 ".
+  								"WHERE `cd`.`id` = ? AND `srv`.`utility` = 0 AND `cd`.`isDisabled` = 0 ".
   								"ORDER BY `srv`.`name`");
 	  $req->bind_param('i', $divMatch[1]);
 	  $req->bind_result($servId, $servName);
@@ -296,7 +296,7 @@ function calcTime($div, $serv, $sla, $sql) {
 							  "UNION SELECT `u`.`id`, `u`.`firstName`, `u`.`secondName`, `u`.`middleName`, `u`.`email`, `u`.`phone`, `u`.`address` ".
 								"FROM `users` AS `u` ".
 								"LEFT JOIN `userContracts` AS `uc` ON `uc`.`users_id` = `u`.`id` ".
-								"LEFT JOIN `contractDivisions` AS `cd` ON `cd`.`contracts_id` = `uc`.`contracts_id` ".
+								"LEFT JOIN `contractDivisions` AS `cd` ON `cd`.`contracts_id` = `uc`.`contracts_id` AND `cd`.`isDisabled` = 0 ".
 								"WHERE `cd`.`id` = ? ".
 								  "AND `u`.`rights` = 'client'"); 
 	  $req->bind_param('ii', $divMatch[1], $divMatch[1]);
@@ -336,7 +336,7 @@ function calcTime($div, $serv, $sla, $sql) {
   		  							"FROM `contractDivisions` AS `cd` ".
   		  							"LEFT JOIN `contracts` AS `c` ON `c`.`id` = `cd`.`contracts_id` ".
   		  							"LEFT JOIN `divServicesSLA` AS `dss` ON `dss`.`contract_id` = `c`.`id` AND `cd`.`type_id` = `dss`.`divType_id` ".
-  		  							"WHERE `cd`.`id` = ? AND `dss`.`service_id` = ? ".
+  		  							"WHERE `cd`.`id` = ? AND `dss`.`service_id` = ? AND `cd`.`isDisabled` = 0 ".
 									"ORDER BY `dss`.`slaLevel` ");
 		  $req->bind_param('ii', $divMatch[1], $servMatch[1]);
 		  $req->bind_result($slaLevel, $isDefault);
@@ -415,6 +415,7 @@ function calcTime($div, $serv, $sla, $sql) {
 								"LEFT JOIN `equipment` AS `eq` ON `eq`.`contractDivisions_id` = `cd`.`id` ".
 								"WHERE (`ucd`.`users_id` = ? OR `uc`.`users_id` = ?) AND `cd`.`id` = ? ".
 									"AND `dss`.`service_id` = ? AND `dss`.`slaLevel` = ? ".
+									"AND `cd`.`isDisabled` = 0 ".
 									"AND (? = '' OR (`eq`.`serviceNumber` = ? AND `eq`.`onService` = 1))");
 		$req->bind_param('iiiisss', $contMatch[1], $contMatch[1], $divMatch[1], $servMatch[1], $_REQUEST['sla'], $_REQUEST['srvNum'], $_REQUEST['srvNum']);
 		$req->bind_result($ok);

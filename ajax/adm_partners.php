@@ -43,8 +43,8 @@
 				case 'users':
 					$req =  $mysqli->prepare("SELECT `id`, `firstName`, `secondName`, `middleName`, `partner_id` ".
 												"FROM `users` ".
-												"WHERE `rights` = 'partner' AND (`partner_id` != ? OR ISNULL(`partner_id`)) ".
-													"AND `isDisabled` = 0 AND `loginDB` = 'mysql' ".
+												"WHERE `rights` = 'partner' AND `isDisabled` = 0 AND `loginDB` = 'mysql' ".
+													"AND (`partner_id` != ? OR ISNULL(`partner_id`)) ".
 												"ORDER BY `secondName`, `firstName`, `middleName`");
 					$req->bind_param('i', $id);
 					$req->bind_result($uid, $gn, $fn, $mn, $partnerId);
@@ -62,10 +62,10 @@
 					$req->close();
 					$req =  $mysqli->prepare("SELECT `id`, `firstName`, `secondName`, `middleName` ".
 												"FROM `users` ".
-												"WHERE `rights` = 'partner' AND `partner_id` = ? AND `isDisabled` = 0 ".
+												"WHERE `rights` = 'partner' AND `isDisabled` = 0 AND `partner_id` = ? ".
 												"ORDER BY `secondName`, `firstName`, `middleName`");
 					$req->bind_param('i', $_REQUEST['id']);
-					$req->bind_result($uid, $gn, $fn, $mn);									
+					$req->bind_result($uid, $gn, $fn, $mn);
 					if (!$req->execute()) {
 						returnJson(array('error' => 'Внутренняя ошибка сервера.'));
 						exit;
@@ -85,6 +85,7 @@
 												"JOIN `contracts` AS `c` ON `c`.`id` = `cd`.`contracts_id` ".
 												"JOIN `contragents` AS `ca` ON `ca`.`id` = `c`.`contragents_id` ".
 												"WHERE (`ac`.`partner_id` != ? OR `ac`.`partner_id` IS NULL) ".
+													"AND `cd`.`isDisabled` = 0 ".
 												"ORDER BY `c`.`number`, `cd`.`name`");
 					$req->bind_param('i', $id);
 					$req->bind_result($divId, $divName, $contractNumber, $contragentName, $partnerId);
@@ -116,6 +117,7 @@
 												"JOIN `contracts` AS `c` ON `c`.`id` = `cd`.`contracts_id` ".
 												"JOIN `contragents` AS `ca` ON `ca`.`id` = `c`.`contragents_id` ".
 												"WHERE `ac`.`partner_id` = ? ".
+													"AND `cd`.`isDisabled` = 0 ".
 												"ORDER BY `c`.`number`, `cd`.`name`");
 					$req->bind_param('i', $id);
 					$req->bind_result($divId, $divName, $contractNumber, $contragentName);
@@ -270,6 +272,7 @@
 								"JOIN `contracts` AS `c` ON `c`.`id` = `cd`.`contracts_id` ".
 								"JOIN `contragents` AS `ca` ON `ca`.`id` = `c`.`contragents_id` ".
 								"WHERE `ac`.`partner_id` = ? ".
+									"AND `cd`.`isDisabled` = 0 ".
 								"ORDER BY `c`.`number`, `cd`.`name`");
 	$req2->bind_param('i', $servId);
 	$req2->bind_result($divName, $contractNum, $contragentName);

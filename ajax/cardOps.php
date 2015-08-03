@@ -78,7 +78,7 @@
                         "`co`.`secondName`, `co`.`firstName`, `co`.`middleName`, `co`.`email`, `co`.`phone`, `rq`.`fixBefore`, `rq`.`repairBefore`, ".
                         "CAST(`rq`.`problem` AS CHAR(8192)), `rq`.`slaLevel`, `co`.`address`, ".
                         "`rq`.`solutionProblem`, `rq`.`solution`,  `rq`.`solutionRecomendation`, `div`.`id`, `c`.`number`, `rq`.`repairedAt`, ".
-                        "`ca`.`id`, `c`.`id`, `c`.`number` ".
+                        "`ca`.`id`, `c`.`id`, `c`.`number`, `div`.`address` ".
           "FROM `request` AS `rq` ".
             "LEFT JOIN `contractDivisions` AS `div` ON `rq`.`contractDivisions_id` = `div`.`id` ".
             "LEFT JOIN `contracts` AS `c` ON `c`.`id` = `div`.`contracts_id` ".
@@ -106,7 +106,7 @@
                                       $userId, $byPartner, $partnerId, $byService, $srvFilter);
 	$req->bind_result($id, $state, $stateTime, $srvSName, $srvName, $createdAt, $repairBefore, $div, $contragent, $engLN, $engGN, $engMN, $engEmail, $engPhone, 
                     $eqType, $eqSubType, $eqName, $eqMfg, $servNum, $serial, $contLN, $contGN, $contMN, $contEmail, $contPhone, $fixBefore, $repairBefore, $problem, 
-                    $slaLevel, $contAddress, $solProblem, $sol, $solRecomend, $divId, $contractNumber, $repairedAt, $caId, $cId, $cNum);
+                    $slaLevel, $contAddress, $solProblem, $sol, $solRecomend, $divId, $contractNumber, $repairedAt, $caId, $cId, $cNum, $divAddress);
 	if (!$req->execute()) { 
 		sendJson(array('error' => 'Внутренняя ошибка сервера'));
 		$req->close();
@@ -303,7 +303,7 @@
                   'contact' => "<option value='n0'>{$contLN} {$contGN} {$contMN}",
                   '_email' => $contEmail,
                   '_phone' => $contPhone,
-                  '_address' => $contAddress,
+                  '_address' => ($divAddress == '' ? $contAddress : $divAddress),
                   '_cardSolProblem' => $solProblem,
                   '_cardSolSolution' => $sol,
                   '_cardSolRecomendation' => $solRecomend,

@@ -83,7 +83,7 @@
 								"FROM `contragents` AS `ca` ".
 								"LEFT JOIN (SELECT DISTINCT `contragents_id` FROM `contracts`) AS `c` ON `c`.`contragents_id` = `ca`.`id` ".
 								"LEFT JOIN (SELECT DISTINCT `contragents_id` FROM `contractDivisions`) AS `cd` ON `cd`.`contragents_id` = `ca`.`id` ".
-								"ORDER BY `name`");
+								"ORDER BY `ca`.`name`");
 	$req->bind_result($caId, $name, $inUse);
 	if (!$req->execute()) {
 		returnJson(array('error' => 'Внутренняя ошибка сервера.'));

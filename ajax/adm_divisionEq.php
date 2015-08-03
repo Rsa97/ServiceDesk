@@ -121,18 +121,38 @@
 				exit;
 			}
 			$req->close();
-			if ($workplace == 0)
+			$did = $divId;
+			if ($workplace == 0) {
 				$workplace = null;
+				$did = null;
+			}
 			if ($id == 0) {
+				$contId = 0;
+				$req = $mysqli->prepare("SELECT `contracts_id` FROM `contractDivisions` WHERE `id` = ?");
+				$req->bind_param('i', $divId);
+				$req->bind_result($contId);
+				if (!$req->execute()) {
+					returnJson(array('error' => 'Внутренняя ошибка сервера.'));
+					exit;
+				}
+				$req->fetch();
+				$req->close();
 				$req = $mysqli->prepare("INSERT IGNORE INTO `equipment` (`serviceNumber`, `serialNumber`, `warrantyEnd`, ".
-												"`equipmentModels_id`, `contractDivisions_id`, `rem`, `workplace_id`) ".
-												"VALUES (?, ?, ?, ?, ?, ?, ?)");
-				$req->bind_param('issiisi', $serviceNum, $serial, $_REQUEST['warrEnd'], $model, $divId, $comment, $workplace);
+												"`equipmentModels_id`, `contractDivisions_id`, `rem`, `workplace_id`, `contracts_id`) ".
+												"VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+				$req->bind_param('issiisii', $serviceNum, $serial, $_REQUEST['warrEnd'], $model, $did, $comment, $workplace, $contId);
 			} else {
-				$req = $mysqli->prepare("UPDATE IGNORE `equipment` SET `serviceNumber` = ?, `serialNumber` = ?, `warrantyEnd` = ?, ".
-												"`equipmentModels_id` = ?, `contractDivisions_id` = ?, `rem` = ?, `workplace_id` = ? ".
-												"WHERE `serviceNumber` = ?");
-				$req->bind_param('issiisii', $serviceNum, $serial, $_REQUEST['warrEnd'], $model, $divId, $comment, $workplace, $id);
+				if ($workplace != 0) {
+					$req = $mysqli->prepare("UPDATE IGNORE `equipment` SET `serviceNumber` = ?, `serialNumber` = ?, `warrantyEnd` = ?, ".
+													"`equipmentModels_id` = ?, `rem` = ?, `workplace_id` = ?, `contractDivisions_id` = ? ".
+													"WHERE `serviceNumber` = ?");
+					$req->bind_param('issisiii', $serviceNum, $serial, $_REQUEST['warrEnd'], $model, $comment, $workplace, $divId, $id);
+				} else {
+					$req = $mysqli->prepare("UPDATE IGNORE `equipment` SET `serviceNumber` = ?, `serialNumber` = ?, `warrantyEnd` = ?, ".
+													"`equipmentModels_id` = ?, `rem` = ?, `workplace_id` = ? ".
+													"WHERE `serviceNumber` = ?");
+					$req->bind_param('issisii', $serviceNum, $serial, $_REQUEST['warrEnd'], $model, $comment, $workplace, $id);
+				}
 			}
 			if (!$req->execute()) {
 				returnJson(array('error' => 'Внутренняя ошибка сервера.'));
@@ -152,8 +172,13 @@
 				returnJson(array('error' => 'Ошибка в параметрах.'));
 				exit;
 			}
-			$req = $mysqli->prepare("UPDATE IGNORE `equipment` SET `onService` = ? WHERE `serviceNumber` = ?");
-			$req->bind_param('ii', $setService, $id);
+			if ($setService == 1) {
+				$req = $mysqli->prepare("UPDATE IGNORE `equipment` SET `onService` = 1, `contractDivisions_id` = ? WHERE `serviceNumber` = ?");
+				$req->bind_param('ii', $divId, $id);
+			} else {
+				$req = $mysqli->prepare("UPDATE IGNORE `equipment` SET `onService` = 0, `contractDivisions_id` = NULL WHERE `serviceNumber` = ?");
+				$req->bind_param('i', $id);
+			} 
 			if (!$req->execute()) {
 				returnJson(array('error' => 'Внутренняя ошибка сервера.'));
 				exit;
@@ -185,21 +210,31 @@
 			returnJson(array('error' => 'Ошибка в параметрах.'));
 			exit;
 	}
+	$contrId = 0;
+	$req = $mysqli->prepare("SELECT `contracts_id` FROM `contractDivisions` WHERE `id` = ?");
+	$req->bind_param('i', $divId);
+	$req->bind_result($contrId);
+	if (!$req->execute()) {
+		returnJson(array('error' => 'Внутренняя ошибка сервера.'));
+		exit;
+	}
+	$req->fetch();
+	$req->close();
 	$req = $mysqli->prepare("SELECT `eq`.`serviceNumber`, `eq`.`serialNumber`, IFNULL(DATE(`eq`.`warrantyEnd`), ''), `eq`.`onService`, `m`.`name`, ".
-								"`mfg`.`name`, `eq`.`rem`, `t`.`sn`, `wp`.`name` ".
+								"`mfg`.`name`, `eq`.`rem`, `t`.`sn`, `wp`.`name`, `eq`.`contractDivisions_id` ".
 								"FROM `equipment` AS `eq` ".
 								"JOIN `equipmentModels` AS `m` ON `m`.`id` = `eq`.`equipmentModels_id` ".
 								"JOIN `equipmentManufacturers` AS `mfg` ON `mfg`.`id` = `m`.`equipmentManufacturers_id` ".
 								"LEFT JOIN ( ".
 									"SELECT DISTINCT `equipment_serviceNumber` AS `sn` FROM `equipmentOnServiceLog` ".
-									"UNION SELECT DISTINCT `equipment_serviceNumber` AS `sn` FROM `replacement` ".
-									"UNION SELECT DISTINCT `equipment_id` AS `sn` FROM `request` ".
+									"UNION SELECT `equipment_serviceNumber` AS `sn` FROM `replacement` ".
+									"UNION SELECT `equipment_id` AS `sn` FROM `request` ".
 								") AS `t` ON `t`.`sn` = `eq`.`serviceNumber` ".
 								"LEFT JOIN `divisionWorkplaces` AS `wp` ON `wp`.`id` = `eq`.`workplace_id` ".
-								"WHERE `eq`.`contractDivisions_id` = ? ".
-								"ORDER BY `eq`.`serviceNumber`");
-	$req->bind_param('i', $divId);
-	$req->bind_result($servNum, $serial, $warrEnd, $onService, $model, $mfg, $rem, $inUse, $workplace);
+								"WHERE `eq`.`contractDivisions_id` = ? OR (`eq`.`contractDivisions_id` IS NULL AND `eq`.`contracts_id` = ?) ".
+								"ORDER BY `eq`.`contractDivisions_id` DESC, `eq`.`serviceNumber`");
+	$req->bind_param('ii', $divId, $contrId);
+	$req->bind_result($servNum, $serial, $warrEnd, $onService, $model, $mfg, $rem, $inUse, $workplace, $inDiv);
 	if (!$req->execute()) {
 		returnJson(array('error' => 'Внутренняя ошибка сервера.'));
 		exit;
@@ -209,12 +244,16 @@
 	$i = 0;
 	$serv = 0;
 	$total = 0;
+	$inDiv = ($inDiv == '' ? 0 : 1);
 	while ($req->fetch()) {
 		$row = array('id' => $servNum, 
 					 'fields' => array(htmlspecialchars($servNum), htmlspecialchars($serial), htmlspecialchars($mfg.' '.$model),
 										$warrEnd, htmlspecialchars($workplace), htmlspecialchars($rem)),
-					  'onService' => $onService);
-		if ($onService == 0)
+					 'onService' => $onService,
+					 'inDivision' => $inDiv);
+		if ($inDiv == 0)
+			$row['mark'] = 'blue';
+		else if ($onService == 0)
 			$row['mark'] = 'gray';
 		else
 			$serv++;
@@ -228,5 +267,5 @@
 		$tbl[] = $row;
 		$i++;
 	}
-	returnJson(array('table' => $tbl, 'last' => $last, 'count' => "({$serv} / {$total})"));
+	returnJson(array('table' => $tbl, 'last' => $last, 'count' => "")); // 'count' => "({$serv} / {$total})"));
 ?>	
