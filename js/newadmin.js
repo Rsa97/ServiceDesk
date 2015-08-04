@@ -961,33 +961,38 @@ function initEqTree(data, parentSelector) {
 	tree.append('<li class="eqType" data-id="0"><span class="icons3">'+icon.add+'</span> <span class="typeName">Добавить</span>');
 	tree.find('ul').hide();
 	
-	tree.on('click', '.eqTypes li .'+iconClass.expand, function(event) {
+	console.log(tree);
+	console.log('.eqTypes li .'+iconClass.expand);
+	
+	tree.on('click', 'li .'+iconClass.expand, function(event) {
 		event.stopPropagation();
+		console.log('click!');
 		$(this).removeClass(iconClass.expand).addClass(iconClass.collapse);
 		$(this).parents('li').first().removeClass('collapsed').addClass('expanded');
-		$(this).parent().siblings('ul').show();
+		$(this).parents('span').first().siblings('ul').show();
 		return false;
 	});
 
-	tree.on('click', '.eqTypes li .'+iconClass.collapse, function(event) {
+	tree.on('click', 'li .'+iconClass.collapse, function(event) {
 		event.stopPropagation();
-		if ($(this).parent().siblings('ul').find('.'+iconClass.cancel).length > 0)
+		console.log('click!');
+		if ($(this).parents('span').first().siblings('ul').find('.'+iconClass.cancel).length > 0)
 			return false;
 		$(this).removeClass(iconClass.collapse).addClass(iconClass.expand);
 		$(this).parents('li').first().removeClass('expanded').addClass('collapsed');
-		$(this).parent().siblings('ul').hide();
+		$(this).parents('span').first().siblings('ul').hide();
 		return false;
 	});
 	
 	setEqTreeDragDrop(parentSelector);
 	
-	tree.on('click', '.eqTypes li .'+iconClass.edit, function(event) {
+	tree.on('click', 'li .'+iconClass.edit, function(event) {
 		event.stopPropagation();
 		if ($(parentSelector+' .'+iconClass.cancel).length > 0)
 			return false;
 		$(parentSelector+' .eqTypes li.drag').draggable('destroy');
-		var li = $(this).parent().parent();
-		var name = $(this).parent().next();
+		var li = $(this).parents('li').first();
+		var name = $(this).parents('span').first().next();
 		var icons = name.siblings('.icons3');
 		icons.data('old', icons.html());
 		icons.html(icon.apply+icon.cancel); 
@@ -1025,13 +1030,13 @@ function initEqTree(data, parentSelector) {
 		return false;
 	});
 
-	tree.on('click', '.eqTypes li .'+iconClass.add, function(event) {
+	tree.on('click', 'li .'+iconClass.add, function(event) {
 		event.stopPropagation();
 		if ($(parentSelector+' .'+iconClass.cancel).length > 0)
 			return false;
 		$(parentSelector+' .eqTypes li.drag').draggable('destroy');
-		var li = $(this).parent().parent();
-		var name = $(this).parent().next();
+		var li = $(this).parents('li').first();
+		var name = $(this).parents('span').first().next();
 		var icons = name.siblings('.icons3');
 		icons.html(icon.apply+icon.cancel);
 		if (li.hasClass('eqType') || li.hasClass('eqSubType')) {
@@ -1061,10 +1066,10 @@ function initEqTree(data, parentSelector) {
 		return false;
 	});
 	
-	tree.on('click', '.eqTypes li .'+iconClass.cancel, function(event) {
+	tree.on('click', 'li .'+iconClass.cancel, function(event) {
 		event.stopPropagation();
-		var li = $(this).parent().parent();
-		var name = $(this).parent().next();
+		var li = $(this).parents('li').first();
+		var name = $(this).parents('span').first().next();
 		var icons = name.siblings('.icons3');
 		if (li.data('id') == 0) {
 			icons.html(icon.add);
@@ -1083,19 +1088,19 @@ function initEqTree(data, parentSelector) {
 		return false;
 	});
 
-	tree.on('click', '.eqTypes li .'+iconClass.apply, function(event) {
+	tree.on('click', 'li .'+iconClass.apply, function(event) {
 		event.stopPropagation();
-		var li = $(this).parent().parent();
-		var inp = $(this).parent().next().children('input');
+		var li = $(this).parents('li').first();
+		var inp = $(this).parents('span').first().next().children('input');
 		var name = inp.val().trim();
-		var icons = $(this).parent().siblings('.icons3');
+		var icons = $(this).parents('span').first().siblings('.icons3');
 		if (name == '') {
 			alert('Не указан '+(li.hasClass('eqType') ? 'тип' : (li.hasClass('eqSubType') ? 'подтип' : 'производитель')));
 			return false;
 		}
 		var name2 = '';
 		if (li.hasClass('eqMfgModel')) {
-			var inp2 = $(this).parent().siblings('.eqModel').find('input');
+			var inp2 = $(this).parents('span').first().siblings('.eqModel').find('input');
 			var name2 = inp2.val().trim();
 			if (name2 == '') {
 				alert('Не указана модель');
@@ -1168,13 +1173,13 @@ function initEqTree(data, parentSelector) {
 		});
 	});
 	
-	tree.on('click', '.eqTypes li .'+iconClass.del, function(event) {
+	tree.on('click', 'li .'+iconClass.del, function(event) {
 		event.stopPropagation();
 		if ($(parentSelector+' .'+iconClass.cancel).length > 0)
 			return false;
 		if (!confirm('Удалить?'))
 			return false;
-		var li = $(this).parent().parent();
+		var li = $(this).parents('li').first();
 		var req = {call: 'del', id: li.data('id')};
 		if (li.hasClass('eqType'))
 			req.type = 'type';
