@@ -110,6 +110,8 @@ function calcTime($div, $serv, $sla, $sql) {
 	while ($req->fetch()) {
 		$time = calcTime($divId, $srvId, $slaLevel, 1);
 		$mysqli->query("START TRANSACTION");
+		if ($clientId == '')
+			$clientId = 1;
 		$req1->bind_param('sssssiisiiii', $problem, $time['createdAt'], $time['reactBefore'], $time['fixBefore'], 
 										$time['repairBefore'], $clientId, $divId, $slaLevel, $srvId, 
 										$time['toReact'], $time['toFix'], $time['toRepair']);
