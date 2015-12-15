@@ -184,7 +184,7 @@ $times = array();
 while ($mysqli->query("UPDATE `request` ".
                     "SET `alarm` = 3 ".
                     "WHERE `alarm` < 3 AND `currentState` IN ('accepted', 'received', 'fixed') ".
-                      "AND CAST(SUBSTRING_INDEX(calcTime(`id`), ',', -1) AS UNSIGNED)/60./`toRepair` >= 1 ".
+                      "AND CAST(SUBSTRING_INDEX(calcTime_new(`id`), ',', -1) AS UNSIGNED)/60./`toRepair` >= 1 ".
                       "AND @id := `id` ".
                     "LIMIT 1") && ($mysqli->affected_rows > 0)) {
 	if (!$req->execute()) {
@@ -198,7 +198,7 @@ while ($mysqli->query("UPDATE `request` ".
 while ($mysqli->query("UPDATE `request` ".
                     "SET `alarm` = 2 ".
                     "WHERE `alarm` < 2 AND `currentState` IN ('accepted', 'received', 'fixed') ".
-                      "AND CAST(SUBSTRING_INDEX(calcTime(`id`), ',', -1) AS UNSIGNED)/60./`toRepair` >= 0.8 ".
+                      "AND CAST(SUBSTRING_INDEX(calcTime_new(`id`), ',', -1) AS UNSIGNED)/60./`toRepair` >= 0.8 ".
                       "AND @id := `id` ".
                     "LIMIT 1")  && ($mysqli->affected_rows > 0)) {
 	if (!$req->execute()) {
@@ -212,7 +212,7 @@ while ($mysqli->query("UPDATE `request` ".
 while ($mysqli->query("UPDATE `request` ".
                     "SET `alarm` = 1 ".
                     "WHERE `alarm` < 1 AND `currentState` IN ('accepted', 'received', 'fixed') ".
-                      "AND CAST(SUBSTRING_INDEX(calcTime(`id`), ',', -1) AS UNSIGNED)/60./`toRepair` >= 0.5 ".
+                      "AND CAST(SUBSTRING_INDEX(calcTime_new(`id`), ',', -1) AS UNSIGNED)/60./`toRepair` >= 0.5 ".
                       "AND @id := `id` ".
                     "LIMIT 1") && ($mysqli->affected_rows > 0)) {
 	if (!$req->execute()) {
