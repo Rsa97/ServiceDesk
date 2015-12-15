@@ -229,6 +229,7 @@
 									"SELECT DISTINCT `equipment_serviceNumber` AS `sn` FROM `equipmentOnServiceLog` ".
 									"UNION SELECT `equipment_serviceNumber` AS `sn` FROM `replacement` ".
 									"UNION SELECT `equipment_id` AS `sn` FROM `request` ".
+									"UNION SELECT `equipment_id` AS `sn` FROM `workplaceEquipment_register` ".
 								") AS `t` ON `t`.`sn` = `eq`.`serviceNumber` ".
 								"LEFT JOIN `divisionWorkplaces` AS `wp` ON `wp`.`id` = `eq`.`workplace_id` ".
 								"WHERE `eq`.`contractDivisions_id` = ? OR (`eq`.`contractDivisions_id` IS NULL AND `eq`.`contracts_id` = ?) ".

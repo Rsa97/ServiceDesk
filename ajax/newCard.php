@@ -61,6 +61,8 @@ function calcTime($div, $serv, $sla, $sql) {
 	preg_match('~(\d\d):(\d\d):(\d\d)~', $dayStart, $start);
 	preg_match('~(\d\d):(\d\d):(\d\d)~', $endDayTime, $end);
 	$daysecs = $end[1]*3600+$end[2]*60+$end[3]-$start[1]*3600-$start[2]*60-$start[3];
+	if ($daysecs < 0)
+		$daysecs = 0;
 	if ($secs+$daysecs > $toReact*60 && $okReact == 0) {
 	  $reactBefore = formatDateTime($day, $start, $toReact*60-$secs, $sql);
 	  $okReact = 1;

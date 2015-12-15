@@ -1,5 +1,5 @@
 <?php
-	include "../config/db.php";
+	include "../../www/config/db.php";
 	
 function formatDateTime($date, $dayStart, $daysecs, $sql) {
   preg_match('~(\d\d\d\d)-(\d\d)-(\d\d)~', $date, $day);
@@ -25,15 +25,17 @@ function calcTime($div, $serv, $sla, $sql, $date) {
   global $mysqli; 
   $created = date_format($date, 'Y-m-d');
   $dayStart = date_format($date, 'H:i:s');
+  print "created = {$created}\n";
+  print "dayStart = {$dayStart}\n";
   $req = $mysqli->prepare("SELECT DISTINCT `dss`.`toReact`, `dss`.`toFix`, `dss`.`toRepair`, `dss`.`startDayTime`, `dss`.`endDayTime`, `wc`.`date` ".
   							"FROM `contractDivisions` AS `cd` ".
   							"LEFT JOIN `contracts` AS `c` ON `c`.`id` = `cd`.`contracts_id` ".
   							"LEFT JOIN `contractServices` AS `cs` ON `cs`.`contract_id` = `c`.`id` ".
   							"LEFT JOIN `divServicesSLA` AS `dss` ON `dss`.`contract_id` = `c`.`id` AND `cd`.`type_id` = `dss`.`divType_id` ".
   							"LEFT JOIN `workCalendar` AS `wc` ON FIND_IN_SET(`wc`.`type`, `dss`.`dayType`) ".
-  							"WHERE `cd`.`id` = ? AND `dss`.`service_id` = ? AND `dss`.`slaLevel` = ? AND `wc`.`date` >= CURDATE() ".
+  							"WHERE `cd`.`id` = ? AND `dss`.`service_id` = ? AND `dss`.`slaLevel` = ? AND `wc`.`date` >= ? ".
 							"ORDER BY `wc`.`date` ");
-  $req->bind_param('iis', $div, $serv, $sla);
+  $req->bind_param('iiss', $div, $serv, $sla, $created);
   $req->bind_result($toReact, $toFix, $toRepair, $startDayTime, $endDayTime, $day);
   if (!$req->execute()) {
 	return array('error' => 'Внутренняя ошибка сервера');
@@ -54,17 +56,23 @@ function calcTime($div, $serv, $sla, $sql, $date) {
 	preg_match('~(\d\d):(\d\d):(\d\d)~', $dayStart, $start);
 	preg_match('~(\d\d):(\d\d):(\d\d)~', $endDayTime, $end);
 	$daysecs = $end[1]*3600+$end[2]*60+$end[3]-$start[1]*3600-$start[2]*60-$start[3];
+	if ($daysecs < 0)
+	    $daysecs = 0;
+	print "dayStart = {$dayStart}, endDayTime = {$endDayTime}, daysecs = {$daysecs}\n";
 	if ($secs+$daysecs > $toReact*60 && $okReact == 0) {
 	  $reactBefore = formatDateTime($day, $start, $toReact*60-$secs, $sql);
 	  $okReact = 1;
+	  print "reactBefore = {$reactBefore}\n";
 	}
 	if ($secs+$daysecs > $toFix*60 && $okFix == 0) {
 	  $fixBefore = formatDateTime($day, $start, $toFix*60-$secs, $sql);
 	  $okFix = 1;
+	  print "fixBefore = {$fixBefore}\n";
 	}
 	if ($secs+$daysecs > $toRepair*60 && $okRepair == 0) {
 	  $repairBefore = formatDateTime($day, $start, $toRepair*60-$secs, $sql);
 	  $okRepair = 1;
+	  print "repairBefore = {$repairBefore}\n";
 	}
 	if ($okReact == 1 && $okFix == 1 && $okRepair == 1)
 	  break;
@@ -83,16 +91,16 @@ if ($mysqli->connect_error) {
 }
 $mysqli->query("SET NAMES utf8");
 
-$date = new DateTime('06/05/2015');
-$div = 12;
-$serv = 21;
+$date = new DateTime('12/14/2015 18:53:42');
+$div = 75;
+$serv = 22;
 $sla = 'medium';
 $sql = 1;
 
-for ($i = 0; $i < 288; $i++) {
+#for ($i = 0; $i < 288; $i++) {
 	print date_format($date, 'Y-m-d H:i:s')."\n";
 	$res = calcTime($div, $serv, $sla, $sql, $date);
 	print "{$res['createdAt']}\t{$res['reactBefore']}\t{$res['fixBefore']}\t{$res['repairBefore']}\n";
-	$date->add(new DateInterval('PT300S'));
-}
+#	$date->add(new DateInterval('PT300S'));
+#}
 ?>
