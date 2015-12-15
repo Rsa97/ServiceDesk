@@ -312,3 +312,8 @@ td .ui-icon {
 table.planned .cell2 {
     text-align: left;
 }
+
+textarea#problem {
+	overflow-y: scroll;
+	padding-right: 0;
+}
