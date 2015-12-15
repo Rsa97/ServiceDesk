@@ -137,7 +137,7 @@
                         "`rq`.`fixBefore`, `rq`.`repairBefore`, `div`.`name`, `ca`.`name`, `e`.`secondName`, `e`.`firstName`, `e`.`middleName`, `e`.`email`, ".
                         "`e`.`phone`, `et`.`name`, `est`.`description`, `em`.`name`, `emf`.`name`, `eq`.`serviceNumber`, `eq`.`serialNumber`, ".
                         "`co`.`secondName`, `co`.`firstName`, `co`.`middleName`, `co`.`email`, `co`.`phone`, CAST(`rq`.`problem` AS CHAR(1024)), `rq`.`onWait`, ".
-                        "`rq`.`reactedAt`, `rq`.`fixedAt`, `rq`.`repairedAt`, `rq`.`slaLevel`, `rq`.`toReact`, `rq`.`toFix`, `rq`.`toRepair`, calcTime(`rq`.`id`) ".
+                        "`rq`.`reactedAt`, `rq`.`fixedAt`, `rq`.`repairedAt`, `rq`.`slaLevel`, `rq`.`toReact`, `rq`.`toFix`, `rq`.`toRepair`, calcTime_new(`rq`.`id`) ".
           "FROM `request` AS `rq` ".
             "LEFT JOIN `contractDivisions` AS `div` ON `rq`.`contractDivisions_id` = `div`.`id` ".
             "LEFT JOIN `contracts` AS `c` ON `c`.`id` = `div`.`contracts_id` ".
