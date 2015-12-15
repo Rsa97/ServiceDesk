@@ -129,7 +129,8 @@
   while ($req->fetch()) {
     $result[$statusGroup[$state].'Num'] += $count;
   }
-
+  $req->close();
+  
   // Готовим списки заявок по каждому разделу
   $req = $mysqli->prepare(
         "SELECT DISTINCT `rq`.`id`, `rq`.`currentState`, `rq`.`stateChangeAt`, `srv`.`shortName`, `srv`.`name`, `rq`.`createdAt`, `rq`.`reactBefore`, ".
@@ -162,17 +163,19 @@
             "AND (? = 0 OR `ac`.`partner_id` = ?) ".
             "AND (? = 0 OR `rq`.`service_id` = ?) ".
 			"ORDER BY `rq`.`id`");
-  $req->bind_param('iiiiiiiiiiiiiii', $byContrTime, $onlyMy, $userId, $userId, $byDiv, $divFilter, $byCntrAgent, $divFilter, $byClient, $userId, $userId, $byPartner, $partnerId, $byService, $srvFilter);
-  $req->bind_result($id, $state, $stateTime, $srvSName, $srvName, $createdAt, $reactBefore, 
+  if ($mysqli->errno == 0)
+  	$req->bind_param('iiiiiiiiiiiiiii', $byContrTime, $onlyMy, $userId, $userId, $byDiv, $divFilter, $byCntrAgent, $divFilter, $byClient, $userId, $userId, $byPartner, $partnerId, $byService, $srvFilter);
+  if ($mysqli->errno == 0)
+  	$req->bind_result($id, $state, $stateTime, $srvSName, $srvName, $createdAt, $reactBefore, 
                     $fixBefore, $repairBefore, $div, $contragent, $engLN, $engGN, $engMN, $engEmail, 
                     $engPhone, $eqType, $eqSubType, $eqName, $eqMfg, $servNum, $serial, 
                     $contLN, $contGN, $contMN, $contEmail, $contPhone, $problem, $onWait, 
                     $reactedAt, $fixedAt, $repairedAt, $slaLevel,
 					$timeToReact, $timeToFix, $timeToRepair, $times);
-  if (!$req->execute()) { 
-    echo json_encode(array('error' => 'Внутренняя ошибка сервера'));
-    $req->close();
-    $mysqli->close();
+  if ($mysqli->errno == 0)
+  	$req->execute();
+  if ($mysqli->errno != 0) {
+    echo json_encode(array('error' => 'Внутренняя ошибка сервера '.$mysqli->error));
     exit;
   }
   $counts = array();
