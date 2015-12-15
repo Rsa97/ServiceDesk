@@ -137,8 +137,11 @@
                         "`rq`.`fixBefore`, `rq`.`repairBefore`, `div`.`name`, `ca`.`name`, `e`.`secondName`, `e`.`firstName`, `e`.`middleName`, `e`.`email`, ".
                         "`e`.`phone`, `et`.`name`, `est`.`description`, `em`.`name`, `emf`.`name`, `eq`.`serviceNumber`, `eq`.`serialNumber`, ".
                         "`co`.`secondName`, `co`.`firstName`, `co`.`middleName`, `co`.`email`, `co`.`phone`, CAST(`rq`.`problem` AS CHAR(1024)), `rq`.`onWait`, ".
-                        "`rq`.`reactedAt`, `rq`.`fixedAt`, `rq`.`repairedAt`, `rq`.`slaLevel`, `rq`.`toReact`, `rq`.`toFix`, `rq`.`toRepair`, calcTime_new(`rq`.`id`) ".
-          "FROM `request` AS `rq` ".
+                        "`rq`.`reactedAt`, `rq`.`fixedAt`, `rq`.`repairedAt`, `rq`.`slaLevel`, `rq`.`toReact`, `rq`.`toFix`, `rq`.`toRepair`, ".
+						"TIME_TO_SEC(TIMEDIFF(IFNULL(`rq`.`reactedAt`, NOW()), `rq`.`createdAt`))/TIME_TO_SEC(TIMEDIFF(`rq`.`reactBefore`, `rq`.`createdAt`)), ".
+						"TIME_TO_SEC(TIMEDIFF(IFNULL(`rq`.`fixedAt`, NOW()), `rq`.`createdAt`))/TIME_TO_SEC(TIMEDIFF(`rq`.`fixBefore`, `rq`.`createdAt`)), ".
+    					"TIME_TO_SEC(TIMEDIFF(IFNULL(`rq`.`repairedAt`, NOW()), `rq`.`createdAt`))/TIME_TO_SEC(TIMEDIFF(`rq`.`repairBefore`, `rq`.`createdAt`)) ".
+            "FROM `request` AS `rq` ".
             "LEFT JOIN `contractDivisions` AS `div` ON `rq`.`contractDivisions_id` = `div`.`id` ".
             "LEFT JOIN `contracts` AS `c` ON `c`.`id` = `div`.`contracts_id` ".
             "LEFT JOIN `contragents` AS `ca` ON `ca`.`id` = `div`.`contragents_id` ".
@@ -171,7 +174,7 @@
                     $engPhone, $eqType, $eqSubType, $eqName, $eqMfg, $servNum, $serial, 
                     $contLN, $contGN, $contMN, $contEmail, $contPhone, $problem, $onWait, 
                     $reactedAt, $fixedAt, $repairedAt, $slaLevel,
-					$timeToReact, $timeToFix, $timeToRepair, $times);
+					$timeToReact, $timeToFix, $timeToRepair, $reactPercent, $fixPercent, $repairPercent);
   if ($mysqli->errno == 0)
   	$req->execute();
   if ($mysqli->errno != 0) {
@@ -199,14 +202,10 @@
       $timeToReact *= 60;
       $timeToFix *= 60;
       $timeToRepair *= 60;
-	  $times = split(',', $times);
-	  $reactPercent = ($timeToReact == 0 ? 1 : $times[0]/$timeToReact);
       if ($reactPercent > 1)
 	    $reactPercent = 1;
-	  $fixPercent = ($timeToFix == 0 ? 1 : $times[1]/$timeToFix);
       if ($fixPercent > 1)
         $fixPercent = 1;
-	  $repairPercent = ($timeToRepair == 0 ? 1 : $times[2]/$timeToRepair);
       if ($repairPercent > 1)
         $repairPercent = 1;
       $reactColor = ($reactedAt == '' ? ('rgb('.floor(255*$reactPercent).','.floor(255*(1-$reactPercent)).',0)') : '#808080');
@@ -283,7 +282,7 @@
             	"AND (? = 0 OR `div`.`contragents_id` = ?) ".
             	"AND (? = 0 OR `ucd`.`users_id` = ? OR `uc`.`users_id` = ?) ".
             	"AND (? = 0 OR `ac`.`partner_id` = ?) ".
-            	"AND (? = 0 OR `pr`.`service_id` = ?)".
+            	"AND (? = 0 OR `pr`.`service_id` = ?) ".
             	"AND `pr`.`nextDate` < DATE_ADD(NOW(), INTERVAL 1 MONTH) ".
             "ORDER BY `pr`.`nextDate`");
   $req->bind_param('iiiiiiiiiiii', $byContrTime, $byDiv, $divFilter, $byCntrAgent, $divFilter, $byClient, $userId, $userId, $byPartner, $partnerId, $byService, $srvFilter);
