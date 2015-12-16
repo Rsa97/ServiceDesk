@@ -1,0 +1,3 @@
+RewriteEngine On
+
+RewriteRule ^api/(.*)$ /ajax/api.php?request=$1 [QSA,NC,L]

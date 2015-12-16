@@ -138,9 +138,12 @@
                         "`e`.`phone`, `et`.`name`, `est`.`description`, `em`.`name`, `emf`.`name`, `eq`.`serviceNumber`, `eq`.`serialNumber`, ".
                         "`co`.`secondName`, `co`.`firstName`, `co`.`middleName`, `co`.`email`, `co`.`phone`, CAST(`rq`.`problem` AS CHAR(1024)), `rq`.`onWait`, ".
                         "`rq`.`reactedAt`, `rq`.`fixedAt`, `rq`.`repairedAt`, `rq`.`slaLevel`, `rq`.`toReact`, `rq`.`toFix`, `rq`.`toRepair`, ".
-						"TIME_TO_SEC(TIMEDIFF(IFNULL(`rq`.`reactedAt`, NOW()), `rq`.`createdAt`))/TIME_TO_SEC(TIMEDIFF(`rq`.`reactBefore`, `rq`.`createdAt`)), ".
-						"TIME_TO_SEC(TIMEDIFF(IFNULL(`rq`.`fixedAt`, NOW()), `rq`.`createdAt`))/TIME_TO_SEC(TIMEDIFF(`rq`.`fixBefore`, `rq`.`createdAt`)), ".
-    					"TIME_TO_SEC(TIMEDIFF(IFNULL(`rq`.`repairedAt`, NOW()), `rq`.`createdAt`))/TIME_TO_SEC(TIMEDIFF(`rq`.`repairBefore`, `rq`.`createdAt`)) ".
+                        "IFNULL(`rq`.`reactRate`, calcTime_v2(`rq`.`id`, IFNULL(`rq`.`reactedAt`, NOW()))/`rq`.`toReact`), ".
+						"IFNULL(`rq`.`fixRate`, calcTime_v2(`rq`.`id`, IFNULL(`rq`.`fixedAt`, NOW()))/`rq`.`toFix`), ".
+    					"IFNULL(`rq`.`repairRate`, calcTime_v2(`rq`.`id`, IFNULL(`rq`.`repairedAt`, NOW()))/`rq`.`toRepair`) ".
+#						"TIME_TO_SEC(TIMEDIFF(IFNULL(`rq`.`reactedAt`, NOW()), `rq`.`createdAt`))/TIME_TO_SEC(TIMEDIFF(`rq`.`reactBefore`, `rq`.`createdAt`)), ".
+#						"TIME_TO_SEC(TIMEDIFF(IFNULL(`rq`.`fixedAt`, NOW()), `rq`.`createdAt`))/TIME_TO_SEC(TIMEDIFF(`rq`.`fixBefore`, `rq`.`createdAt`)), ".
+#   					"TIME_TO_SEC(TIMEDIFF(IFNULL(`rq`.`repairedAt`, NOW()), `rq`.`createdAt`))/TIME_TO_SEC(TIMEDIFF(`rq`.`repairBefore`, `rq`.`createdAt`)) ".
             "FROM `request` AS `rq` ".
             "LEFT JOIN `contractDivisions` AS `div` ON `rq`.`contractDivisions_id` = `div`.`id` ".
             "LEFT JOIN `contracts` AS `c` ON `c`.`id` = `div`.`contracts_id` ".
