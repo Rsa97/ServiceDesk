@@ -8,8 +8,8 @@ $attrMapping = array('firstName' => 'givenName',
 		     'phone'      => 'telephoneNumber',
 		     'mail'       => 'mail');
 $userAttr = 'sAMAccountName';
-$adminFilter = 'memberOf:1.2.840.113556.1.4.1941:=CN=SD_Admins,OU=Permissions,DC=sod,DC=local';
-$operFilter = 'memberOf:1.2.840.113556.1.4.1941:=CN=SD_Operators,OU=Permissions,DC=sod,DC=local';
-$engeneerFilter = 'memberOf:1.2.840.113556.1.4.1941:=CN=SD_Engeneers,OU=Permissions,DC=sod,DC=local';
-$userFilter = 'memberOf:1.2.840.113556.1.4.1941:=CN=Пользователи домена,OU=Groups,DC=sod,DC=local';
+$filters = array('client' => 'memberOf:1.2.840.113556.1.4.1941:=CN=Пользователи домена,OU=Groups,DC=sod,DC=local',
+				 'operator' => 'memberOf:1.2.840.113556.1.4.1941:=CN=SD_Operators,OU=Permissions,DC=sod,DC=local',
+				 'engineer' => 'memberOf:1.2.840.113556.1.4.1941:=CN=SD_Engeneers,OU=Permissions,DC=sod,DC=local',
+				 'admin' => 'memberOf:1.2.840.113556.1.4.1941:=CN=SD_Admins,OU=Permissions,DC=sod,DC=local'); 
 ?>

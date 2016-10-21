@@ -52,6 +52,32 @@ body {
     margin: 5px 0 10px 10px;
 }
 
+#fltByText {
+    padding: 0.4em 0.1em;
+    width: 95%;
+    margin: 5px 0 10px 10px;
+}
+
+#fltByFromDate, #fltByToDate {
+    padding: 0.4em 0.1em;
+	display: inline-block;
+    width: calc((100% - 1.4em - 26px) / 2);
+}
+
+#fltByFromDate {
+    margin: 5px 0 10px 10px;
+}
+
+#fltByToDate {
+    margin: 5px 0 10px 0;
+}
+
+#fltByDate span {
+	display: inline-block;
+	width: 1em;
+	text-align: center;
+}
+
 #chkMyTickets {
     width: 100%;
     text-align: center;

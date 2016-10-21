@@ -64,10 +64,16 @@
         </div>
       </div>
       <div id='filter'>
+      	<input type='hidden' name='fltFromDateSQL' id='fltFromDateSQL'> 
+      	<input type='hidden' name='fltToDateSQL' id='fltToDateSQL'> 
         <label for='fltByDiv'>Заказчик:</label>
         <div id='fltByDivPlace'></div>
         <label for='fltBySrv'>Группа работ: </label>
         <div id='fltBySrvPlace'></div>
+        <label for='fltByText'>Текст заявки: </label>
+        <div id='fltByTextPlace'><input type='text' name='fltByText' id='fltByText' value=''></div>
+        <label for='fltByText'>Интервал дат: </label>
+		<div id='fltByDate'><input type='text' name='fltByFromDate' id='fltByFromDate' value=''><span>-</span><input type='text' name='fltByToDate' id='fltByToDate' value=''></div>
         <div id='chkMyTickets'>
           <input type='radio' id='ticketsAll' name='chkMyTickets' value='0' checked><label for='ticketsAll'>Все</label>
           <input type='radio' id='ticketsMy' name='chkMyTickets' value='1'><label for='ticketsMy'>Только мои</label>
