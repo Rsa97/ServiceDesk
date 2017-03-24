@@ -136,7 +136,7 @@ try {
 							'orig' => "MySQL error".$e->getMessage()));
 	exit;
 }
-$bySrv = "<select class='ui-widget ui-corner-all ui-widget-content' id='selectService'>\n".
+$bySrv = "<select class='ui-widget ui-corner-all ui-widget-content' id='filterService'>\n".
 		 "<option value='n0'>&#160;&#160;&#160;&#160;--- Все --- </option>\n";
 while ($row = $req->fetch(PDO::FETCH_NUM)) {
 	list($serviceGuid, $serviceName) = $row;

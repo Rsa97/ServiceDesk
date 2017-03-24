@@ -53,7 +53,7 @@
   while ($req->fetch()) {
     $states[$state] = $count;
   }
-	$wf = "
+//	$wf = "
   echo json_encode(array("workflowMenuTicketsDiv" => $wf));
   $req->close();
   $mysqli->close();

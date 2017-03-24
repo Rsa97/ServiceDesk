@@ -35,48 +35,49 @@ var eqTreeInitialized = 0;
 
 var tableDefs = {
 	services: {
-		hasIcons: ['a','d','e'],
+		hasIcons: [], // !!! ['a','d','e'],
 		fields: [
 			{name: 'name', header: 'Название', type: 'text', test: /\S+/, val: /^\s*(\S.*\S)\s*$/, placeholder: 'Название услуги', width: '60%'},
 			{name: 'shortName', header: 'Сокращение', type: 'text', test: /\S+/, val: /^\s*(\S.*\S)\s*$/, width: '25%'},
-			{name: 'utility', header: 'Служебная', type: 'check', width: '10%'}
-		],
-		ajax: 'ajax/adm_services.php',
+			{name: 'utility', header: 'Служебная', type: 'check', width: '10%', ro: true}		],
+		ajax: 'ajax/adm/services/',
 		pageSize: 20
 	},
 	partners: {
-		hasIcons: ['a','d','e'],
+		hasIcons: [], // !!! ['a','d','e'],
 		fields: [
 			{name: 'name', header: 'Партнёр', type: 'text', test: /\S+/, val: /^\s*(\S.*\S)\s*$/, width: '20%'},
 			{name: 'address', header: 'Адрес', type: 'multitext', width: '20%', val: /^\s*(\S.*\S)\s*$/},
-			{name: 'users', header: 'Работники', type: 'multilist', width: '15%'},
-			{name: 'contracts', header: 'Обслуживаемые договоры', type: 'multilist', width: '40%'}
+			{name: 'users', header: 'Работники', type: 'multilist', width: '15%', ro: true},
+			{name: 'contracts', header: 'Обслуживаемые договоры', type: 'multilist', width: '40%', ro: true}
 		],
-		ajax: 'ajax/adm_partners.php',
+		ajax: 'ajax/adm/partners/',
 		pageSize: 20
 	},
 	contragents: {
-		hasIcons: ['a','d','e'],
+		hasIcons: [], // !!! ['a','d','e'],
 		fields: [
-			{name: 'name', header: 'Контрагент', type: 'text', test: /\S+/, val: /^\s*(\S.*\S)\s*$/, width: '95%'}
+			{name: 'inn', header: 'ИНН', type: 'text', test: /\S+/, val: /^\s*(\S.*\S)\s*$/, width: '20%'},
+			{name: 'kpp', header: 'КПП', type: 'text', test: /\S+/, val: /^\s*(\S.*\S)\s*$/, width: '20%'},
+			{name: 'name', header: 'Контрагент', type: 'text', test: /\S+/, val: /^\s*(\S.*\S)\s*$/, width: '55%'}
 		],
-		ajax: 'ajax/adm_contragents.php',
+		ajax: 'ajax/adm/contragents/',
 		pageSize: 20
 	},
 	divisionTypes: {
-		hasIcons: ['a','d','e'],
+		hasIcons: [], // !!! ['a','d','e'],
 		fields: [
 			{name: 'name', header: 'Название', type: 'text', test: /\S+/, val: /^\s*(\S.*\S)\s*$/, width: '30%'},
 			{name: 'comment', header: 'Примечание', type: 'text', val: /^\s*(\S.*\S)\s*$/, width: '65%'}
 		],
-		ajax: 'ajax/adm_divisionTypes.php',
+		ajax: 'ajax/adm/divisionTypes/',
 		pageSize: 20
 	},
 	users: {
-		hasIcons: ['a','d','e'],
+		hasIcons: [], // !!! ['a','d','e'],
 		customIcons: [
-			{name: 'state', value: 'unlocked', icon: 'ui-icon-unlocked', call: 'lock'},
-			{name: 'state', value: 'locked', icon: 'ui-icon-locked', call: 'unlock'},
+// !!!		{name: 'state', value: 'unlocked', icon: 'ui-icon-unlocked', call: 'lock'},
+// !!!		{name: 'state', value: 'locked', icon: 'ui-icon-locked', call: 'unlock'},
 			{name: 'changePass', value: 1, icon: 'ui-icon-key', call: 'changePass', confirm: "Сменить пароль пользователя?"},
 		],
 		fields: [
@@ -93,14 +94,14 @@ var tableDefs = {
 			]},
 			{name: 'email', header: 'E-mail', type: 'text', test: /\S+[@]\S+\.\S+/, val: /^\s*(\S.*\S)\s*$/, width: '12%'},
 			{name: 'phone', header: 'Телефон', type: 'text', val: /^\s*(\S.*\S)\s*$/, width: '13%'},
-			{name: 'address', header: 'Адрес', type: 'multitext', rows: 3, val: /^\s*(\S.*\S)\s*$/, width: '17%'},
+			{name: 'address', header: 'Адрес', type: 'multitext', rows: 3, val: /^\s*(\S.*\S)\s*$/, width: '17%', ro: true},
 			{name: 'partner', header: 'Партнёр', type: 'list', width: '18%'}
 		],
-		ajax: 'ajax/adm_users.php',
+		ajax: 'ajax/adm/users/',
 		pageSize: 20
 	},
 	contractSLA: {
-		hasIcons: ['a','d','e','c'],
+		hasIcons: [], // !!! ['a','d','e','c'],
 		fields: [
 			{name: 'service', header: 'Сервис', type: 'list', width: '9%'},
 			{name: 'divType', header: 'Тип филиала', type: 'list', width: '9%'},
@@ -116,7 +117,7 @@ var tableDefs = {
 			{name: 'quality', header: 'Качество', type: 'text', val: /^\s*(\S.*\S)\s*$/, width: '8%'},
 			{name: 'dayStart', header: 'Начало дня', type: 'text', test: /\d{1,2}:\d{1,2}/, val: /^\s*(\S.*\S)\s*$/, width: '7%'},
 			{name: 'dayEnd', header: 'Конец дня', type: 'text', test: /\d{1,2}:\d{1,2}/, val: /^\s*(\S.*\S)\s*$/, width: '7%'},
-			{name: 'workdays', header: 'Рабочие дни', type: 'check', width: '7%', canChange: function(self) {
+			{name: 'workdays', header: 'Рабочие дни', type: 'check', width: '7%', ro: true, canChange: function(self) {
 				if ($(self).parents('tbody').find('.'+iconClass.cancel).length > 0) {
 					$(self).removeProp('checked');
 					return false;
@@ -142,7 +143,7 @@ var tableDefs = {
 				}
 				return true;
 			}},
-			{name: 'weekdays', header: 'Выходные', type: 'check', width: '7%', canChange: function(self){
+			{name: 'weekdays', header: 'Выходные', type: 'check', width: '7%', ro: true, canChange: function(self){
 				if ($(self).parents('tbody').find('.'+iconClass.cancel).length > 0) {
 					$(self).removeProp('checked');
 					return false;
@@ -168,7 +169,7 @@ var tableDefs = {
 				}
 				return true;
 			}},
-			{name: 'default', header: 'По умолчанию', type: 'check', width: '7%', canChange: function(self) {
+			{name: 'default', header: 'По умолчанию', type: 'check', width: '7%', ro: true, canChange: function(self) {
 				if ($(self).parents('tbody').find('.'+iconClass.cancel).length > 0) {
 					$(self).removeProp('checked');
 					return false;
@@ -198,11 +199,11 @@ var tableDefs = {
 		pageSize: 20
 	},
 	divisionEquipment: {
-		hasIcons: ['a','d','e'],
-		customIcons: [
+		hasIcons: [], // !!! ['a','d','e'],
+/* !!!		customIcons: [
 			{name: 'onService', value: 1, icon: iconClass.serviceOff, call: 'serviceOff'},
 			{name: 'onService', value: 0, icon: iconClass.serviceOn, call: 'serviceOn'}
-		],
+		], */
 		fields: [
 			{name: 'serviceNum', header: 'Сервисный номер', type: 'text', test: /\S+/, val: /^\s*(\S.*\S)\s*$/, width: '10%'},
 			{name: 'serial', header: 'Серийный номер', type: 'text', width: '15%'},
@@ -211,7 +212,7 @@ var tableDefs = {
 			{name: 'workplace', header: 'Рабочее место', type: 'list', width: '20%'},
 			{name: 'comment', header: 'Комментарий', type: 'text', width: '20%'}
 		],
-		ajax: 'ajax/adm_divisionEq.php',
+		ajax: 'ajax/adm/divisionEq/',
 		pageSize: 20,
 		onUpdate: function(data) {
 			if (typeof data.count !== 'undefined') {
@@ -230,8 +231,8 @@ var tableDefs = {
 				inp = $(this).parent('td').next().children('select');
 				var val = inp.data('val');
 				inp.html('');
-				myJson($(this).parents('table').data('def').ajax, {call: 'getlists', id: $(this).parents('tr').data('id'), 
-						field: 'sla', service: $(this).val()}, function(data) {
+				myJson($(this).parents('table').data('def').ajax+'getlist/'+$(this).parents('tr').data('id'), 
+						{field: 'sla', service: $(this).val()}, function(data) {
 					for (var i = 0; i < data.options.length; i++) {
 						inp.append('<option value="'+data.options[i].id+'"'+
 							(data.options[i].name == val ? ' selected' : '')+
@@ -247,17 +248,17 @@ var tableDefs = {
 			{name: 'interval', header: 'Интервал', type: 'text', test: /(\d+\s+y)?\s*(\d+\s+m)?\s*(\d+\s+w)?\s*(\d+\s+d)?/, val: /^\s*(\S.*\S)\s*$/, width: '10%', placeholder: '## y ## m ## w ## d'},
 			{name: 'preStart', header: 'Ранний выезд, дней', type: 'text', test: /\d+/, val: /(\d+)/, width: '10%'}				
 		],
-		ajax: 'ajax/adm_divisionPlanned.php',
+		ajax: 'ajax/adm/divisionPlanned/',
 		pageSize: 20
 	},
 	divisionWorkplaces: {
-		hasIcons: ['a','d','e'],
+		hasIcons: [], // !!! ['a','d','e'],
 		fields: [
 			{name: 'name', header: 'Название', type: 'text', test: /\S+/, val: /^\s*(\S.*\S)\s*$/, width: '30%'},
 			{name: 'description', header: 'Примечание', type: 'text', width: '30%'},
-			{name: 'equipment', header: 'Оборудование', type: 'multilist', width: '35%'}
+			{name: 'equipment', header: 'Оборудование', type: 'multilist', width: '35%', ro: true}
 		],
-		ajax: 'ajax/adm_divisionWorkplaces.php',
+		ajax: 'ajax/adm/divisionWorkplaces/',
 		pageSize: 20,
 		onUpdate: function(data) {
 			var tbl = $('#divEquip').children('table');
@@ -359,7 +360,7 @@ function makeRowEditable(row, from) {
 					inp.data('val', val);
 					inp.html('');
 					if (typeof def.fields[i-1].externalFill === 'undefined' || !def.fields[i-1].externalFill)
-						myJson(def.ajax, {call: 'getlists', id: $(this).parents('tr').data('id'), field: def.fields[i-1].name}, function(data) {
+						myJson(def.ajax+'getlist/'+$(this).parents('tr').data('id'), {field: def.fields[i-1].name}, function(data) {
 							for (var i = 0; i < data.options.length; i++) {
 								inp.append('<option value="'+data.options[i].id+'"'+
 									(data.options[i].name == val ? ' selected' : '')+
@@ -390,7 +391,7 @@ function makeRowEditable(row, from) {
 
 function updateRow(row, parentSelector) {
 	var def = row.parents('table').data('def');
-	var data = {call: 'update', id: row.data('id')};
+	var data = {};
 	var ok = true;
 	var err = '';
 	row.children('td').each(function(i) {
@@ -421,7 +422,7 @@ function updateRow(row, parentSelector) {
 		alert('Неверное значение "'+err+'"');
 		return;
 	}
-	myJson(def.ajax, data, function(data) {
+	myJson(def.ajax+'update/'+row.data('id'), data, function(data) {
 		var pageSize = (typeof def.pageSize !== 'undefined' ? def.pageSize : 100);
 		var page = (typeof data.last === 'undefined' ? 0 : Math.floor(data.last/pageSize));
 		if (typeof def.onUpdate == 'function')
@@ -565,7 +566,7 @@ function editMultiList(ajax, field, rowId, confirm) {
     $('.selected').width($('.selected').parents('td').width-2);
     $('#listEdit').dialog('open');
     $('#listEdit button').prop('disabled');
-    myJson(ajax, {call: 'getlists', id: rowId, field: field}, function(data) {
+    myJson(ajax+'getlist/'+rowId, {field: field}, function(data) {
     	if (typeof data.mode === 'undefined' || data.mode == 'flat') {
 	    	var list = '';
     		for (var i = 0; i < data.total.length; i++)
@@ -632,6 +633,8 @@ function drawTable(data, def, parentSelector, page) {
 	}
 	if (page < maxPage-3)
 		pager += '...<span class="page">'+(1+maxPage)+'</span>';
+	if (page == maxPage-3)
+		pager += '<span class="page">'+(1+maxPage)+'</span>';
 	pager += '</div>';
 	var tbl = '<table><thead><tr>';
 	if (typeof def.hasIcons !== 'undefined') {
@@ -677,8 +680,9 @@ function drawTable(data, def, parentSelector, page) {
 					break; 
 				case 'multilist':
 					tbl += '<td><table class="invis"><tr><td class="listIcon">'+
-						   '<span class="ui-icon '+iconClass.doc+'" data-field="'+def.fields[fieldNum].name+'"></span><td>'+
-							data[rowNum].fields[fieldNum]+'</table>';
+						   (typeof def.fields[fieldNum].ro != 'undefined' && def.fields[fieldNum].ro ? '' : 
+						   		'<span class="ui-icon '+iconClass.doc+'" data-field="'+def.fields[fieldNum].name+'"></span>')+
+						   	'<td>'+data[rowNum].fields[fieldNum]+'</table>';
 							
 					break;
 				case 'fixedlist':
@@ -690,7 +694,8 @@ function drawTable(data, def, parentSelector, page) {
 					break;
 				case 'check':
 					tbl += '<td><input type="checkbox" value="1" class="'+def.fields[fieldNum].name+'Check" data-name="'+
-							def.fields[fieldNum].name+'"'+(data[rowNum].fields[fieldNum] == 1 ? ' checked' : '')+'>';
+							def.fields[fieldNum].name+'"'+(data[rowNum].fields[fieldNum] == 1 ? ' checked' : '')+
+							(typeof def.fields[fieldNum].ro != 'undefined' && def.fields[fieldNum].ro ? ' disabled' : '')+'>';
 					break;
 				case 'autocomplete':
 				case 'multitext':
@@ -702,10 +707,11 @@ function drawTable(data, def, parentSelector, page) {
 			}
 		}
 	}
-	if (typeof def.hasIcons !== 'undefined' && def.hasIcons.indexOf('a') != -1)
+	if (typeof def.hasIcons !== 'undefined' && def.hasIcons.indexOf('a') != -1) {
 		tbl += '<tr data-id="0"><td style="text-align:center;">'+icon.add+'<td>Добавить';
-	for (var i = 1; i < def.fields.length; i++)
-		tbl += '<td>';
+		for (var i = 1; i < def.fields.length; i++)
+			tbl += '<td>';
+	}
 	tbl += '</table>';
 	$(parentSelector).html(pager+tbl+pager);
 	tbl = $(parentSelector+' table');
@@ -718,30 +724,31 @@ function drawTable(data, def, parentSelector, page) {
 			var canChange = '';
 			if (typeof def.fields[fieldNum].canChange == 'function')
 				canChange = def.fields[fieldNum].canChange;
-			$(parentSelector+' .'+def.fields[fieldNum].name+'Check').change(function(event) {
-				event.stopPropagation();
-				if (typeof canChange !== 'function' || canChange(this)) {
-					var check = !$(this).prop('checked');
-					var self = this;
-					myJson(def.ajax, {call: 'setCheck', field: $(this).data('name'), id: $(this).parents('tr').data('id'), 
-							value: ($(this).prop('checked') ? 1 : 0)}, function(data) {
-								console.log(data + (typeof data.ok) + check);
-								if (typeof data.ok === 'undefined' || data.ok != 1) {
+			if (typeof def.fields[fieldNum].ro !== 'undefined' && !def.fields[fieldNum].ro) {
+				$(parentSelector+' .'+def.fields[fieldNum].name+'Check').change(function(event) {
+					event.stopPropagation();
+					if (typeof canChange !== 'function' || canChange(this)) {
+						var check = !$(this).prop('checked');
+						var self = this;
+						myJson(def.ajax+'setCheck/'+$(this).parents('tr').data('id'), 
+								{field: $(this).data('name'), value: ($(this).prop('checked') ? 1 : 0)}, 
+								function(data) {
+									if (typeof data.ok === 'undefined' || data.ok != 1) {
+										if (check)
+											$(self).prop('checked', true);
+										else
+											$(self).removeProp('checked');
+									}
+								}, function() {
 									if (check)
 										$(self).prop('checked', true);
 									else
 										$(self).removeProp('checked');
-								}
-							}, function() {
-								console.log(check, $(self));
-								if (check)
-									$(self).prop('checked', true);
-								else
-									$(self).removeProp('checked');
-							});
-				}
-				return false;
-			});
+								});
+					}
+					return false;
+				});
+			}
 		}
 	}
 
@@ -751,7 +758,7 @@ function drawTable(data, def, parentSelector, page) {
 				event.stopPropagation();
 				if ($(this).data('confirm') == '' || confirm($(this).data('confirm'))) {
 					var page = tbl.data('page');
-					myJson(def.ajax, {call: $(this).data('call'), id: $(this).parents('tr').data('id')}, function(data) {
+					myJson(def.ajax+$(this).data('call')+'/'+$(this).parents('tr').data('id'), null, function(data) {
 						if (typeof def.onUpdate == 'function')
 							def.onUpdate(data);
 						drawTable(data.table, def, parentSelector, page);
@@ -797,7 +804,7 @@ function drawTable(data, def, parentSelector, page) {
 			return false;
 		var tbl = $(parentSelector+' table');
 		var page = tbl.data('page');
-		myJson(def.ajax, {call: 'del', id: $(this).parents('tr').data('id')}, function(data) {
+		myJson(def.ajax+'del/'+$(this).parents('tr').data('id'), null, function(data) {
 			if (typeof def.onUpdate == 'function')
 				def.onUpdate(data);
 			drawTable(data.table, def, parentSelector, page);
@@ -812,8 +819,7 @@ function drawTable(data, def, parentSelector, page) {
 		var field = $(this).data('field');
 		var rowId = $(this).parents('table').parents('tr').data('id'); 
 		editMultiList(def.ajax, field, rowId, function(list) {
-			myJson(def.ajax, {call: 'updatelists', id: rowId, 
-							  field: field, list: list}, function(data) {
+			myJson(def.ajax+'updatelists/'+rowId, {field: field, list: list}, function(data) {
             	var pageSize = (typeof def.pageSize !== 'undefined' ? def.pageSize : 100);
 				var page = (typeof data.last === 'undefined' ? 0 : Math.floor(data.last/pageSize));
 				if (typeof def.onUpdate == 'function')
@@ -835,8 +841,8 @@ function drawTable(data, def, parentSelector, page) {
 
 function initTable(def, parentSelector, lastId) {
 	if (typeof lastId === 'undefined')
-		lastId = 0;
-	myJson(def.ajax, {call: 'init', last: lastId}, function(data) {
+		lastId = '00000000-0000-0000-0000-000000000000';
+	myJson(def.ajax+'init', {last: lastId}, function(data) {
 		drawTable(data.table, def, parentSelector, 0);
 	});
 }
@@ -940,25 +946,27 @@ function initEqTree(data, parentSelector) {
 	var subtypeNum, modelNum, type, subtype;
 	for(var i = 0; i < data.types.length; i++) {
 		subtypeNum = (typeof data.types[i].subtypes !== 'undefined' ? data.types[i].subtypes.length : 0);
-		tree.append('<li class="eqType collapsed" data-id="'+data.types[i].id+'"><span class="icons3">'+icon.expand+icon.edit+
-					(subtypeNum == 0 ? icon.del : '')+'</span> <span class="typeName">'+data.types[i].name+'</span><ul class="eqSubTypes"></ul>');
+		tree.append('<li class="eqType collapsed" data-id="'+data.types[i].id+'"><span class="icons3">'+icon.expand+
+//					icon.edit+(subtypeNum == 0 ? icon.del : '')+
+					'</span> <span class="typeName">'+data.types[i].name+'</span><ul class="eqSubTypes"></ul>');
 		type = tree.children('li').last().children('ul').first();
 		for (var j = 0; j < subtypeNum; j++) {
 			modelNum = (typeof data.types[i].subtypes[j].models !== 'undefined' ? data.types[i].subtypes[j].models.length : 0);
-			type.append('<li class="eqSubType collapsed drag" data-id="'+data.types[i].subtypes[j].id+'"><span class="icons3">'+icon.expand+icon.edit+
-						(modelNum == 0 ? icon.del : '')+'</span> <span class="subTypeName">'+data.types[i].subtypes[j].name+'</span><ul class="eqModels"></ul>');
+			type.append('<li class="eqSubType collapsed drag" data-id="'+data.types[i].subtypes[j].id+'"><span class="icons3">'+icon.expand+
+//						icon.edit+(modelNum == 0 ? icon.del : '')+
+						'</span> <span class="subTypeName">'+data.types[i].subtypes[j].name+'</span><ul class="eqModels"></ul>');
 			subtype = type.children('li').last().children('ul');
 			for (var k = 0; k < modelNum; k++) {
-				subtype.append('<li class="eqMfgModel drag" data-id="'+data.types[i].subtypes[j].models[k].id+'"><span class="icons3">'+icon.edit+
-								(typeof data.types[i].subtypes[j].models[k].notDel == 'undefined' ? icon.del : '')+
+				subtype.append('<li class="eqMfgModel drag" data-id="'+data.types[i].subtypes[j].models[k].id+'"><span class="icons3">'+
+//								icon.edit+(typeof data.types[i].subtypes[j].models[k].notDel == 'undefined' ? icon.del : '')+
 								'</span> <span class="eqMfg">'+data.types[i].subtypes[j].models[k].mfg+'</span> '+
 								'<span class="eqModel">'+data.types[i].subtypes[j].models[k].model+"</span>");
 			}
-			subtype.append('<li class="eqMfgModel" data-id="0"><span class="icons3">'+icon.add+'</span> <span class="eqMfg">Добавить</span> <span class="eqModel"></span>');
+//			subtype.append('<li class="eqMfgModel" data-id="0"><span class="icons3">'+icon.add+'</span> <span class="eqMfg">Добавить</span> <span class="eqModel"></span>');
 		}
-		type.append('<li class="eqSubType" data-id="0"><span class="icons3">'+icon.add+'</span> <span class="subTypeName">Добавить</span>');
+//		type.append('<li class="eqSubType" data-id="0"><span class="icons3">'+icon.add+'</span> <span class="subTypeName">Добавить</span>');
 	}
-	tree.append('<li class="eqType" data-id="0"><span class="icons3">'+icon.add+'</span> <span class="typeName">Добавить</span>');
+//	tree.append('<li class="eqType" data-id="0"><span class="icons3">'+icon.add+'</span> <span class="typeName">Добавить</span>');
 	tree.find('ul').hide();
 	
 	console.log(tree);
@@ -1203,7 +1211,7 @@ function initContracts() {
 	$('#editDUsers').addClass(iconClass.doc);
 	$('#editDPartners').addClass(iconClass.doc);
 
-	myJson('ajax/adm_contracts', {call: 'getlists', field: 'contragents', id: 1}, function(data) {
+	myJson('ajax/adm/contracts/getlist/contragents/00000000-0000-0000-0000-000000000000', null, function(data) {
 		if (typeof data.list !== 'undefined') {
 			var opt = ''; 
 			for (var i = 0; i < data.list.length; i++) {
@@ -1239,7 +1247,7 @@ $(function() {
 	
 	$('#logout').click(function(event) {
 		event.stopPropagation();
-    	myJson('/ajax/login.php', {Op: 'out'});
+    	myJson('/ajax/user/logout', null);
     	return false;
   	});
 
@@ -1260,6 +1268,7 @@ $(function() {
 			}
 	});
 
+
 	$('#cEndIn').datepicker({
 			changeMonth: true,
 			numberOfMonths: 1,
@@ -1276,18 +1285,21 @@ $(function() {
 			}
 	});
 
-	myJson('ajax/userName.php', {});
+	myJson('ajax/user/name', {}, function(data) {
+		if (typeof data.name !== 'undefined' )
+			$('#name').html(data.name); 
+	});
 
 	$('#content').on('click', '.shiftYear', function(event) {
 		event.stopPropagation();
-		myJson('ajax/adm_calendar.php', {call: 'setYear', year: $(this).data('year')}, function(data) {
+		myJson('ajax/adm/calendar/setYear/'+$(this).data('year'), null, function(data) {
 			if (typeof data.content !== 'undefined')
 				$('#content').html(data.content);
 		});
 		return false;
 	});
 
-	$('#content').on('click', '.monthTbl td', function(event) {
+/*	$('#content').on('click', '.monthTbl td', function(event) {
 		event.stopPropagation();
 		var self = this;
 		myJson('ajax/adm_calendar.php', {call: 'change', year: $("#calendar").data('year'),
@@ -1296,7 +1308,7 @@ $(function() {
 				$(self).removeClass('work').removeClass('weekend').addClass(data.ok);
 		});
 		return false;
-	});
+	}); */
 		
 	$('.menuLink').click(function(event) {
 		event.stopPropagation();
@@ -1309,14 +1321,14 @@ $(function() {
 		switch($(this).data('page')) {
 			case 'calendar':
 				$('#content').show();
-				myJson('ajax/adm_calendar.php', {"call":"init"}, function(data) {
+				myJson('ajax/adm/calendar/init', null, function(data) {
 					if (typeof data.content !== 'undefined')
 						$('#content').html(data.content);
 				});
 				break;
 			case 'eqmodels':
 				$('#content').show();
-				myJson('ajax/adm_eqmodels.php', {"call":"init"}, function(data) {
+				myJson('ajax/adm/eqmodels/init', null, function(data) {
 					initEqTree(data, '#content');
 				});
 				break;
@@ -1338,7 +1350,7 @@ $(function() {
 
 	$('#selContragent').change(function(event) {
 		event.stopPropagation();
-		myJson('ajax/adm_contracts', {call: 'getlists', field: 'contracts', id: $(this).val()}, function(data) {
+		myJson('ajax/adm/contracts/getlist/contracts/'+$(this).val(), null, function(data) {
 			if (typeof data.list !== 'undefined') {
 				var opt = '';
 				for (var i = 0; i < data.list.length; i++)
@@ -1360,7 +1372,7 @@ $(function() {
 			return false;
 		}
 		$('#contract').tabs('option', 'disabled', false);
-		myJson('ajax/adm_contracts', {call: 'getlists', field: 'contract', id: $(this).val()}, function(data) {
+		myJson('ajax/adm/contracts/getlist/contract/'+$(this).val(), null, function(data) {
 			if (typeof data.notDel !== 'undefined' && data.notDel == 1)
 				$('.contractIcons').html(icon.add+icon.edit);
 			else 
@@ -1389,7 +1401,7 @@ $(function() {
 				$('#selDivision').html(opt).trigger('change');
 			}
 		});
-		tableDefs['contractSLA'].ajax = 'ajax/adm_contractSLA.php?contId='+$(this).val();
+		tableDefs['contractSLA'].ajax = 'ajax/adm/sla/'+$(this).val()+'/';
 		initTable(tableDefs['contractSLA'], '#contSLA');
 		return false;
 	}); 
@@ -1507,7 +1519,7 @@ $(function() {
 			return false;
 		}
 		$('#division').tabs('option', 'disabled', false);
-		myJson('/ajax/adm_divisions', {call: 'init', id: $(this).val()}, function(data) {
+		myJson('/ajax/adm/divisions/init/'+$(this).val(), null, function(data) {
 			var icons = icon.add+icon.edit;
 			if (typeof data.notDel === 'undefined' || data.notDel == 0)
 				icons += icon.del;
@@ -1521,11 +1533,11 @@ $(function() {
            			$('#'+key).text(data.main[key]);
             	}
 		});
-		tableDefs['divisionEquipment'].ajax = 'ajax/adm_divisionEq.php?divId='+$(this).val();
+		tableDefs['divisionEquipment'].ajax = 'ajax/adm/divisionEq/'+$(this).val()+'/';
 		initTable(tableDefs['divisionEquipment'], '#divEquip');
-		tableDefs['divisionPlanned'].ajax = 'ajax/adm_divisionPlanned.php?divId='+$(this).val();
+		tableDefs['divisionPlanned'].ajax = 'ajax/adm/divisionPlanned/'+$(this).val()+'/';
 		initTable(tableDefs['divisionPlanned'], '#divPlanned');
-		tableDefs['divisionWorkplaces'].ajax = 'ajax/adm_divisionWorkplaces.php?divId='+$(this).val();
+		tableDefs['divisionWorkplaces'].ajax = 'ajax/adm/divisionWorkplaces/'+$(this).val()+'/';
 		initTable(tableDefs['divisionWorkplaces'], '#divWorkplaces');
 		return false;
 	});

@@ -7,7 +7,7 @@ include 'init.php';
 
 // Получаем список доступных контрагентов
 try {
-	$req = $db->prepare("SELECT DISTINCT `ca`.`guid` AS `guid`, `ca`.`name` AS `name`".
+	$req = $db->prepare("SELECT DISTINCT `ca`.`guid` AS `guid`, `ca`.`name` AS `name` ".
 							"FROM `contragents` AS `ca` ".
 							"JOIN `contracts` AS `c` ON `ca`.`guid` = `c`.`contragent_guid` ".
 							"LEFT JOIN `userContracts` AS `uc` ON `uc`.`contract_guid` = `c`.`guid` ".
@@ -15,7 +15,7 @@ try {
 							"LEFT JOIN `userContractDivisions` AS `ucd` ON `ucd`.`contractDivision_guid` = `div`.`guid` ".
 							"WHERE (:byClient = 0 OR `ucd`.`user_guid` = UNHEX(REPLACE(:userGuid, '-', '')) ".
 									"OR `uc`.`user_guid` = UNHEX(REPLACE(:userGuid, '-', ''))) ".
-								"AND (:byActive = 0 OR (NOW() BETWEEN `c`.`contractStart` AND `c`.`contractEnd`)) ".
+								"AND (NOW() BETWEEN `c`.`contractStart` AND `c`.`contractEnd`) ".
 							"ORDER BY `ca`.`name`");
 	$req->execute(array('byClient' => $byClient, 'userGuid' => $userGuid, 'byActive' => $byActive));
 } catch (PDOException $e) {

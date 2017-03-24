@@ -24,6 +24,26 @@ function nameFull($lastName, $givenName, $middleName) {
 										('' == $middleName ? '' : (' '.$middleName))));
 }
 
+function timeToSOAP($time) {
+	return date_format(new DateTime($time), 'c');
+}
+
+function rtf_encode($str) {
+	if ($str == '')
+		$str = ' ';
+	$ret = '';
+	$str = preg_replace('/\n/', '\par ', $str);
+	$win = iconv('UTF-8', 'CP1251', $str);
+		
+	foreach (str_split($win) as $char)
+		if ($char >= ' ' && $char <= '~')
+			$ret .= $char;
+		else
+			$ret .= sprintf("\\'%02x",ord($char));
+	return $ret;
+}
+
+
 $slaLevels = array('critical' => 'Критический', 'high' => 'Высокий', 'medium' => 'Средний', 'low' => 'Низкий');
 
 $statusNames = array('received' => 'Получена',

@@ -14,6 +14,7 @@
     <script src='js/jquery.placeholder.min.js'></script>
     <script src='js/jquery-ui.js'></script>
     <script src='js/select2.min.js'></script>
+    <script src='js/jquery.blockUI.js'></script>
     <script src='js/desktop.js'></script>
   </head>
   <body>
@@ -109,7 +110,8 @@
               <span class='cardField ileft'>
                 <label for='service'>Услуга:</label>
                 <div class='cardInput ui-search ui-widget ui-widget-content ui-corner-all'>
-                  <select id='service' type='text' class='ui-search-input ro'></select>
+                  <input id='service' type='text' class='withBtn ui-search-input' maxlength='20' readonly required>
+                  <button id='lookService' class='ui-search-button' data-icon='ui-icon-search'></button>
                 </div>
               </span>
               <span class='cardField iright'>
@@ -156,15 +158,18 @@
                 <label for='repairBefore'>Срок исполнения:</label>
                 <div class='cardInput ui-search ui-widget ui-widget-content ui-corner-all'><input id='repairBefore' type='text' class='ui-search-input' readonly></div>
               </span>
-<!--              <span class='cardField ileft'>
-                <label for='division'>Заказчик:</label>
-                <div class='cardInput ui-search ui-widget ui-widget-content ui-corner-all'><input id='division' type='text' class='ui-search-input' readonly></div>
-         	  </span> -->
-              <span class='cardField ileft
-              '>
+              <span class='cardField ileft'>
+                <label for='createdAt'>Назначена партнёру:</label>
+                <div class='cardInput ui-search ui-widget ui-widget-content ui-corner-all'>
+                  <input id='partner' type='text' class='withBtn ui-search-input' maxlength='20' readonly required>
+                  <button id='lookPartner' class='ui-search-button' data-icon='ui-icon-search'></button>
+                </div>
+              </span>
+              <span class='cardField iright'>
                 <label for='contact'>Ответственное лицо:</label>
                 <div class='cardInput ui-search ui-widget ui-widget-content ui-corner-all'>
-                  <select id='contact' class='ui-search-input ro'></select>
+                  <input id='contact' type='text' class='withBtn ui-search-input' maxlength='20' readonly required>
+                  <button id='lookContact' class='ui-search-button' data-icon='ui-icon-search'></button>
                 </div>
               </span>
               <span class='cardField ileft'>
@@ -279,6 +284,15 @@
             <textarea id='apProblem' rows="5" class='withBtn ui-search-input'></textarea>
           </div>
         </span>
+	  </div>
+	  <div id='selectPartner'>
+	  	<div id='selectPartnerList'></div>
+	  </div>
+	  <div id='selectContact'>
+	  	<div id='selectContactList'></div>
+	  </div>
+	  <div id='selectService'>
+	  	<div id='selectServiceList'></div>
 	  </div>
 	  <div id='newCardDiv' style='visibility:hidden'> </div>
 	  <div id='workflowDiv'></div>

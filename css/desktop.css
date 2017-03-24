@@ -237,7 +237,7 @@ textarea {
 }
 
 .logMain, .logComment {
-    margin: 0 0 0.7em 20px;
+    margin: 0 0 0.3em 20px;
 }
 
 .logMain {
@@ -343,3 +343,25 @@ textarea#problem {
 	overflow-y: scroll;
 	padding-right: 0;
 }
+
+.blockMsg {
+	font-size: 2em;
+	color: blue;
+	vertical-align: middle;
+}
+.blockMsg img {
+	margin: 1em;
+	vertical-align: middle;
+}
+
+#selectPartnerList ul, #selectContactList ul, #selectServiceList ul {
+	font-size: 1.1em;
+	list-style: none;
+	cursor: pointer;
+	padding: 0 0.1em;
+}
+
+#selectPartnerList li:hover, #selectContactList li:hover, #selectServiceList li:hover {
+	background-color: #0073ea;
+	color: #ffffff;
+} 

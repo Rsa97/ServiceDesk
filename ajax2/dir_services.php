@@ -19,13 +19,23 @@ try {	// Получаем список услуг
 							'orig' => "MySQL error".$e->getMessage()));
 	exit;
 }
-$services = "";
+$services = '<ul>';
+$num = 0;
 while (($row = $req->fetch(PDO::FETCH_NUM))) {
 	list($servGuid, $servName) = $row;
 	$servGuid = formatGuid($servGuid);
-	$services .= "<option value='{$servGuid}'>".htmlspecialchars($servName);
+	$services .= "<li data-id='{$servGuid}'>".htmlspecialchars($servName);
+	$num++;
 }
-if ($services == "")
-	$services = "<option value='*'>";
-echo json_encode(array('service' => $services));
+$services .= '</ul>';
+$ret = array('!lookService' => ($num > 1 ? 1 : 0), '_service' => '', 'service_guid' => null);
+if (1 == $num) {
+	$ret['_service'] = $servName;
+	$ret['service_guid'] = $servGuid;
+}
+
+if (0 == $paramValues['edit'])
+	echo json_encode($ret);
+else 
+	echo json_encode(array('selectServiceList' => $services));
 ?>

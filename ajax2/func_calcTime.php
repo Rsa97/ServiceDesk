@@ -18,8 +18,9 @@ function formatDateTime($date, $dayStart, $daysecs, $sql) {
   	return sprintf("%04d-%02d-%02d %02d:%02d:%02d", $day[1], $day[2], $day[3], $hr, $min, $sec);
 }
 
-function calcTime($db, $div, $serv, $sla, $sql) {
-	$date = date_create();
+function calcTime($db, $div, $serv, $sla, $sql, $date = null) {
+	if (null == $date)
+		$date = date_create();
 	$created = date_format($date, 'Y-m-d');
 	$dayStart = date_format($date, 'H:i:s');
 	try {
@@ -32,9 +33,9 @@ function calcTime($db, $div, $serv, $sla, $sql) {
 								"JOIN `divServicesSLA` AS `dss` ON `dss`.`service_guid` = UNHEX(REPLACE(:serviceGuid, '-', '')) ".
 									"AND `dss`.`contract_guid` = `c`.`guid` AND `dss`.`divType_guid` = `cd`.`type_guid` ".
 									"AND `dss`.`slaLevel` = :slaLevel ".
-								"JOIN `workCalendar` AS `wc` ON `wc`.`date` >= CURDATE() AND FIND_IN_SET(`wc`.`type`, `dss`.`dayType`) ".
+								"JOIN `workCalendar` AS `wc` ON `wc`.`date` >= :created AND FIND_IN_SET(`wc`.`type`, `dss`.`dayType`) ".
 								"ORDER BY `wc`.`date` ");
-		$req->execute(array('divisionGuid' => $div, 'serviceGuid' => $serv, 'slaLevel' => $sla));
+		$req->execute(array('divisionGuid' => $div, 'serviceGuid' => $serv, 'slaLevel' => $sla, 'created' => $created));
 	} catch (PDOException $e) {
 		echo json_encode(array('error' => 'Внутренняя ошибка сервера', 
 								'orig' => "MySQL error".$e->getMessage()));
