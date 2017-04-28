@@ -16,10 +16,11 @@ $(function() {
   	var crypt = new JSEncrypt();
   	crypt.setPublicKey($('#key').val());
   	newpass = crypt.encrypt(newpass);
-  	$.post('/newpwd.php', {op: "cp", newpass: newpass})
+  	$.post('/ajax/user/setPass', {newpass: newpass})
       .done(function(data){
         if (data !== null) {
           if (typeof data.redirect !== 'undefined') {
+          	console.log(data.redirect);
             location.replace(data.redirect);
             return;
           }

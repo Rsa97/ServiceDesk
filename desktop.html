@@ -14,6 +14,7 @@
     <script src='js/jquery.placeholder.min.js'></script>
     <script src='js/jquery-ui.js'></script>
     <script src='js/select2.min.js'></script>
+    <script src='js/jquery.blockUI.js'></script>
     <script src='js/desktop.js'></script>
   </head>
   <body>
@@ -64,10 +65,16 @@
         </div>
       </div>
       <div id='filter'>
+      	<input type='hidden' name='fltFromDateSQL' id='fltFromDateSQL'> 
+      	<input type='hidden' name='fltToDateSQL' id='fltToDateSQL'> 
         <label for='fltByDiv'>Заказчик:</label>
         <div id='fltByDivPlace'></div>
         <label for='fltBySrv'>Группа работ: </label>
         <div id='fltBySrvPlace'></div>
+        <label for='fltByText'>Текст заявки: </label>
+        <div id='fltByTextPlace'><input type='text' name='fltByText' id='fltByText' value=''></div>
+        <label for='fltByText'>Интервал дат: </label>
+		<div id='fltByDate'><input type='text' name='fltByFromDate' id='fltByFromDate' value=''><span>-</span><input type='text' name='fltByToDate' id='fltByToDate' value=''></div>
         <div id='chkMyTickets'>
           <input type='radio' id='ticketsAll' name='chkMyTickets' value='0' checked><label for='ticketsAll'>Все</label>
           <input type='radio' id='ticketsMy' name='chkMyTickets' value='1'><label for='ticketsMy'>Только мои</label>
@@ -103,7 +110,7 @@
               <span class='cardField ileft'>
                 <label for='service'>Услуга:</label>
                 <div class='cardInput ui-search ui-widget ui-widget-content ui-corner-all'>
-                  <select id='service' type='text' class='ui-search-input ro'></select>
+                  <select id='service' class='ui-search-input'></select>
                 </div>
               </span>
               <span class='cardField iright'>
@@ -150,15 +157,17 @@
                 <label for='repairBefore'>Срок исполнения:</label>
                 <div class='cardInput ui-search ui-widget ui-widget-content ui-corner-all'><input id='repairBefore' type='text' class='ui-search-input' readonly></div>
               </span>
-<!--              <span class='cardField ileft'>
-                <label for='division'>Заказчик:</label>
-                <div class='cardInput ui-search ui-widget ui-widget-content ui-corner-all'><input id='division' type='text' class='ui-search-input' readonly></div>
-         	  </span> -->
-              <span class='cardField ileft
-              '>
+              <span class='cardField ileft'>
+                <label for='createdAt'>Назначена партнёру:</label>
+                <div class='cardInput ui-search ui-widget ui-widget-content ui-corner-all'>
+                  <input id='partner' type='text' class='withBtn ui-search-input' maxlength='20' readonly required>
+                  <button id='lookPartner' class='ui-search-button' data-icon='ui-icon-search'></button>
+                </div>
+              </span>
+              <span class='cardField iright'>
                 <label for='contact'>Ответственное лицо:</label>
                 <div class='cardInput ui-search ui-widget ui-widget-content ui-corner-all'>
-                  <select id='contact' class='ui-search-input ro'></select>
+                  <select id='contact' class='ui-search-input'></select>
                 </div>
               </span>
               <span class='cardField ileft'>
@@ -273,6 +282,9 @@
             <textarea id='apProblem' rows="5" class='withBtn ui-search-input'></textarea>
           </div>
         </span>
+	  </div>
+	  <div id='selectPartner'>
+	  	<div id='selectPartnerList'></div>
 	  </div>
 	  <div id='newCardDiv' style='visibility:hidden'> </div>
 	  <div id='workflowDiv'></div>

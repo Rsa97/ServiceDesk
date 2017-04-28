@@ -339,7 +339,7 @@
 		echo "<h3>Услуги по филиалу:</h3>";
 		echo "<p>/api/getServices";
 		echo "<p><b>divId=&lt;id филиала&gt;</b> - идентификатор филиала";
-		echo "<p>Пример:<br>https://sd-dev.sodrk.ru/api/getDivisions&fmt=xml&token=2f251f8795f385205cbb256dd259740c5d7e3999&divId=58";
+		echo "<p>Пример:<br>https://sd-dev.sodrk.ru/api/getServices&fmt=xml&token=2f251f8795f385205cbb256dd259740c5d7e3999&divId=58";
 		echo "<p>Ответ xml:<pre>";
 		echo "&lt;answer&gt;\n";
 		echo " &lt;state&gt;ok&lt;/state&gt;\n";
@@ -367,7 +367,7 @@
 		echo "<p><b>serviceId=&lt;id сервиса&gt;</b> - идентификатор сервиса";
 		echo "<p><b>sla=[critical | high | medium | low]</b> - уровень критичности";
 		echo "<p><b>problem=&lt;описание&gt;</b> - описание проблемы";
-		echo "<p>Пример:<br>https://sd-dev.sodrk.ru/api/getDivisions&fmt=xml&token=2f251f8795f385205cbb256dd259740c5d7e3999&divId=58&serviceId=14&sla=medium&problem=Всё пропало!!!!";
+		echo "<p>Пример:<br>https://sd-dev.sodrk.ru/api/newRequest&fmt=xml&token=2f251f8795f385205cbb256dd259740c5d7e3999&divId=58&serviceId=14&sla=medium&problem=Всё пропало!!!!";
 		echo "<p>Ответ xml:<pre>";
 		echo "&lt;answer&gt;\n";
 		echo " &lt;state&gt;ok&lt;/state&gt;\n";
