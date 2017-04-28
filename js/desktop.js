@@ -11,9 +11,64 @@ var cardBtnLook = [ {text: 'Сервисный лист',
 					 		}},
 					{text: 'Закрыть', 
                     click: function() { 
-//                             $('#card button').removeProp('disabled');
                              $(this).dialog("close");
                            }}
+                  ];
+
+function serviceNumSet() {
+  if ($('#servNum').data('serv') != $('#servNum').val())
+    myPostJson('/ajax/request/changeEq/'+openCard, {equipment: $('#servNum').data('id')}, null,
+	  function() {
+	    alert('Ошибка связи с сервером');
+	  },
+	  function() {
+		$('#card').dialog('close');
+	  });
+  else
+    $('#card').dialog('close');
+}
+
+function contactSet() {
+  if ($('#contact').data('id') != $('#service').val())
+    myPostJson('/ajax/request/contact/set/'+openCard+'/'+$('#contact').val(), null,
+      function() {
+        serviceNumSet();
+	  },
+	  function() {
+	    alert('Ошибка связи с сервером');
+	  },
+	  function() {
+		$('#card').dialog('close');
+	  });
+  else
+    serviceNumSet();
+}
+
+function serviceSet() {
+  if ($('#service').data('id') != $('#service').val() ||
+    $('#level').data('id') != $('#level').val())
+  myPostJson('/ajax/request/sla/set/'+openCard+'/'+$('#service').val()+'/'+$('#level').val(), null, 
+	function() {
+	  contactSet();
+	},
+	function() {
+	  alert('Ошибка связи с сервером');
+	},
+	function() {
+	  $('#card').dialog('close');
+	});
+  else
+	contactSet();
+}
+
+var cardBtnChange = [{text: 'Отменить',
+					  click: function() {
+					    $(this).dialog("close");
+					  }},
+					 {text: 'Изменить', 
+                      click: function() {
+                      	serviceSet();
+                     }}
                   ];
 
 // Кнопки карточки заявки в режиме обмена с базой
@@ -22,7 +77,6 @@ var cardBtnWait = [{text: 'Идёт запрос'}];
 // Кнопки карточки заявки в режиме создания
 var cardBtnNew = [{text: 'Отменить', 
                    click: function() { 
-//                            $('#card button').removeProp('disabled');
                             $(this).dialog("close");
                           }},
                    {text: 'Создать', 
@@ -35,27 +89,20 @@ var cardBtnNew = [{text: 'Отменить',
                               alert('Не указана проблема');
                               return;
                             }
-                            if ($('#contact').data('id') == null) {
+                            if ($('#contact').val() == '*') {
                               alert('Не выбран ответственный');
                               return;
                             }
-                            if ($('#service').data('id') == null) {
+                            if ($('#service').val() == '*') {
                               alert('Не выбрана услуга');
                               return;
                             }
-//                            $('#addProblem').dialog('option', 'buttons', cardBtnWait);
-//                            $('#card button').prop('disabled', true);
-                            myPostJson('/ajax/request/new/'+$('#division').val()+'/'+$('#service').data('id')+'/'+$('#level').val()+'/'+$('#contact').data('id'),
+                            myPostJson('/ajax/request/new/'+$('#division').val()+'/'+$('#service').val()+'/'+$('#level').val()+'/'+$('#contact').val(),
 										{equipment: $('#servNum').data('id'), problem: $('#problem').val().trim()},
 							  function() {
                                 $('#workflow').tabs('option', 'active', 0);
                                 setFilter();
                                	$('#card').dialog("close");
-                              },
-                              null,
-                              function() {
-//                                $('#addProblem').dialog('option', 'buttons', cardBtnNew);
-//                                $('#card button').removeProp('disabled');
                               });
                           }}
                  ];
@@ -63,7 +110,6 @@ var cardBtnNew = [{text: 'Отменить',
 // Кнопки списка оборудования
 var selectEqBtn = [{text: 'Отменить', 
                    click: function() { 
-//                            $('#selectEq button').removeProp('disabled');
                             $(this).dialog("close");
                           }}
                  ];
@@ -71,26 +117,10 @@ var selectEqBtn = [{text: 'Отменить',
 // Кнопки списка партнёров
 var selectPartnerBtn = [{text: 'Отменить', 
         	       	     click: function() { 
-//                    	           $('#selectPatner button').removeProp('disabled');
                         	       $(this).dialog("close");
 	                             }}
     	               ];
                  
-// Кнопки списка контактов
-var selectContactBtn = [{text: 'Отменить', 
-        	       	     click: function() { 
-//                    	           $('#selectContact button').removeProp('disabled');
-                        	       $(this).dialog("close");
-	                             }}
-    	               ];
-
-var selectServiceBtn = [{text: 'Отменить', 
-        	       	     click: function() { 
-//                    	           $('#selectService button').removeProp('disabled');
-                        	       $(this).dialog("close");
-	                             }}
-    	               ];
-
 // Кнопки добавления задач в плановые
 var addProblemBtn = [{text: 'Отменить', 
                       click: function() { 
@@ -112,12 +142,10 @@ var addProblemBtn = [{text: 'Отменить',
 // Кнопки решения
 var solutionBtn = [{text: 'Отменить', 
                    click: function() { 
-//                            $('#solution button').removeProp('disabled');
                             $(this).dialog("close");
                           }},
                    {text: 'Принять', 
                    click: function() {
-//					     	$('button').prop('disabled', true);
     						myPostJson('/ajax/request/Repaired/'+$('#solution').data('id'),
     							{solProblem: $('#solProblem').val().trim(),
     							 sol: $('#solSolution').val().trim(),
@@ -127,7 +155,6 @@ var solutionBtn = [{text: 'Отменить',
                					function() {
 									$('#solution').dialog("close");
                  					setFilter();
-//                 					$('button').removeProp('disabled');
                					});
                				}}
                  ];
@@ -169,6 +196,18 @@ function resetFilter() {
   fltFromDate = $('#fltByFromDate').datepicker('getDate');
 }
 
+function checkChanges() {
+	if ('new' == cardMode)
+		return;
+	if ($('#service').data('id') != $('#service').val() ||
+		$('#contact').data('id') != $('#contact').val() || 
+		$('#servNum').data('serv') != $('#servNum').val() || 
+		$('#level').data('id') != $('#level').val()) 
+		$('#card').dialog('option', 'buttons', cardBtnChange);
+	else
+		$('#card').dialog('option', 'buttons', cardBtnLook);
+}
+
 function myPostJson(url, param, onReady, onError, onAlways) {
   $.blockUI({message: '<img src="img/busy.gif"> Подождите...', 
   			 overlayCSS:  { 
@@ -180,7 +219,6 @@ function myPostJson(url, param, onReady, onError, onAlways) {
   $.post(url, param, 'json')
     .done(function(data) {
       $.unblockUI();
-//      console.log(data);
       if (data !== null) {
         if (typeof data.error !== 'undefined') {
           alert(data.error);
@@ -222,7 +260,6 @@ function myPostJson(url, param, onReady, onError, onAlways) {
 
 // Установка фильтра на сервере
 function setFilter() {
-//  $('#filter input').prop('disabled', true);
   myPostJson('/ajax/filter/set', {byDiv: $('#selectDivision :selected').val(),
                                   bySrv: $('#filterService :selected').val(),
                                   byText: $('#fltByText').val(),
@@ -231,7 +268,6 @@ function setFilter() {
                                   onlyMy: $('#chkMyTickets :checked').val()}, 
              null, null, 
              function() { 
-//               $('#filter input').removeProp('disabled');
                $('.list tr:nth-child(2n+1)').addClass('odd');
                $('.list td:nth-child(1), .list th:nth-child(1)').addClass('cell1');
                $('.list td:nth-child(2)').addClass('cell2');
@@ -248,10 +284,6 @@ function servNumLookup() {
 	function() {
 	  alert('Ошибка связи с сервером');
 	  $('#selectEq').dialog('close');
-	},
-	function() {
-//	  $('#selectEq button').removeProp('disabled'); 
-//	  $('#selectEq').dialog('option', 'buttons', selectEqBtn);
 	});       
   timeoutSet = 0;
 }
@@ -312,24 +344,6 @@ $(function() {
                      modal: true,
                      draggable: false,
                      buttons: selectPartnerBtn
-              });
-  $('#selectContact').dialog({autoOpen: false,
-    				 title: 'Выберите контактное лицо',
-                     resizable: false,
-                     dialogClass: 'no-close',
-                     width: 660,
-                     modal: true,
-                     draggable: false,
-                     buttons: selectContactBtn
-              });
-  $('#selectService').dialog({autoOpen: false,
-    				 title: 'Выберите услугу',
-                     resizable: false,
-                     dialogClass: 'no-close',
-                     width: 660,
-                     modal: true,
-                     draggable: false,
-                     buttons: selectServiceBtn
               });
   $('#solution').dialog({autoOpen: false,
                      resizable: false,
@@ -418,64 +432,9 @@ $(function() {
   	location.replace('newadmin.html');
   });
 
-  $('#lookService').click(function() {
-    $('#selectServiceList').html('');
-//    $('#selectService').dialog('option', 'buttons', cardBtnWait);
-    $('#selectService').dialog('open');
-	myPostJson('/ajax/dir/services/1/'+$('#division').val(), null, null,
-	  function(data) {
-		alert('Ошибка связи с сервером');
-		$('#selectService').dialog('close');
-	  },
-	  function() {
-//		$('#selectService button').removeProp('disabled'); 
-//		$('#selectService').dialog('option', 'buttons', selectServiceBtn);
-	  });       
-  });
-  
-  $('#selectServiceList').on('click', 'li', function() {
-	  $('#selectService').dialog('close');
- 	  $('#service').val($(this).text()).data('id', $(this).data('id'));
- 	  $('#service').trigger('change');
-  });
-
-  $('#lookContact').click(function() {
-    $('#selectContactList').html('');
-//    $('#selectContact').dialog('option', 'buttons', cardBtnWait);
-    $('#selectContact').dialog('open');
-	myPostJson('/ajax/dir/contacts/1/'+$('#division').val(), null, null,
-	  function(data) {
-		alert('Ошибка связи с сервером');
-		$('#selectContact').dialog('close');
-	  },
-	  function() {
-//		$('#selectContact button').removeProp('disabled'); 
-//		$('#selectContact').dialog('option', 'buttons', selectContactBtn);
-	  });       
-  });
-  
-  $('#selectContactList').on('click', 'li', function() {
-	  $('#selectContact').dialog('close');
- 	  $('#contact').val($(this).text()).data('id', $(this).data('id'));
-	  $('#email').val($(this).data('email'));
-	  $('#phone').val($(this).data('phone'));
-	  $('#address').val($(this).data('address'));
-	  if ('new' != cardMode) {
-	    myPostJson('/ajax/request/contact/set/'+openCard+'/'+$(this).data('id'), null, 
-	    function() {
-//		  $('#card').dialog('option', 'buttons', cardBtnLook);
-	    },
-	    function() {
-		  alert('Ошибка связи с сервером');
-		  $('#card').dialog('close');
-	    }); 
-	 }
-  });
-
   $('#lookServNum').click(function() {
   	if ($('#division').val() == '*')
   	  return;
-//    $('#selectEq').dialog('option', 'buttons', cardBtnWait);
     $('#selectEq select').html('');
     $('#selectEq').dialog('open');
     //$('#selectServNum').val($('#servNum').val());
@@ -488,25 +447,16 @@ $(function() {
 	  function() {
 		alert('Ошибка связи с сервером');
 		$('#selectEq').dialog('close');
-	  },
-	  function() {
-//		$('#selectEq button').removeProp('disabled'); 
-//		$('#selectEq').dialog('option', 'buttons', selectEqBtn);
 	  });       
   });
 
   $('#lookPartner').click(function() {
-//    $('#selectPartner').dialog('option', 'buttons', cardBtnWait);
     $('#selectPartnerList').html('');
     $('#selectPartner').dialog('open');
 	myPostJson('/ajax/dir/partners/'+openCard, null, null,
 	  function() {
 		alert('Ошибка связи с сервером');
 		$('#selectPartner').dialog('close');
-	  },
-	  function() {
-//		$('#selectPartner button').removeProp('disabled'); 
-//		$('#selectPartner').dialog('option', 'buttons', selectPartnerBtn);
 	  });       
   });
   
@@ -516,11 +466,7 @@ $(function() {
 	  	$('#partner').val('');
 	  else
 	  	$('#partner').val($(this).text());
-//	  $('#card').dialog('option', 'buttons', cardBtnWait);
-	  myPostJson('/ajax/request/partner/set/'+openCard+'/'+$(this).data('id'), null, 
-	  function() {
-//		$('#card').dialog('option', 'buttons', cardBtnLook);
-	  },
+	  myPostJson('/ajax/request/partner/set/'+openCard+'/'+$(this).data('id'), null, null, 
 	  function() {
 		alert('Ошибка связи с сервером');
 		$('#card').dialog('close');
@@ -533,18 +479,17 @@ $(function() {
     $('#card .ro').removeProp('readonly');
 	$('#cardTabs').tabs('option', 'active', 0);
   	$('#card').dialog('option', 'buttons', cardBtnNew);
-	$('#servNum').val('').data('id', null);
+	$('#servNum').val('').data('serv', null).data('id', null);
 	$('#card input').val('');
 	$('#card select').html('').select2();
+	$('#service').data('id', null);
+	$('#contact').data('id', null);
 	$('#card textarea').val('');
 	$('#card .active').removeClass('active');
 	$('#lookServNum').hide();
 	$('#lookPartner').hide();
-	$('#lookContact').hide();
-	$('#lookService').hide();
 	myPostJson('/ajax/dir/contragents', null,
   	  function() {
-//		$('#card').dialog('option', 'buttons', cardBtnNew);
 		$('#contragent').select2();
 		if ($('#contragent').val() != 0)
 		  $('#contragent').trigger('change');
@@ -565,18 +510,16 @@ $(function() {
 	  $('#card input').val('');
 	  $('#contract').html('').select2();
 	  $('#division').html('').select2();
-	  $('#service').val('');
-	  $('#level').html('');
-	  $('#contact').val('');
+	  $('#service').html('').select2();
+	  $('#level').html('').select2();
+	  $('#contact').html('').select2();
 	  $('#card textarea').val('');
 	  $('#card .active').removeClass('active');
 	  $('#lookServNum').hide();
   	  return;
     }
-//   	$('#card').dialog('option', 'buttons', cardBtnWait);
 	myPostJson('/ajax/dir/contracts/'+$('#contragent').val(), null,
 	  function() {
-//		$('#card').dialog('option', 'buttons', cardBtnNew);
 		$('#contract').select2();
 		if ($('#contract').val() != 0)
 	  		$('#contract').trigger('change');
@@ -595,18 +538,16 @@ $(function() {
 	  $('#servNum').val('').data('id', null);
 	  $('#card input').val('');
 	  $('#division').html('').select2();
-	  $('#service').val('');
-	  $('#level').html('');
-	  $('#contact').html('');
+	  $('#service').html('').select2();
+	  $('#level').html('').select2();
+	  $('#contact').html('').select2();
 	  $('#card textarea').val('');
 	  $('#card .active').removeClass('active');
 	  $('#lookServNum').hide();
   	  return;
     }
-//   	$('#card').dialog('option', 'buttons', cardBtnWait);
 	myPostJson('/ajax/dir/divisions/'+$('#contract').val(), null,
 	  function() {
-	//	$('#card').dialog('option', 'buttons', cardBtnNew);
 		$('#division').select2();
 		if ($('#division').val() != 0)
 	  		$('#division').trigger('change');
@@ -626,18 +567,16 @@ $(function() {
 	  $('#card textarea').val('');
 	  $('#card .active').removeClass('active');
 	  $('#lookServNum').hide();
-	  $('#lookContact').hide();
 	  $('#lookPartner').hide();
     }
-    $('#service').val('').data('id', null);
+    $('#service').html('').select2();
   	$('#servNum').val('').data('id', null);
-	$('#contact').val('').data('id', null);
+	$('#contact').html('').select2();
     $('#level').html('');
   	$('#SN').val('');
   	$('#eqType').val('');
   	$('#manufacturer').val('');
   	$('#model').val('');
-//   	$('#card').dialog('option', 'buttons', cardBtnWait);
    	myPostJson('ajax/time', null,
    	  function(data) {
    	  	if (typeof data !== 'undefined') {
@@ -645,24 +584,19 @@ $(function() {
    	        $('#createdAt').val(data.time);
    	  	  if (typeof data.timeEn !== 'undefined')
    	        $('#createTime').val(data.timeEn);
-   	      $('#contact').val('').data('id', '');
 	      $('#lookServNum').show();
-	      $('#lookContact').show();
-//	      $('#card button').removeProp('disabled');
 	      $('#division').parent().prev().removeClass('active');
 	      $('#problem').parent().prev().addClass('active');
 	      $('#level').parent().prev().addClass('active');
 	      $('#contact').parent().prev().addClass('active');
-//	      $('#card').dialog('option', 'buttons', cardBtnNew);
           if ($('#division').val() != '*')
-	        myPostJson('/ajax/dir/services/0/'+$('#division').val(), null,
+	        myPostJson('/ajax/dir/services/'+$('#division').val(), null,
 	          function() {
 	            $('#service').parent().prev().addClass('active');
-  	            $('#service').data('id', data.service_guid);
   	            $('#service').trigger('change');
-         	    myPostJson('/ajax/dir/contacts/0/'+$('#division').val(), null,
+         	    myPostJson('/ajax/dir/contacts/'+$('#division').val(), null,
           	      function(data) {
-          	        $('#contact').data('id', data.contact_guid);
+          	        $('#contact').trigger('change');
           	  	  },
 	  			  function() {
 				    alert('Ошибка связи с сервером');
@@ -682,12 +616,12 @@ $(function() {
   });
   
   $('#card').on('change', '#service', function() {
-  	if ($('#service').data('id') == null)
-  	  return;
-//   	$('#card').dialog('option', 'buttons', cardBtnWait);
-	myPostJson('/ajax/dir/slas/'+$('#division').val()+'/'+$('#service').data('id'), null, 
+  	if ($(this).val() == '*') {
+  		$('#level').html('').select2();
+  		return;
+  	}
+	myPostJson('/ajax/dir/slas/'+$('#division').val()+'/'+$('#service').val(), null, 
 	  function() {
-//		$('#card').dialog('option', 'buttons', cardBtnNew);
 		$('#level').trigger('change');
 	  },
 	  function() {
@@ -696,22 +630,27 @@ $(function() {
 	  });
   });
   
+  $('#card').on('change', '#contact', function() {
+  	console.log($(this));
+  	if ($(this).val() == '*') {
+  	  $('#email').val('');
+  	  $('#phone').val('');
+  	  $('#address').val('');
+  	} else {
+  	  var sel = $(this).find('option:selected');
+  	  $('#email').val(sel.data('email'));
+  	  $('#phone').val(sel.data('phone'));
+  	  $('#address').val(sel.data('address'));
+  	  checkChanges();
+  	}
+  });
+  
   $('#card').on('change', '#level', function() {
-//   	$('#card').dialog('option', 'buttons', cardBtnWait);
     var cardNum = ('new' == cardMode ? null : {id: openCard});
-	myPostJson('/ajax/request/calcTime/'+$('#division').val()+'/'+$('#service').data('id')+'/'+$('#level').val(), cardNum, 
+	myPostJson('/ajax/request/calcTime/'+$('#division').val()+'/'+$('#service').val()+'/'+$('#level').val(), cardNum, 
 	  function() {
-	  	if ('new' != cardMode && $('#service').data('id') != null)
-	      myPostJson('/ajax/request/sla/set/'+openCard+'/'+$('#service').data('id')+'/'+$('#level').val(), null, 
-	        function() {
-//		      $('#card').dialog('option', 'buttons', cardBtnLook);
-	        },
-	        function() {
-		      alert('Ошибка связи с сервером');
-		      $('#card').dialog('close');
-	        });
-//	    else 
-//		  $('#card').dialog('option', 'buttons', cardBtnNew);
+	  	if ('new' != cardMode && $('#service').val() != '*')
+       		checkChanges();
 	  },
 	  function() {
 		alert('Ошибка связи с сервером');
@@ -741,13 +680,9 @@ $(function() {
     });
     if (list == '')
       return;
-//    $('button').prop('disabled', true);
-    myPostJson('/ajax/request/'+cmd+'/'+list, null,
-               null,
-               null,
+    myPostJson('/ajax/request/'+cmd+'/'+list, null, null, null,
                function() {
                  setFilter();
-//                 $('button').removeProp('disabled');
                });
   });
   
@@ -761,16 +696,10 @@ $(function() {
   	$('#solution').data('id', id);
     $('#solution').dialog('open');
 	$('#solution').dialog('option', 'title', 'Решение заявки '+('0000000'+id).substr(-7));
-//   	$('#solution').dialog('option', 'buttons', cardBtnWait);
-//	$('#solution button').prop('disabled', true);
     myPostJson('/ajax/request/getSolution/'+id, null, null,
 	  function() {
 		alert('Ошибка связи с сервером');
 		$('#solution').dialog('close');
-	  },
-      function() {
-//		$('#solution button').removeProp('disabled');
-//		$('#solution').dialog('option', 'buttons', solutionBtn); 
 	  });       
 	
   });
@@ -790,13 +719,9 @@ $(function() {
     var cause;
     if ((cause = prompt('Причина:', '')) == null || cause == '')
 	    return;
-//    $('button').prop('disabled', true);
-    myPostJson('/ajax/request/'+cmd+'/'+list, {cause: cause},
-               null,
-               null,
+    myPostJson('/ajax/request/'+cmd+'/'+list, {cause: cause}, null, null,
                function() {
                  setFilter();
-//                 $('button').removeProp('disabled');
                });
   });
 
@@ -808,7 +733,6 @@ $(function() {
     openCard = ($(this).parents('tr').attr('id'));
     if (openCard != 'n0') {
       $('#card').dialog('option', 'title', 'Заявка '+$(this).siblings('.cell2').text());
-//      $('#card').dialog('option', 'buttons', cardBtnWait);
       $('#cardTabs').tabs('option', 'active', 0);
       $('#card .ro').prop('readonly', 'readonly');
       $('#card input, #card select, #card textarea').val('');
@@ -816,24 +740,25 @@ $(function() {
         $(this).parent().prev().removeClass('active');
       });
       $('#card select').html('').select2({width: '100%'});
-//      $('#card button').prop('disabled', true);
       $('#card').dialog('option', 'buttons', cardBtnLook);
       $('#card').dialog('open');
       cardMode = 'look';
       myPostJson('/ajax/request/view/'+openCard, null,
-        function() {
+        function(data) {
           $('#cardDocTbl tr:nth-child(2n+1)').addClass('odd');
           $('#cardDocTbl td:nth-child(1)').addClass('cell1');
           $('#cardDocTbl td:nth-child(4)').addClass('cell4');
           $('#card select').select2();
+          $('#service').data('id', $('#service').val());
+		  $('#contact').data('id', $('#contact').val());
+		  $('#servNum').data('serv', $('#servNum').val()).data('id', data.equipment_guid);
+		  $('#level').data('id', $('#level').val());
         },
         function() {
           alert('Ошибка связи с сервером');
           $('#card').dialog('close');
         },
         function() {
-//          $('#card button').removeProp('disabled'); 
-//          $('#card').dialog('option', 'buttons', cardBtnLook);
 	      $('#cardTabs').tabs('option', 'disabled', []);
         });       
     }
@@ -841,20 +766,13 @@ $(function() {
 
   $('#addComm').click(function() {
     if (cardMode == 'look' && $('#addComment').val() != '') {
-//      $('#card button').prop('disabled', true); 
-//      $('#card').dialog('option', 'buttons', cardBtnWait);
       myPostJson('/ajax/request/addComment/'+openCard, {comment: $('#addComment').val()},
                  function() {
                    $('#cardDocTbl tr:nth-child(2n+1)').addClass('odd');
                    $('#cardDocTbl td:nth-child(1)').addClass('cell1');
                    $('#cardDocTbl td:nth-child(3)').addClass('cell3');
                    $('#addComment').val('');
-                 },
-                 null,
-                 function() { 
-//                   $('#card').dialog('option', 'buttons', cardBtnLook); 
-//                   $('#card button').removeProp('disabled'); 
-                  });
+                 });
     }
   });
 
@@ -862,7 +780,6 @@ $(function() {
     if (cardMode == 'look' && typeof ($('#file')[0].files[0]) !== 'undefined') {
       var fd = new FormData();
       fd.append('file', $('#file')[0].files[0]);
-//      $('#card button').prop('disabled', true); 
       $('#card').dialog('option', 'buttons', cardBtnWait);
       $.ajax({type: 'POST',
               url: '/ajax/request/addFile/'+openCard,
@@ -873,8 +790,6 @@ $(function() {
         .done(function(data) {
           if (data === null || typeof data.error !== 'undefined') {
             alert((typeof data.error !== 'undefined') ? data.error : 'Ошибка передачи файла');
-//            $('#card').dialog('option', 'buttons', cardBtnLook); 
-//            $('#card button').removeProp('disabled'); 
           } else {
             $('#file').val('');
             myPostJson('/ajax/request/view/'+openCard, null,
@@ -882,18 +797,11 @@ $(function() {
                          $('#cardDocTbl tr:nth-child(2n+1)').addClass('odd');
                          $('#cardDocTbl td:nth-child(1)').addClass('cell1');
                          $('#cardDocTbl td:nth-child(3)').addClass('cell3');
-                       },
-                       null,
-                       function() { 
-//                         $('#card').dialog('option', 'buttons', cardBtnLook); 
-//                         $('#card button').removeProp('disabled'); 
-                        });
+                       });
           }
         })
         .fail(function() {
             alert('Ошибка передачи файла');
-//            $('#card').dialog('option', 'buttons', cardBtnLook); 
-//            $('#card button').removeProp('disabled'); 
         });
     }
   });
@@ -913,134 +821,62 @@ $(function() {
     $(this).blur();
   });
   
-/*	$('body').on('click', '.newTicket', function() {
-		$.post('newcard.php',
-			function(output) {
-				$('#newCardDiv').html(output).show();
-			}); 
-		$('#newCardDiv').css("visibility", 'visible');
-	}); */	
-
-	$('body').on('change', '.checkAll', function() {  
-    	if ($(this).prop('checked'))
-      		$(this).parents('table').first().find('.checkOne').not(':disabled').prop('checked', 'checked');
-    	else
-      		$(this).parents('table').first().find('.checkOne').not(':disabled').removeProp('checked');
-	});	
-
-/*	$('#workflowDiv').on('change', '#selectDivision, #chkMyTickets', function() {
-		$('#ticketFilter').find('input').each(function() {
-			$(this).prop('disabled', true);
-		});
-		var divFilterValue = $('#selectDivision').val().substring(1);
-		var divTypeValue = $('#selectDivision').val().charAt(0);
-		var statusTicket = $('#statusTicket').val();
-		var onlyMy = $('#chkMyTickets').prop('checked') ? 1 : 0;
-		$.post('workflowMenuTickets.php', { statusTicket: statusTicket , divFilter: divFilterValue, divType: divTypeValue, onlyMy: onlyMy })
-			.done(function(output) {
-				$('#workflowMenuTicketsDiv').html(output).show();
-			})
-			.always(function() {
-				$('#ticketFilter').find('input').each(function() {
-					$(this).removeProp('disabled');
-				});
-			});
-  }); */
-
-/*	$('#newCardDiv').on('click', '#btnSearchEquipment', function() {
-		$(this).prop('disabled', true);
-		$.post('cardFunctions.php', {op: 'getEq', num: $('#newEdISN').val()}, 'json')
-			.done(function(result) {
-				if (result === null)
-					return;
-				if (result.num !== 'undefined')
-					$('#newEdISN').val(result.num);
-				if (result.sn !== 'undefined')
-					$('#newEdSN').val(result.sn);
-				if (result.brand !== 'undefined')
-					$('#newEdMaker').val(result.brand);
-				if (result.model !== 'undefined')
-					$('#newEdModel').val(result.model);
-				if (result.type !== 'undefined')
-					$('#newEdEquip').val(result.type);
-			})
-			.always(function() {
-				$('#btnSearchEquipment').removeProp('disabled');
-			});
-}); */
+  $('body').on('change', '.checkAll', function() {  
+   	if ($(this).prop('checked'))
+      $(this).parents('table').first().find('.checkOne').not(':disabled').prop('checked', 'checked');
+    else
+      $(this).parents('table').first().find('.checkOne').not(':disabled').removeProp('checked');
+  });	
 	
-	$('#selectEqList').on('click', '.open>ul>li', function (evt) {
-	  evt.stopPropagation();
-	  $('#selectEq').dialog('close');
-  	  $('#servNum').data('id', $(this).data('id'));
-//	  $('#card').dialog('option', 'buttons', cardBtnWait);
-	  myPostJson('/ajax/equipment/info/'+$('#division').val()+'/'+$(this).data('id'), null, 
-	  	function() {
-	  		if (cardMode != 'new')
-//		  		$('#card').dialog('option', 'buttons', cardBtnNew);
-//			else
-                myPostJson('/ajax/request/changeEq/'+openCard, {equipment: $('#servNum').data('id')},
-                	function() {
-						setFilter();
-                    },null,
-                    function() {
-//                    	$('#card').dialog('option', 'buttons', cardBtnLook);
-//                    	$('#card button').removeProp('disabled');
-					}); 
-		},
-	  	function() {
-			alert('Ошибка связи с сервером');
-			$('#card').dialog('close');
-	  	});
-	});
+  $('#selectEqList').on('click', '.open>ul>li', function (evt) {
+	evt.stopPropagation();
+	$('#selectEq').dialog('close');
+	$('#servNum').data('id', $(this).data('id'));
+	$('#servNum').val($(this).data('servnum'));
+	$('#SN').val($(this).data('sn'));
+	$('#eqType').val($(this).data('eqtype'));
+	$('#manufacturer').val($(this).data('mfg'));
+	$('#model').val($(this).data('model'));
+	checkChanges(); 
+  });
 	
-	$('#selectEqList').on('click', '.collapsed', function () {
-		$(this).children('span').removeClass('ui-icon-folder-collapsed').addClass('ui-icon-folder-open');
-		$(this).children('ul').show();
-		$(this).removeClass('collapsed').addClass('open');
-	});
+  $('#selectEqList').on('click', '.collapsed', function () {
+	$(this).children('span').removeClass('ui-icon-folder-collapsed').addClass('ui-icon-folder-open');
+	$(this).children('ul').show();
+	$(this).removeClass('collapsed').addClass('open');
+  });
 
-	$('#selectEqList').on('click', '.open', function () {
-		$(this).children('span').removeClass('ui-icon-folder-open').addClass('ui-icon-folder-collapsed');
-		$(this).children('ul').hide();
-		$(this).removeClass('open').addClass('collapsed');
-	});
+  $('#selectEqList').on('click', '.open', function () {
+	$(this).children('span').removeClass('ui-icon-folder-open').addClass('ui-icon-folder-collapsed');
+	$(this).children('ul').hide();
+	$(this).removeClass('open').addClass('collapsed');
+  });
 	
-	$('#workflow').on('click', '.btnAddProblem', function() {
-		$('#addProblem').dialog('open');
-//		$('#addProblem').dialog('option', 'buttons', cardBtnWait);
-		myPostJson('/ajax/addProblem.php', {op: 'getContragents'}, function() {
-//			$('#addProblem').dialog('option', 'buttons', addProblemBtn);
-			$('#apContragent').trigger('change');
-		}, function() {
-//			$('#addProblem').dialog('option', 'buttons', addProblemBtn);
-		});
-	});
+  $('#workflow').on('click', '.btnAddProblem', function() {
+	$('#addProblem').dialog('open');
+	myPostJson('/ajax/addProblem.php', {op: 'getContragents'}, 
+	  function() {
+		$('#apContragent').trigger('change');
+	  });
+  });
 
-	$('#apContragent').change(function() {
-//		$('#addProblem').dialog('option', 'buttons', cardBtnWait);
-		myPostJson('/ajax/addProblem.php', {op: 'getContracts', caId: $('#apContragent').val()}, function() {
-//			$('#addProblem').dialog('option', 'buttons', addProblemBtn);
-			$('#apContract').trigger('change');
-		}, function() {
-//			$('#addProblem').dialog('option', 'buttons', addProblemBtn);
-		});
-	});
+  $('#apContragent').change(function() {
+	myPostJson('/ajax/addProblem.php', {op: 'getContracts', caId: $('#apContragent').val()}, 
+	  function() {
+		$('#apContract').trigger('change');
+	  });
+  });
 
-	$('#apContract').change(function() {
-//		$('#addProblem').dialog('option', 'buttons', cardBtnWait);
-		myPostJson('/ajax/addProblem.php', {op: 'getDivisions', cId: $('#apContract').val()}, function() {
-//			$('#addProblem').dialog('option', 'buttons', addProblemBtn);
-			$('#apDivision').trigger('change');
-		}, function() {
-//			$('#addProblem').dialog('option', 'buttons', addProblemBtn);
-		});
-	});
+  $('#apContract').change(function() {
+	myPostJson('/ajax/addProblem.php', {op: 'getDivisions', cId: $('#apContract').val()}, 
+	  function() {
+		$('#apDivision').trigger('change');
+	  });
+  });
 
-	$('#apDivision').change(function() {
-//		$('#addProblem').dialog('option', 'buttons', cardBtnWait);
-		myPostJson('/ajax/addProblem.php', {op: 'getProblem', cId: $('#apContract').val(), divId: $('#apDivision').val()},
-					null, null, function() { $('#addProblem').dialog('option', 'buttons', addProblemBtn); });
-	});
+  $('#apDivision').change(function() {
+	myPostJson('/ajax/addProblem.php', {op: 'getProblem', cId: $('#apContract').val(), divId: $('#apDivision').val()},
+				null, null, function() { $('#addProblem').dialog('option', 'buttons', addProblemBtn); });
+  });
 	
 });

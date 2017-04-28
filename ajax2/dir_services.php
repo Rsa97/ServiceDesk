@@ -5,8 +5,8 @@ header('Content-Type: application/json; charset=UTF-8');
 include 'common.php';
 include 'init.php';
 
-// Получаем список ответственных лиц
-try {	// Получаем список услуг
+// Получаем список услуг
+try {
 	$req = $db->prepare("SELECT DISTINCT `srv`.`guid`, `srv`.`name` ".
 							"FROM `contractDivisions` AS `cd` ".
 							"JOIN `divServicesSLA` AS `dss` ON `cd`.`guid` = UNHEX(REPLACE(:divisionGuid, '-', '')) AND `cd`.`isDisabled` = 0 ".
@@ -19,23 +19,16 @@ try {	// Получаем список услуг
 							'orig' => "MySQL error".$e->getMessage()));
 	exit;
 }
-$services = '<ul>';
+$services = '';
 $num = 0;
 while (($row = $req->fetch(PDO::FETCH_NUM))) {
 	list($servGuid, $servName) = $row;
 	$servGuid = formatGuid($servGuid);
-	$services .= "<li data-id='{$servGuid}'>".htmlspecialchars($servName);
+	$services .= "<option value='{$servGuid}'>".htmlspecialchars($servName);
 	$num++;
 }
-$services .= '</ul>';
-$ret = array('!lookService' => ($num > 1 ? 1 : 0), '_service' => '', 'service_guid' => null);
-if (1 == $num) {
-	$ret['_service'] = $servName;
-	$ret['service_guid'] = $servGuid;
-}
+if ($num > 1)
+	$services = "<option value='*' selected>-- Выберите услугу --".$services;
 
-if (0 == $paramValues['edit'])
-	echo json_encode($ret);
-else 
-	echo json_encode(array('selectServiceList' => $services));
+echo json_encode(array('service' => $services));
 ?>

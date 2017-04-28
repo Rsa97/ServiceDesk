@@ -50,7 +50,7 @@ try {
 	$req = $db->prepare("SELECT `newState` ".
 							"FROM `requestEvents` ".
 							"WHERE `request_guid` = UNHEX(REPLACE(:requestGuid, '-', '')) AND `event` = 'changeState' ".
-								"AND `newState` IN ('accepted', 'fixed') ".
+								"AND `newState` IN ('fixed', 'accepted') ".
 							"ORDER BY `timestamp` DESC ".
 							"LIMIT 1");
 	$req->execute(array('requestGuid' => $guid));
@@ -59,12 +59,10 @@ try {
 							'orig' => "MySQL error in line ".$e->getLine().': '.$e->getMessage()));
 	exit;
 }
-if (!($row = $req->fetch(PDO::FETCH_ASSOC))) {
-	echo json_encode(array('error' => 'Внутренняя ошибка сервера', 
-							'orig' => "MySQL error in line ".$e->getLine().': '.$e->getMessage()));
-	exit;
-}
-$state = $row['newState'];
+if ($row = $req->fetch(PDO::FETCH_ASSOC))
+	$state = $row['newState'];
+else
+	$state = 'accepted';
 
 include 'init_soap.php';
 if (false === $soap) {

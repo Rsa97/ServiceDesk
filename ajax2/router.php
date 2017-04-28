@@ -138,15 +138,13 @@
 										'filters' => array('contract' => '/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/'),
 										'required' => array('contract')),
 					'dir/contacts' => array('file' => 'dir_contacts.php',
-										'get' => array('edit', 'division'),
-										'filters' => array('edit' => '/[01]/',
-														   'division' => '/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/'),
-										'required' => array('edit', 'division')),
+										'get' => array('division'),
+										'filters' => array('division' => '/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/'),
+										'required' => array('division')),
 					'dir/services' => array('file' => 'dir_services.php',
-										'get' => array('edit', 'division'),
-										'filters' => array('edit' => '/[01]/',
-														   'division' => '/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/'),
-										'required' => array('edit', 'division')),
+										'get' => array('division'),
+										'filters' => array('division' => '/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/'),
+										'required' => array('division')),
 					'dir/slas' 	   => array('file' => 'dir_slas.php',
 										'get' => array('division', 'service'),
 										'filters' => array('division' => '/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/',
@@ -263,7 +261,7 @@
 										'required' => array('divId', 'call')),
 					'api/dir/divisions' => array('file' => 'api_dir_divisions.php',
 										'get' => array('token', 'contract', 'format'),
-										'post' => array('format'),
+										'post' => array('contract', 'format'),
 										'filters' => array('token' => '/^[0-9a-f]{40}$/',
 														   'contract' => '/\S+/',
 														   'format' => '/json|xml/'),
@@ -304,7 +302,7 @@
 						$paramValues[$def['get'][$i]] = trim($param);
 			}
 			if (isset($def['post'])) {
-				foreach($_POST as $name => $value)
+				foreach($_REQUEST as $name => $value)
 					if (in_array($name, $def['post']))
 						$paramValues[$name] = trim($value);
 			}

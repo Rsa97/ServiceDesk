@@ -154,7 +154,7 @@ try {
 										"`eq`.`serialNumber`, `c`.`number`, `co`.`lastName`, `co`.`firstName`, `co`.`middleName`, `co`.`email`, ".
 										"`co`.`phone`, CAST(`rq`.`problem` AS CHAR(1024)), `rq`.`onWait`, `rq`.`reactedAt`, ".
 										"`rq`.`fixedAt`, `rq`.`repairedAt`, `rq`.`slaLevel`, `rq`.`toReact`, `rq`.`toFix`, ".
-										"`rq`.`toRepair`, `p`.`name`, ".
+										"`rq`.`toRepair`, `p`.`name`, `rq`.`guid`, ".
 										"IFNULL(`rq`.`reactRate`, calcTime_v3(`rq`.`id`, IFNULL(`rq`.`reactedAt`, NOW()))/`rq`.`toReact`), ".
 										"IFNULL(`rq`.`fixRate`, calcTime_v3(`rq`.`id`, IFNULL(`rq`.`fixedAt`, NOW()))/`rq`.`toFix`), ".
     									"IFNULL(`rq`.`repairRate`, calcTime_v3(`rq`.`id`, IFNULL(`rq`.`repairedAt`, NOW()))/`rq`.`toRepair`) ".
@@ -208,7 +208,7 @@ while ($row = $req->fetch(PDO::FETCH_NUM)) {
 	list($id, $state, $stateTime, $srvSName, $srvName, $createdAt, $reactBefore, $fixBefore, $repairBefore, $div, $contragent, 
 		 $engLN, $engGN, $engMN, $engEmail, $engPhone, $eqType, $eqSubType, $eqName, $eqMfg, $servNum, $serial, $contractNumber, 
 		 $contLN, $contGN, $contMN, $contEmail, $contPhone, $problem, $onWait, $reactedAt, $fixedAt, $repairedAt, $slaLevel, 
-		 $timeToReact, $timeToFix, $timeToRepair, $partnerName, $reactPercent, $fixPercent, $repairPercent) = $row;
+		 $timeToReact, $timeToFix, $timeToRepair, $partnerName, $requestGuid, $reactPercent, $fixPercent, $repairPercent) = $row;
 	$engName = $engLN.($engGN == '' ? '' : (' '.mb_substr($engGN, 0, 1, 'utf-8').'.')).
 			   ($engMN == '' ? '' : (' '.mb_substr($engMN, 0, 1, 'utf-8').'.'));
 	if ($state == 'canceled') {
@@ -250,15 +250,17 @@ while ($row = $req->fetch(PDO::FETCH_NUM)) {
 		"<td><input type='checkbox' class='checkOne'>".
 		"<abbr title='{$statusNames[$state]}'><span class='ui-icon {$statusIcons[$state]}'></span></abbr>".
 		(1 == $onWait ? "<abbr title='{$statusNames['onWait']}'><span class='ui-icon {$statusIcons['onWait']}'></span></abbr>" : "").
+		(null == $requestGuid ? "<abbr title='Нет синхронизации с 1С'><span class='ui-icon ui-icon-alert'></span></abbr>" : "").
 		('' == $partnerName ? "" : "<abbr title='{$partnerName}'><span class='ui-icon ui-icon-arrowthick-1-e'></span></abbr>").
 		"<td>".sprintf('%07d', $id).
 		"<td>{$slaLevels[$slaLevel]}".
 		"<td><abbr title='{$srvName}\n{$problem}'>{$srvSName}</abbr>".
 		"<td>".date_format(date_create($createdAt), 'd.m.Y H:i').
 		"<td>".date_format(date_create($repairBefore), 'd.m.Y H:i').
-		"<td><abbr title='Договор {$contractNumber}\n{$div}\n{$contLN} {$contGN} {$contMN}\nE-mail: {$contEmail}\nТелефон: {$contPhone}\n'>{$contragent}</abbr>".
+		"<td><abbr title='Договор {$contractNumber}'>{$contragent}</abbr>".
+		"<td><abbr title='Контактное лицо: {$contLN} {$contGN} {$contMN}\nE-mail: {$contEmail}\nТелефон: {$contPhone}\n'>{$div}</abbr>".
 		"<td><abbr title='{$engLN} {$engGN} {$engMN}\nE-mail: {$engEmail}\nТелефон: {$engPhone}'>{$engName}</abbr>".
-		"<td><abbr title='{$eqSubType}\n{$eqMfg} {$eqName}\nСервисный номер: ${servNum}\nSN: {$serial}'>{$eqType}</abbr>".
+//		"<td><abbr title='{$eqSubType}\n{$eqMfg} {$eqName}\nСервисный номер: ${servNum}\nSN: {$serial}'>{$eqType}</abbr>".
 		"<td><abbr title='{$timeComment}'>".
         	"<div class='timeSlider' style='border: 1px solid {$sliderColor};'>".
 				"<div class='scale' style='background-color: {$reactColor}; width: {$reactPercent}%';></div>".
@@ -281,8 +283,9 @@ foreach ($tables as $state => $table) {
 								  	"<th>Дата поступления".
 								  	"<th>Выполнить до".
 								  	"<th>Заказчик".
+								  	"<th>Филиал".
 								  	"<th>Ответственный".
-								  	"<th>Оборудование".
+//								  	"<th>Оборудование".
 								  	"<th>Осталось".
 								  $table.
 								  "</table>";

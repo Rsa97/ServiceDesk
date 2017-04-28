@@ -24,40 +24,25 @@ try {
 							'orig' => "MySQL error".$e->getMessage()));
 	exit;
 }
-$contacts = '<ul>';
-$idOk = 0;
+$contacts = '';
 $num = 0;
+$have = 0;
 $ret = array('_contact' => '', '_email' => '', '_phone' => '', '_address' => '', 'contact_guid' => null);
 while (($row = $req->fetch(PDO::FETCH_NUM))) {
 	list($contGuid, $contGN, $contLN, $contMN, $contEmail, $contPhone, $contAddress) = $row;
 	$contGuid = formatGuid($contGuid);
-	$contacts .= "<li data-id='{$contGuid}' data-email='".htmlspecialchars($contEmail).
+	$contacts .= "<option value='{$contGuid}' data-email='".htmlspecialchars($contEmail).
 				 "' data-phone='".htmlspecialchars($contPhone)."' data-address='".htmlspecialchars($contAddress)."'".
-				 ">".htmlspecialchars(nameFull($contLN, $contGN, $contMN));
-	if ($userGuid == $contGuid) {
-		$ret['_email'] = htmlspecialchars($contEmail);
-		$ret['_phone'] = htmlspecialchars($contPhone);
-		$ret['_address'] = htmlspecialchars($contAddress);
-		$ret['_contact'] = htmlspecialchars(nameFull($contLN, $contGN, $contMN));
-		$ret['contact_guid'] = $contGuid; 
-		$idOk = 1;
-	}
+				 ($userGuid == $contGuid ? ' selected' : '').">".htmlspecialchars(nameFull($contLN, $contGN, $contMN));
+	if ($userGuid == $contGuid)
+		$have = 1;
 	$num++;
 }
-$contacts .= '</ul>';
+$contacts .= '';
 
-if (1 == $num) {
-	$ret['_email'] = htmlspecialchars($contEmail);
-	$ret['_phone'] = htmlspecialchars($contPhone);
-	$ret['_address'] = htmlspecialchars($contAddress);
-	$ret['_contact'] = htmlspecialchars(nameFull($contLN, $contGN, $contMN));
-	$ret['contact_guid'] = $contGuid;
-}
-$ret['!lookContact'] = ($num > 1 ? 1 : 0);
-$ret['selectContactList'] = $contacts; 
+if ($num > 1 && 0 == $have)
+	$contacts = "<option value='*' selected>-- Выберите контактное лицо --".$contacts;
+$ret['contact'] = $contacts; 
 
-if (0 == $paramValues['edit'])
-	echo json_encode($ret);
-else 
-	echo json_encode(array('selectContactList' => $contacts));
+echo json_encode($ret);
 ?>

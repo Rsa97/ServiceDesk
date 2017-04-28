@@ -40,6 +40,23 @@ if ($ok == 0) {
 // Считаем время
 $time = calcTime($db, $paramValues['division'], $paramValues['service'], $paramValues['slaLevel'], 1);
 
+// Если заявка от робота, то ищем ответственного по филиалу / договору
+if ('2c2dd584-73f7-11e6-95f3-002590839a1d' == $userGuid)
+	try {
+		$req = $db->prepare("SELECT IFNULL(`ucd`.`user_guid`, `uc`.`user_guid`) ".
+								"FROM `contractDivisions` AS `cd` ".
+								"LEFT JOIN `userContractDivisions` AS `ucd` ON `ucd`.`contractDivision_guid` = `cd`.`guid` ".
+								"LEFT JOIN `userContracts` AS `uc` ON `uc`.`contract_guid` = `cd`.`contract_guid` ".
+								"WHERE `cd`.`guid` = UNHEX(REPLACE(:divisionGuid, '-', ''))");
+		$req->execute(array('divisionGuid' => $paramValues['division']));
+		if (($row = $req->fetch(PDO::FETCH_NUM)) && ('' != $row[0]))
+			$userGuid = formatGuid($row[0]);
+	} catch (PDOException $e) {
+		return_format($format, array('state' => 'error', 'text' => 'Внутренняя ошибка сервера (MySQL)', 
+									 'orig' => 'MySQL error '.$e->getMessage()));
+		exit;
+	}
+
 // Записываем заявку в MySQL
 try {
 	$req = $db->prepare("INSERT INTO `requests` (`problem`, `createdAt`, `reactBefore`, `fixBefore`, `repairBefore`, ".

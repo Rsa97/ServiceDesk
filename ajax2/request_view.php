@@ -16,7 +16,8 @@ try {
 								"`rq`.`repairBefore`, CAST(`rq`.`problem` AS CHAR(8192)), `rq`.`slaLevel`, `co`.`address`, ".
                         		"`rq`.`solutionProblem`, `rq`.`solution`,  `rq`.`solutionRecomendation`, `div`.`guid`, ".
                         		"`c`.`number`, `rq`.`repairedAt`, `ca`.`guid`, `c`.`guid`, `c`.`number`, `div`.`address`, ".
-                        		"`rq`.`guid`, `p`.`name` ".
+                        		"`rq`.`guid`, `p`.`name`, `rq`.`service_guid`, `rq`.`contractDivision_guid`, ".
+                        		"`rq`.`contactPerson_guid`, `rq`.`equipment_guid` ".
           					"FROM `requests` AS `rq` ".
 	            			"LEFT JOIN `contractDivisions` AS `div` ON `rq`.`contractDivision_guid` = `div`.`guid` ".
     	        			"LEFT JOIN `contracts` AS `c` ON `c`.`guid` = `div`.`contract_guid` ".
@@ -48,41 +49,143 @@ try {
 							'orig' => "MySQL error".$e->getMessage()));
 	exit;
 }
-list($id, $state, $stateTime, $srvSName, $srvName, $createdAt, $repairBefore, $div, $contragent, $engLN, $engGN, $engMN, $engEmail, 
-	 $engPhone, $eqType, $eqSubType, $eqName, $eqMfg, $servNum, $serial, $contLN, $contGN, $contMN, $contEmail, $contPhone, $fixBefore, 
-	 $repairBefore, $problem, $slaLevel, $contAddress, $solProblem, $sol, $solRecomend, $divGuid, $contractNumber, $repairedAt, 
-	 $contragentGuid, $contractGuid, $contractNumber, $divAddress, $requestGuid, $partnerName) = $row;
+list($id, $state, $stateTime, $srvSName, $serviceName, $createdAt, $repairBefore, $div, $contragent, $engLN, $engGN, $engMN, $engEmail, 
+	 $engPhone, $eqType, $eqSubType, $eqName, $eqMfg, $servNum, $serial, $contactLN, $contactGN, $contactMN, $contactEmail, $contactPhone, 
+	 $fixBefore, $repairBefore, $problem, $slaLevel, $contactAddress, $solProblem, $sol, $solRecomend, $divGuid, $contractNumber, 
+	 $repairedAt, $contragentGuid, $contractGuid, $contractNumber, $divAddress, $requestGuid, $partnerName, $serviceGuid, $divisionGuid,
+	 $contactGuid, $equipmentGuid) = $row;
 $requestGuid = formatGuid($requestGuid);
 $engName = nameWithInitials($engLN, $engGN, $engMN);
 $createTime = date_timestamp_get(date_create($createdAt));
 $passedTime = date_timestamp_get(date_create('now'))-$createTime;
 $timeToFix = date_timestamp_get(date_create($fixBefore))-$createTime;
 $timeToRepair = date_timestamp_get(date_create($repairBefore))-$createTime;
+$serviceGuid = formatGuid($serviceGuid);
+$divisionGuid = formatGuid($divisionGuid);
+$contactGuid = formatGuid($contactGuid);
+$equipmentGuid = formatGuid($equipmentGuid);
 $result = array('_servNum' => $servNum,
+				'equipment_guid' => $equipmentGuid,
 				'_SN' => $serial,
-				'_eqType' => (('' == $eqType || '' == $eqSubType) ? "{$eqType}{$eqSubType}" : "{$eqType} / {$eqSubType}"),
+				'_eqType' => (('' == $eqType || '' == $eqSubType) ? $eqType.$eqSubType : $eqType.' / '.$eqSubType),
 				'_manufacturer' => $eqMfg,
 				'_model' => $eqName,
 				'_problem' => $problem,
+				'_email' => $contactEmail,
+				'_phone' => $contactPhone,
+				'_address' => (('' == $divAddress) ? $contactAddress : $divAddress),
 				'contragent' => "<option value='".formatGuid($contragentGuid)."'>".htmlspecialchars($contragent),
 				'contract' => "<option value='".formatGuid($contractGuid)."'>".htmlspecialchars($contractNumber),
-				'_service' => $srvName,
-				'level' => "<option value='{$slaLevel}' selected>{$slaLevels[$slaLevel]}",
 				'_createdAt' => date_format(date_create($createdAt), 'd.m.Y H:i'),
 				'_repairBefore' => date_format(date_create($repairBefore), 'd.m.Y H:i'),
 				'division' => "<option value='".formatGuid($divGuid)."'>".htmlspecialchars($div),
-				'_contact' => htmlspecialchars(nameFull($contLN, $contGN, $contMN)),
-				'_email' => $contEmail,
-				'_phone' => $contPhone,
-				'_address' => ('' == $divAddress ? $contAddress : $divAddress),
 				'_cardSolProblem' => $solProblem,
 				'_cardSolSolution' => $sol,
 				'_cardSolRecomendation' => $solRecomend,
 				'!lookServNum' => (('received' == $state  || ('client' != $rights && 'accepted' == $state)) ? 1 : 0),
+				'!lookPartner' => (('received' == $state  && ('admin' != $rights || 'engineer' == $rights)) ? 1 : 0),
 				'requestGuid' => $requestGuid,
 				'_partner' => $partnerName,
-				'!lookService' => 1 // (('received' == $state && ('admin' == $rights || 'engineer' == $rights)) ? 1 : 0)
 			);
+
+// Получаем доступные по подразделению услуги
+$have = 0;
+$services = '';
+if (in_array($rights, array('admin', 'engineer')) && 'received' == $state) {
+	try {
+		$req = $db->prepare("SELECT DISTINCT `srv`.`guid`, `srv`.`name` ".
+								"FROM `contractDivisions` AS `cd` ".
+								"JOIN `divServicesSLA` AS `dss` ON `cd`.`guid` = UNHEX(REPLACE(:divisionGuid, '-', '')) AND `cd`.`isDisabled` = 0 ".
+									"AND `dss`.`contract_guid` = `cd`.`contract_guid` AND `dss`.`divType_guid` = `cd`.`type_guid` ".
+								"JOIN `services` AS `srv` ON `srv`.`utility` = 0 AND `srv`.`guid` = `dss`.`service_guid` ".
+								"ORDER BY `srv`.`name`");
+		$req->execute(array('divisionGuid' => $divisionGuid)); 
+	} catch (PDOException $e) {
+		echo json_encode(array('error' => 'Внутренняя ошибка сервера', 
+								'orig' => "MySQL error".$e->getMessage()));
+		exit;
+	}
+	while (($row = $req->fetch(PDO::FETCH_NUM))) {
+		list($servGuid, $servName) = $row;
+		$servGuid = formatGuid($servGuid);
+		if ($servGuid == $serviceGuid)
+			$have = 1;
+		$services .= "<option value='{$servGuid}'".($servGuid == $serviceGuid ? ' selected' : '').">".htmlspecialchars($servName);
+	}
+}
+if (0 == $have)
+	$services = "<option value='{$serviceGuid}' selected>".htmlspecialchars($serviceName).$services;
+$result['service'] = $services;
+
+// Получаем возможные уровни SLA
+$have = 0;
+$levels = '';
+if (in_array($rights, array('admin', 'engineer')) && 'received' == $state) {
+	try {
+		$req = $db->prepare("SELECT DISTINCT `dss`.`slaLevel` ".
+								"FROM `contractDivisions` AS `cd` ".
+								"JOIN `contracts` AS `c` ON `cd`.`guid` = UNHEX(REPLACE(:divisionGuid, '-', '')) AND `cd`.`isDisabled` = 0 ".
+									"AND `c`.`guid` = `cd`.`contract_guid` ".
+								"JOIN `divServicesSLA` AS `dss` ON `dss`.`service_guid` = UNHEX(REPLACE(:serviceGuid, '-', '')) ".
+									"AND `dss`.`contract_guid` = `c`.`guid` AND `dss`.`divType_guid` = `cd`.`type_guid` ".
+								"ORDER BY `dss`.`slaLevel` ");
+		$req->execute(array('divisionGuid' => $divisionGuid, 'serviceGuid' => $serviceGuid));
+	} catch (PDOException $e) {
+		echo json_encode(array('error' => 'Внутренняя ошибка сервера', 
+								'orig' => "MySQL error".$e->getMessage()));
+		exit;
+	}
+	while (($row = $req->fetch())) {
+		list($slaLvl) = $row;
+		$levels .= "<option value='{$slaLvl}'".($slaLvl == $slaLevel ? ' selected' : '').">{$slaLevels[$slaLvl]}";
+		if ($slaLvl == $slaLevel)
+			$have = 1;
+	}
+}
+if (0 == $have)
+	$levels = "<option value='{$slaLevel}' selected>{$slaLevels[$slaLevel]}".$levels;
+$result['level'] = $levels;
+
+
+// Получаем список контактных лиц
+$have = 0;
+$contacts = '';  
+if (in_array($rights, array('admin')) && 'received' == $state) {
+	try {
+		$req = $db->prepare("SELECT `u`.`guid`, `u`.`firstName`, `u`.`lastName`, `u`.`middleName`, `u`.`email`, `u`.`phone`, `u`.`address` ".
+								"FROM `users` AS `u` ".
+								"JOIN `userContractDivisions` AS `ucd` ON `ucd`.`contractDivision_guid` = UNHEX(REPLACE(:divisionGuid, '-', '')) ".
+									"AND `u`.`rights` = 'client' AND `ucd`.`user_guid` = `u`.`guid` ".
+								"JOIN `contractDivisions` AS `cd` ON `cd`.`guid` = `ucd`.`contractDivision_guid` ".
+									"AND `cd`.`isDisabled` = 0 ".
+							"UNION SELECT `u`.`guid`, `u`.`firstName`, `u`.`lastName`, `u`.`middleName`, `u`.`email`, `u`.`phone`, `u`.`address` ".
+								"FROM `users` AS `u` ".
+								"JOIN `userContracts` AS `uc` ON `u`.`rights` = 'client' AND `uc`.`user_guid` = `u`.`guid` ".
+								"JOIN `contractDivisions` AS `cd` ON `cd`.`guid` = UNHEX(REPLACE(:divisionGuid, '-', '')) ".
+									"AND `cd`.`contract_guid` = `uc`.`contract_guid`");
+		$req->execute(array('divisionGuid' => $divisionGuid)); 
+	} catch (PDOException $e) {
+		echo json_encode(array('error' => 'Внутренняя ошибка сервера', 
+								'orig' => "MySQL error".$e->getMessage()));
+		exit;
+	}
+	while (($row = $req->fetch(PDO::FETCH_NUM))) {
+		list($contGuid, $contGN, $contLN, $contMN, $contEmail, $contPhone, $contAddress) = $row;
+		$contGuid = formatGuid($contGuid);
+		$contacts .= "<option value='{$contGuid}' data-email='".htmlspecialchars($contEmail).
+					 "' data-phone='".htmlspecialchars($contPhone)."' data-address='".
+					 htmlspecialchars(('' == $divAddress) ? $contAddress : $divAddress)."'".
+					 ($contGuid == $contactGuid ? ' selected' : '').">".htmlspecialchars(nameFull($contLN, $contGN, $contMN));
+		if ($contGuid == $contactGuid)
+			$have = 1;
+	}
+}
+if (0 == $have)
+	$contacts = "<option value='{$contactGuid}' data-email='".htmlspecialchars($contactEmail).
+					 "' data-phone='".htmlspecialchars($contactPhone)."' data-address='".
+					 htmlspecialchars(('' == $divAddress) ? $contactAddress : $divAddress)."'".
+					 " selected>".htmlspecialchars(nameFull($contactLN, $contactGN, $contactMN)).$contacts;
+$result['contact'] = $contacts;
 
 // Получаем все события и документы по заявке
 try {
@@ -189,61 +292,6 @@ try {
 							'orig' => "MySQL connection error".$e->getMessage()));
 	exit;
 }
-
-// Проверяем права на назначение партнёра
-$result['!lookPartner'] = 0;
-if (in_array($rights, array('engineer', 'admin')) && 'received' == $state)
-	$result['!lookPartner'] = 1;
-try {
-	$req = $db->prepare("SELECT COUNT(*) AS `count` ".
-    						"FROM `requests` AS `rq` ".
-    						"JOIN `contractDivisions` AS `cd` ON `cd`.`guid` = `rq`.`contractDivision_guid` AND `cd`.`isDisabled` = 0 ".
-    						"JOIN `partnerDivisions` AS `pd` ON `pd`.`contractDivision_guid` = `rq`.`contractDivision_guid` ".
-    						"JOIN `contracts` AS `c` ON `c`.`guid` = `cd`.`contract_guid` ".
- 	                        "WHERE `rq`.`id` = :reqNum ".
-       	                		"AND (NOW() BETWEEN `c`.`contractStart` AND `c`.`contractEnd`)");
-	$req->execute(array('reqNum' => $paramValues['n']));
-	$row = $req->fetch(PDO::FETCH_ASSOC);
-	if (!isset($row['count']) || 0 == $row['count'])
-		$result['!lookPartner'] = 0;
-} catch (PDOException $e) {
-	echo json_encode(array('error' => 'Внутренняя ошибка сервера', 
-							'orig' => "MySQL connection error".$e->getMessage()));
-	exit;
-}
-
-// Проверяем права на смену контактного лица  
-$result['!lookContact'] = 0;
-if (in_array($rights, array('admin')) && 'received' == $state)
-	$result['!lookContact'] = 1;
-try {
-	$req = $db->prepare("SELECT COUNT(*) AS `count` ". 
-							"FROM ( ".
-								"SELECT `rq`.`id` ". 
-									"FROM `requests` AS `rq` ". 
-									"JOIN `contractDivisions` AS `cd` ON `rq`.`id` = :reqNum ". 
-										"AND `cd`.`guid` = `rq`.`contractDivision_guid` AND `cd`.`isDisabled` = 0 ". 
-            						"JOIN `contracts` AS `c` ON `c`.`guid` = `cd`.`contract_guid` ".
-										"AND (NOW() BETWEEN `c`.`contractStart` AND `c`.`contractEnd`) ".
-									"JOIN `userContractDivisions` AS `ucd` ON `ucd`.`user_guid` = `rq`.`contractDivision_guid` ". 
-								"UNION SELECT `rq`.`id` ". 
-									"FROM `requests` AS `rq` ". 
-									"JOIN `contractDivisions` AS `cd` ON `rq`.`id` = :reqNum ". 
-										"AND `cd`.`guid` = `rq`.`contractDivision_guid` AND `cd`.`isDisabled` = 0 ". 
-            						"JOIN `contracts` AS `c` ON `c`.`guid` = `cd`.`contract_guid` ".
-										"AND (NOW() BETWEEN `c`.`contractStart` AND `c`.`contractEnd`) ".
-									"JOIN `userContracts` AS `uc` ON `uc`.`contract_guid` = `cd`.`contract_guid` ".
-							") AS `t`");
-	$req->execute(array('reqNum' => $paramValues['n']));
-	$row = $req->fetch(PDO::FETCH_ASSOC);
-	if (!isset($row['count']) || 0 == $row['count'])
-		$result['!lookContact'] = 0;
-} catch (PDOException $e) {
-	echo json_encode(array('error' => 'Внутренняя ошибка сервера', 
-							'orig' => "MySQL connection error".$e->getMessage()));
-	exit;
-}
-
 	
 echo json_encode($result);
 exit;	 
