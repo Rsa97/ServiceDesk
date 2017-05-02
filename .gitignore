@@ -3,10 +3,10 @@
 *.pyo
 .gitignore
 .project
-files
-config
-.settings
-img/logo.png
-img/color_web.jpg
-mysqldiff
-sync_1c.log
+/files/*
+/config/*
+/.settings
+/img/logo.png
+/img/color_web.jpg
+/mysqldiff
+/sync_1c.log

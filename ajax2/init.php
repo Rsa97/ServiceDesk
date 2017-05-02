@@ -1,6 +1,6 @@
 <?php
 
-	include '../config/db.php';
+include '../config/db.php';
 
 if ('cli' != php_sapi_name()) {
 	session_start();
