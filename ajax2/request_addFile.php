@@ -78,7 +78,7 @@ $time = date_format(new DateTime, 'Y-m-d H:i:s');
 $soapTime = timeToSOAP($time);
 
 try {
-	$soapReq = array('sd_requestevent_table' => array(array('CodeNodeSiteSD' => 'SDTEST2',
+	$soapReq = array('sd_requestevent_table' => array(array('CodeNodeSiteSD' => $node_1c,
 															'GUID' 			 => $guid,
 															'timestamp' 	 => $soapTime,
 															'nameDoc'		 => $fileName,

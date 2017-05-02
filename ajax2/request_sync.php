@@ -34,7 +34,7 @@ while ($row = $req->fetch(PDO::FETCH_NUM)) {
 		 $isPlanned) = $row; 
 	try {
 		$createdAt = timeToSOAP($createdAt);
-		$soapReq = array('sd_request_table' => array(array('CodeNodeSiteSD' => 'SDTEST2',
+		$soapReq = array('sd_request_table' => array(array('CodeNodeSiteSD' => $node_1c,
 														   'NumberSD' => $id,
 														   'createdAt' => $createdAt,
 														   'contractDivision_guid' => formatGuid($contractDivision_guid),

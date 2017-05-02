@@ -61,7 +61,7 @@ $time = calcTime($db, $division, $service, $sla, 1);
 $soapTime = timeToSOAP($time['createdAt']);
 
 try {
-	$soapReq = array('sd_requestevent_table' => array(array('CodeNodeSiteSD' => 'SDTEST2',
+	$soapReq = array('sd_requestevent_table' => array(array('CodeNodeSiteSD' => $node_1c,
 															'GUID' 			 => $guid,
 															'newState' 		 => 'received',
 															'timestamp' 	 => $soapTime,

@@ -104,7 +104,7 @@ foreach ($req->fetchAll(PDO::FETCH_NUM) as $row) {
 	$soapErr = false;
 	if ($soap !== false) {
 		try {
-			$soapReq = array('sd_request_table' => array(array('CodeNodeSiteSD' => 'SDTEST2',
+			$soapReq = array('sd_request_table' => array(array('CodeNodeSiteSD' => $node_1c,
 															   'NumberSD' => $reqId,
 															   'createdAt' => $createdAt,
 															   'contractDivision_guid' => $divId,

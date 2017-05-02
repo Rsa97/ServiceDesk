@@ -32,7 +32,7 @@ try {
 			 $contractDivision_guid, $slaLevel, $equipment_guid, $service_guid, $toReact, $toFix, $toRepair, $contract_guid) = $row; 
 	try {
 		$createdAt = timeToSOAP($time['createdAt']);
-		$soapReq = array('sd_request_table' => array(array('CodeNodeSiteSD' => 'SDTEST2',
+		$soapReq = array('sd_request_table' => array(array('CodeNodeSiteSD' => $node_1c,
 														   'NumberSD' => $id,
 														   'createdAt' => $createdAt,
 														   'contractDivision_guid' => formatGuid($contractDivision_guid),

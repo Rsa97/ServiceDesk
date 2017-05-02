@@ -3,5 +3,5 @@
     $dbPort = 3306;
     $dbUser = 'root';
     $dbPass = 'Rthtyrb$';
-    $dbName = 'sd';
+    $dbName = 'sd-dev-1c';
 ?>
