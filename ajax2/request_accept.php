@@ -68,7 +68,7 @@ $err1C = array();
 foreach($list as $id => $guid) {
 
 	try {
-		$soapReq = array('sd_requestevent_table' => array(array('CodeNodeSiteSD' => 'SDTEST2',
+		$soapReq = array('sd_requestevent_table' => array(array('CodeNodeSiteSD' => $node_1c,
 																'GUID' => $list[$id],
 																'newState' => 'accepted',
 																'timestamp' => $soapTime,

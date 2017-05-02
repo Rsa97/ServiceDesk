@@ -1,6 +1,6 @@
 -- MySQL dump 10.13  Distrib 5.5.46, for debian-linux-gnu (x86_64)
 --
--- Host: localhost    Database: sd-dev-1c
+-- Host: localhost    Database: sd
 -- ------------------------------------------------------
 -- Server version	5.5.46-0ubuntu0.12.04.2
 
@@ -658,7 +658,7 @@ CREATE TABLE `workCalendar` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping routines for database 'sd-dev-1c'
+-- Dumping routines for database 'sd'
 --
 /*!50003 DROP FUNCTION IF EXISTS `calcTime_v2` */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;

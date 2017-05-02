@@ -78,7 +78,7 @@ try {
 		exit;
 	}
 
-	$soapReq = array('sd_request_table' => array(array('CodeNodeSiteSD' => 'SDTEST2',
+	$soapReq = array('sd_request_table' => array(array('CodeNodeSiteSD' => $node_1c,
 													   'GUID' 			 => $guid,
 												 	   'slaLevel' => $paramValues['slaLevel'],  
 												 	   'service_guid' => $paramValues['service'],
