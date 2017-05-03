@@ -289,6 +289,9 @@ function servNumLookup() {
 }
   
 $(function() {
+  $.ui.dialog.prototype._allowInteraction = function(e) {
+   	return !!$(e.target).closest('.ui-dialog, .ui-datepicker, .select2-dropdown').length;
+ };
 // Стартовая инициализация интерфейса
   $('#chkMyTickets').buttonset();
   $('#workflow').tabs({active: 0});
