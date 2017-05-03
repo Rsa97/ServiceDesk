@@ -122,8 +122,8 @@ try {
 	$req->execute(array('requestGuid' => $answer->GUID, 'requestId' => $id));
 	$req = $db->prepare("INSERT INTO `requestEvents` (`timestamp`, `event`, `newState`, `request_guid`, `user_guid`) ".
 								"VALUES (:createdAt, 'open', 'received', UNHEX(REPLACE(:requestGuid, '-', '')), ".
-									"UNHEX(REPLACE(:contactGuid, '-', '')))");
-	$req->execute(array('createdAt' => $time['createdAt'], 'requestGuid' => $answer->GUID, 'contactGuid' => $paramValues['contact']));
+									"UNHEX(REPLACE(:userGuid, '-', '')))");
+	$req->execute(array('createdAt' => $time['createdAt'], 'requestGuid' => $answer->GUID, 'userGuid' => $userGuid));
 	$db->query('COMMIT');
 } catch (Exception $e) {
 	echo json_encode(array('error' => 'Внутренняя ошибка сервера',
