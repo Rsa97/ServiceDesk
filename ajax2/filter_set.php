@@ -153,10 +153,10 @@ try {
 										"`et`.`name`, `est`.`name`, `em`.`name`, `emf`.`name`, `eq`.`serviceNumber`, ".
 										"`eq`.`serialNumber`, `c`.`number`, `co`.`lastName`, `co`.`firstName`, `co`.`middleName`, `co`.`email`, ".
 										"`co`.`phone`, CAST(`rq`.`problem` AS CHAR(1024)), `rq`.`onWait`, `rq`.`reactedAt`, ".
-										"`rq`.`fixedAt`, `rq`.`repairedAt`, `rq`.`slaLevel`, `rq`.`toReact`, `rq`.`toFix`, ".
+										"IFNULL(`rq`.`fixedAt`, `rq`.`repairedAt`), `rq`.`repairedAt`, `rq`.`slaLevel`, `rq`.`toReact`, `rq`.`toFix`, ".
 										"`rq`.`toRepair`, `p`.`name`, `rq`.`guid`, ".
 										"IFNULL(`rq`.`reactRate`, calcTime_v3(`rq`.`id`, IFNULL(`rq`.`reactedAt`, NOW()))/`rq`.`toReact`), ".
-										"IFNULL(`rq`.`fixRate`, calcTime_v3(`rq`.`id`, IFNULL(`rq`.`fixedAt`, NOW()))/`rq`.`toFix`), ".
+										"IFNULL(`rq`.`fixRate`, calcTime_v3(`rq`.`id`, IFNULL(`rq`.`fixedAt`, IFNULL(`rq`.`repairedAt`, NOW())))/`rq`.`toFix`), ".
     									"IFNULL(`rq`.`repairRate`, calcTime_v3(`rq`.`id`, IFNULL(`rq`.`repairedAt`, NOW()))/`rq`.`toRepair`) ".
 	            			"FROM `requests` AS `rq` ".
     	        			"LEFT JOIN `contractDivisions` AS `div` ON `rq`.`contractDivision_guid` = `div`.`guid` ".
