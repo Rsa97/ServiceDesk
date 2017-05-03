@@ -83,7 +83,7 @@ $result = array('_servNum' => $servNum,
 				'_cardSolSolution' => $sol,
 				'_cardSolRecomendation' => $solRecomend,
 				'!lookServNum' => (('received' == $state  || ('client' != $rights && 'accepted' == $state)) ? 1 : 0),
-				'!lookPartner' => (('received' == $state  && ('admin' != $rights || 'engineer' == $rights)) ? 1 : 0),
+				'!lookPartner' => (('received' == $state  && ('admin' == $rights || 'engineer' == $rights)) ? 1 : 0),
 				'requestGuid' => $requestGuid,
 				'_partner' => $partnerName,
 			);
