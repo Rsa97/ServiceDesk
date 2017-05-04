@@ -771,10 +771,13 @@ $(function() {
     if (cardMode == 'look' && $('#addComment').val() != '') {
       myPostJson('/ajax/request/addComment/'+openCard, {comment: $('#addComment').val()},
                  function() {
-                   $('#cardDocTbl tr:nth-child(2n+1)').addClass('odd');
-                   $('#cardDocTbl td:nth-child(1)').addClass('cell1');
-                   $('#cardDocTbl td:nth-child(3)').addClass('cell3');
-                   $('#addComment').val('');
+                     $('#addComment').val('');
+		             myPostJson('/ajax/request/view/'+openCard, null,
+                         function() {
+                         	$('#cardDocTbl tr:nth-child(2n+1)').addClass('odd');
+                         	$('#cardDocTbl td:nth-child(1)').addClass('cell1');
+                         	$('#cardDocTbl td:nth-child(3)').addClass('cell3');
+                       	 });
                  });
     }
   });
