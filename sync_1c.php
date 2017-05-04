@@ -1145,11 +1145,11 @@
 				foreach($events->{'Запись'} as $event) {
 					list($evName, $evTime, $evState) = 
 						parseXML($event->{'ЗначениеПараметра'}, array('Event', 'TimeStamp', 'СтатусЗаявки'));
-					$evList[$evTime] = array($evName, $evState);
+					$evList[] = array($evTime, $evName, $evState);
 				}
-				ksort($evList);
-				foreach($evList as $evTime => $evt) {
-					list($evName, $evState) = $evt;
+				usort($evList, function($a, $b) { return ($a[0] < $b[0] ? -1 : ($a[0] > $b[0] ? 1 : 0)); });
+				foreach($evList as $evt) {
+					list($evTime, $evName, $evState) = $evt;
 					if ('Изменен статус заявки' == $evName) {
 						if ('_6Перенесена' == $evState) {
 							$onWait = 1;
@@ -1306,11 +1306,11 @@
 					list($evName, $evTime, $evState, $evUser, $evComment, $equipmentGuid) = 
 						parseXML($event->{'ЗначениеПараметра'}, array('Event', 'TimeStamp', 'СтатусЗаявки', '?userSD', 'Комментарий', 
 										 							  '?Оборудование'));
-					$evList[$evTime] = array($evName, $evState, $evUser, $evComment, $equipmentGuid);
+					$evList[] = array($evTime, $evName, $evState, $evUser, $evComment, $equipmentGuid);
 				}
-				ksort($evList);
-				foreach ($evList as $evTime => $evt) {
-					list($evName, $evState, $evUser, $evComment, $equipmentGuid) = $evt;
+				usort($evList, function($a, $b) { return ($a[0] < $b[0] ? -1 : ($a[0] > $b[0] ? 1 : 0)); });
+				foreach ($evList as $evt) {
+					list($evTime, $evName, $evState, $evUser, $evComment, $equipmentGuid) = $evt;
 //					print "\t{$evTime}\t{$evName}\t{$evState}\t{$evUser}\t{$equipmentGuid}\t{$evComment}\n\t\t";
 					switch($evName) {
 						case 'Изменен статус заявки':
