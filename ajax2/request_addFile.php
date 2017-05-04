@@ -43,7 +43,7 @@ if (null === $row['guid']) {
 
 $guid = formatGuid($row['guid']);
 
-$error = (is_array($_FILES['file']['error']) ? $_FILES['file']['name'][0] : $_FILES['file']['name']);
+$error = (is_array($_FILES['file']['error']) ? $_FILES['file']['error'][0] : $_FILES['file']['error']);
 if ($error != 0) {
 	echo json_encode(array('error' => 'Ошибка передачи файла.'));
 	exit;
