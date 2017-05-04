@@ -146,10 +146,21 @@ var solutionBtn = [{text: 'Отменить',
                           }},
                    {text: 'Принять', 
                    click: function() {
+                   			var Problem = $('#solProblem').val().trim();
+                   			var Solution = $('#solSolution').val().trim();
+                   			var Recomend = $('#solRecomendation').val().trim();
+                   			if ('' == Recomend)
+                   				Recomend = 'Без рекомендаций';
+                   			if (Problem.length < 10 || Solution.length < 10) {
+                   				alert('Минимальная длина текста - 10 символов!');
+                   				return;
+                   			}
+                   			if (Problem == Solution || Problem == Recomend || Solution == Recomend) {
+                   				alert('Тексты в полях не должны совпадать!');
+                   				return;
+                   			}
     						myPostJson('/ajax/request/Repaired/'+$('#solution').data('id'),
-    							{solProblem: $('#solProblem').val().trim(),
-    							 sol: $('#solSolution').val().trim(),
-    							 solRecomend: $('#solRecomendation').val().trim()},
+    							{solProblem: Problem, sol: Solution, solRecomend: Recomend},
                					null,
                					null,
                					function() {
