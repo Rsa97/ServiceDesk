@@ -33,7 +33,7 @@ try {
             				"LEFT JOIN `equipmentTypes` AS `et` ON `et`.`guid` = `est`.`equipmentType_guid` ".
             				"LEFT JOIN `equipmentManufacturers` AS `emf` ON `emf`.`guid` = `em`.`equipmentManufacturer_guid` ".
             				"LEFT JOIN `partners` AS `p` ON `p`.`guid` = `rq`.`partner_guid` ".
-          					"WHERE (`rq`.`id` = :reqNum) ".
+            				"WHERE (`rq`.`id` = :reqNum) ".
 //	            				"AND (:byActive = 0 OR (NOW() BETWEEN `c`.`contractStart` AND `c`.`contractEnd`)) ".
     	        				"AND (:byClient = 0 OR `ucd`.`user_guid` = UNHEX(REPLACE(:userGuid, '-', '')) ".
         	    					"OR `uc`.`user_guid` = UNHEX(REPLACE(:userGuid, '-', ''))) ".

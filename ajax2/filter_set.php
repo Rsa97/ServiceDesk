@@ -154,10 +154,10 @@ try {
 										"`eq`.`serialNumber`, `c`.`number`, `co`.`lastName`, `co`.`firstName`, `co`.`middleName`, `co`.`email`, ".
 										"`co`.`phone`, CAST(`rq`.`problem` AS CHAR(1024)), `rq`.`onWait`, `rq`.`reactedAt`, ".
 										"IFNULL(`rq`.`fixedAt`, `rq`.`repairedAt`), `rq`.`repairedAt`, `rq`.`slaLevel`, `rq`.`toReact`, `rq`.`toFix`, ".
-										"`rq`.`toRepair`, `p`.`name`, `rq`.`guid`, ".
+										"`rq`.`toRepair`, `p`.`name`, `rq`.`guid`, `ow`.`onWaitAt`, ".
 										"IFNULL(`rq`.`reactRate`, calcTime_v3(`rq`.`id`, IFNULL(`rq`.`reactedAt`, NOW()))/`rq`.`toReact`), ".
-										"IFNULL(`rq`.`fixRate`, calcTime_v3(`rq`.`id`, IFNULL(`rq`.`fixedAt`, IFNULL(`rq`.`repairedAt`, NOW())))/`rq`.`toFix`), ".
-    									"IFNULL(`rq`.`repairRate`, calcTime_v3(`rq`.`id`, IFNULL(`rq`.`repairedAt`, NOW()))/`rq`.`toRepair`) ".
+										"IFNULL(`rq`.`fixRate`, calcTime_v3(`rq`.`id`, IF(1 = `rq`.`onWait`, IFNULL(`ow`.`onWaitAt`, NOW()), IFNULL(`rq`.`fixedAt`, IFNULL(`rq`.`repairedAt`, NOW()))))/`rq`.`toFix`), ".
+    									"IFNULL(`rq`.`repairRate`, calcTime_v3(`rq`.`id`, IF(1 = `rq`.`onWait`, IFNULL(`ow`.`onWaitAt`, NOW()), IFNULL(`rq`.`repairedAt`, NOW())))/`rq`.`toRepair`) ".
 	            			"FROM `requests` AS `rq` ".
     	        			"LEFT JOIN `contractDivisions` AS `div` ON `rq`.`contractDivision_guid` = `div`.`guid` ".
         	    			"LEFT JOIN `contracts` AS `c` ON `c`.`guid` = `div`.`contract_guid` ".
@@ -176,6 +176,12 @@ try {
 	            			"LEFT JOIN `divServicesSLA` AS `dss` ON `dss`.`contract_guid` = `c`.`guid` ".
         	    				"AND `dss`.`service_guid` = `rq`.`service_guid` ".
     	        				"AND `dss`.`divType_guid` = `div`.`type_guid` AND `dss`.`slaLevel` = `rq`.`slaLevel` ".
+    	        			"LEFT JOIN (".
+    							"SELECT MAX(`timestamp`) AS `onWaitAt`, `request_guid` ".
+    								"FROM `requestEvents` ".
+    								"WHERE `event` = 'onWait' ".
+    								"GROUP BY `request_guid`".
+    						") AS `ow` ON `ow`.`request_guid` = `rq`.`guid` ".
           					"WHERE (:byActive = 0 OR (NOW() BETWEEN `c`.`contractStart` AND `c`.`contractEnd`)) ".
             					"AND (:onlyMy = 0 OR `rq`.`contactPerson_guid` = UNHEX(REPLACE(:userGuid, '-', '')) ".
             						"OR `rq`.`engineer_guid` = UNHEX(REPLACE(:userGuid, '-', ''))) ".
@@ -208,7 +214,7 @@ while ($row = $req->fetch(PDO::FETCH_NUM)) {
 	list($id, $state, $stateTime, $srvSName, $srvName, $createdAt, $reactBefore, $fixBefore, $repairBefore, $div, $contragent, 
 		 $engLN, $engGN, $engMN, $engEmail, $engPhone, $eqType, $eqSubType, $eqName, $eqMfg, $servNum, $serial, $contractNumber, 
 		 $contLN, $contGN, $contMN, $contEmail, $contPhone, $problem, $onWait, $reactedAt, $fixedAt, $repairedAt, $slaLevel, 
-		 $timeToReact, $timeToFix, $timeToRepair, $partnerName, $requestGuid, $reactPercent, $fixPercent, $repairPercent) = $row;
+		 $timeToReact, $timeToFix, $timeToRepair, $partnerName, $requestGuid, $onWaitAt, $reactPercent, $fixPercent, $repairPercent) = $row;
 	$engName = $engLN.($engGN == '' ? '' : (' '.mb_substr($engGN, 0, 1, 'utf-8').'.')).
 			   ($engMN == '' ? '' : (' '.mb_substr($engMN, 0, 1, 'utf-8').'.'));
 	if ($state == 'canceled') {
@@ -236,9 +242,11 @@ while ($row = $req->fetch(PDO::FETCH_NUM)) {
 						($repairedAt == '' ? ('rgb('.floor(255*$repairPercent).','.floor(255*(1-$repairPercent)).',0)') : 'yellow'));
 		$timeComment = ($reactedAt == '' ? ("Принять до ".date_format(date_create($reactBefore), 'd.m.Y H:i')) : 
 						("Принято ".date_format(date_create($reactedAt), 'd.m.Y H:i')))."\n".
-                     	($fixedAt == '' ? ("Восстановить до ".date_format(date_create($fixBefore), 'd.m.Y H:i')) : 
+                     	($fixedAt == '' ? (1 == $onWait ? ("Приостановлено ".date_format(date_create($onWaitAt), 'd.m.Y H:i')) : 
+                     	 ("Восстановить до ".date_format(date_create($fixBefore), 'd.m.Y H:i'))) : 
                      	 ("Восстановлено ".date_format(date_create($fixedAt), 'd.m.Y H:i')))."\n".
-                     	($repairedAt == '' ? ("Завершить до ".date_format(date_create($repairBefore), 'd.m.Y H:i')) : 
+                     	($repairedAt == '' ? (1 == $onWait ? ('' == $fixedAt ? '' : ("Приостановлено ".date_format(date_create($onWaitAt), 'd.m.Y H:i'))) : 
+                     	 ("Завершить до ".date_format(date_create($repairBefore), 'd.m.Y H:i'))) : 
                      	 ("Завершено ".date_format(date_create($repairedAt), 'd.m.Y H:i')))."\n";
 		$sliderColor = ($reactedAt == '' ? $reactColor : ($fixedAt == '' ? $fixColor : $repairColor));
 		$reactPercent = floor($reactPercent*100);
