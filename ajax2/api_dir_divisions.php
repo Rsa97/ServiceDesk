@@ -4,7 +4,7 @@ include 'api_init.php';
 
 // Получаем список доступных контрагентов
 try {
-	$req = $db->prepare("SELECT DISTINCT `div`.`guid` AS `guid`, `div`.`name` AS `name` ".
+	$req = $db->prepare("SELECT DISTINCT `div`.`guid` AS `guid`, `div`.`name` AS `name`, `div`.`email` ".
 							"FROM `contractDivisions` AS `div` ".
 							"JOIN `contracts` AS `c` ON `c`.`guid` = `div`.`contract_guid` ".
 							"LEFT JOIN `userContracts` AS `uc` ON `uc`.`contract_guid` = `div`.`contract_guid` ".
@@ -23,10 +23,10 @@ try {
 }
 $divs = array();
 while ($row = ($req->fetch(PDO::FETCH_ASSOC)))
-	$divs[] = array('guid' => formatGuid($row['guid']), 'name' => htmlspecialchars($row['name']));
-		if (count($divs) == 0)
-			return_format($format, array('state' => 'error', 'text' => "Договор '{$paramValues['contract']}' не найден"));
-		else
-			return_format($format, array('state' => 'ok', 'divisions' => $divs));
+	$divs[] = array('guid' => formatGuid($row['guid']), 'name' => $row['name'], 'email' => $row['email']);
+	if (count($divs) == 0)
+		return_format($format, array('state' => 'error', 'text' => "Договор '{$paramValues['contract']}' не найден"));
+	else
+		return_format($format, array('state' => 'ok', 'divisions' => $divs));
 exit;
 ?>
