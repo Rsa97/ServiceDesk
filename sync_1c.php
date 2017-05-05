@@ -397,9 +397,9 @@
 			if ('СправочникСсылка.СоД_ПользователиServiceDesk' == $obj->attributes()->{'Тип'}) {
 				list($guid, $login) = parseXML($obj->{'Ссылка'}->{'Свойство'}, array('{УникальныйИдентификатор}', 'Код'));
 //				$npps[trim($obj->attributes()->{'Нпп'})] = $guid;
-				list($lName, $fName, $mName, $email, $address, $isDisabled, $phone, $partnerGuid) = 
-					parseXML($obj->{'Свойство'}, array('Фамилия', 'Имя', 'Отчество', 'email', 'Адрес', 'Запрещен', 'Телефон', '?Партнёр'));
-				$isDisabled = ('true' == $isDisabled ? 1 : 0);
+				list($lName, $fName, $mName, $email, $address, $isDisabled, $phone, $partnerGuid, $isDeleted) = 
+					parseXML($obj->{'Свойство'}, array('Фамилия', 'Имя', 'Отчество', 'email', 'Адрес', 'Запрещен', 'Телефон', '?Партнёр', 'ПометкаУдаления'));
+				$isDisabled = ('true' == $isDisabled || 'true' == $isDeleted? 1 : 0);
 				if (TEST) {
 					print "{$guid}\t{$lName}\t${fName}\t{$mName}\t{$login}\n\t{$email}\t{$address}\t{$isDisabled}\t{$phone}\t{$partnerGuid}\t".$req->rowCount()."\n";
 					print "INSERT INTO `users` (`guid`, `lastName`, `firstName`, `middleName`, `login`, `email`, `phone`, `address`,\n".

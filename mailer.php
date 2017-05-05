@@ -5,27 +5,29 @@ include 'ajax2/common.php';
 include 'ajax2/smtp.php';
 include 'ajax2/genderByName.php';
 
-/*$sendto = array('open'                   => 'engineers,operators,admins',
-           		'changeState'.'accepted' => 'contact',
+$sendto = array('open'                   => 'engineers,admins',
+				'changeState'.'received' => '',
+           		'changeState'.'accepted' => '',
           		'changeState'.'fixed'    => '',
-           		'changeState'.'repaired' => 'contact',
+           		'changeState'.'repaired' => '',
            		'changeState'.'closed'   => '',
            		'changeState'.'canceled' => '',
            		'unClose'                => 'engineer',
-           		'unCancel'               => 'engineers,operators,admins',
-           		'onWait'                 => 'contact',
+           		'unCancel'               => 'engineers,admins',
+           		'onWait'                 => '',
            		'offWait'                => '',
-           		'changeDate'             => 'contact',
-           		'comment'                => 'contact,engineer',
-           		'addDocument'            => 'contact,engineer',
-           		'time50'                 => 'engineer,operators',
-           		'time20'                 => 'engineer,operators',
-           		'time00'                 => 'engineer,operators,admins',
-           		'autoclose'              => 'contact',
-           		'eqChange'				 => 'contact'
-          ); */
-
-$sendto = array();
+           		'changeDate'             => '',
+           		'comment'                => 'engineer',
+           		'addDocument'            => 'engineer',
+           		'time50'                 => 'engineer',
+           		'time20'                 => 'engineer,admins',
+           		'time00'                 => 'engineer,admins',
+           		'autoclose'              => '',
+           		'eqChange'				 => '',
+           		'changePartner'			 => '',
+           		'changeContact'			 => '',
+           		'changeService'			 => ''
+          );
 
 // Подключаемся к MySQL
 try {
@@ -53,12 +55,12 @@ if ($row = $req->fetch(PDO::FETCH_NUM)) {
 } 
 
 // Сброс статуса отправки всех событий! Только для разработки!
-// $mysqli->query("UPDATE `requestEvents` SET `mailed` = 0");
-//$mysqli->query("UPDATE `request` SET `alarm` = 0");
+//$db->query("UPDATE `requestEvents` SET `mailed` = 0");
+//$db->query("UPDATE `requests` SET `alarm` = 0");
 
 // Получаем список администраторов, операторов, инженеров и партнёров
-/* try {
-	$req = $db->prepare("SELECT `id`, `firstName`, `secondName`, `middleName`, `email`, `rights` FROM `users` WHERE `isDisabled` = 0");
+try {
+	$req = $db->prepare("SELECT `guid`, `firstName`, `lastName`, `middleName`, `email`, IF(0 = `isDisabled`, `rights`, 'none')  FROM `users`");
 	$req->execute();
 } catch (PDOException $e) {
 	print("Ошибка MySQL ".$e->getMessage()."\n");
@@ -69,7 +71,8 @@ $users = array();
 $userRights = array();
 
 while ($row = $req->fetch(PDO::FETCH_NUM)) {
-	list($uid, $givenName, $familyName, $middleName, $email, $rights) = $row; 
+	list($uid, $givenName, $familyName, $middleName, $email, $rights) = $row;
+	$uid = formatGuid($uid); 
   	if ($email != '') {
   		$rights .= 's';
   	if (!isset($userRights[$rights]))
@@ -80,44 +83,59 @@ while ($row = $req->fetch(PDO::FETCH_NUM)) {
 	  					 'gender' => genderByNames($givenName, $middleName, $familyName));
   }
 }
-$req->close();
 
 $msgList = array();
 
 // Обрабатываем события
 $i = 0;
 try {
-	$req = $db->prepare("SELECT `re`.`timestamp`, `re`.`event`, `re`.`text`, `re`.`newState`, `r`.`id`, `r`.`problem`, ".
-                              "`r`.`contactPersons_id`, `div`.`id`, `div`.`name`, `cntr`.`name`, ".
-                              "`r`.`slaLevel`, `r`.`equipment_id`, `em`.`name`, `emfg`.`name`, ".
-                              "`re`.`users_id`, `doc`.`name`, `r`.`engeneer_id` ".
-                         "FROM `requestEvents` AS `re` ".
-                           "LEFT JOIN `request` AS `r` ON `r`.`id` = `re`.`request_id` ".
-                           "LEFT JOIN `contractDivisions` AS `div` ON `div`.`id` = `r`.`contractDivisions_id` ".
-                           "LEFT JOIN `contragents` AS `cntr` ON `cntr`.`id` = `div`.`contragents_id` ".
-                           "LEFT JOIN `equipment` AS `eq` ON `eq`.`serviceNumber` = `r`.`equipment_id` ".
-                           "LEFT JOIN `equipmentModels` AS `em` ON `em`.`id` = `eq`.`equipmentModels_id` ".
-                           "LEFT JOIN `equipmentManufacturers` AS `emfg` ON `emfg`.`id` = `em`.`equipmentManufacturers_id` ".
-                           "LEFT JOIN `documents` AS `doc` ON `doc`.`requestEvents_id` = `re`.`id` ".
-                         "WHERE `re`.`id` = @id ".
-                         "ORDER BY `request_id`, `timestamp`");
-$req->bind_result($timestamp, $event, $evText, $newState, $reqId, $problem, $contId, $divId, $div, $contragent, 
-				  $slaLevel, $servNum, $eqModel, $eqMfg, $authorId, $document, $engId);
-
+	$req = $db->prepare("SELECT `re`.`timestamp`, `re`.`event`, `re`.`text`, `re`.`newState`, `r`.`id`, `r`.`problem`, ". 
+	   							"`r`.`contactPerson_guid`, `div`.`guid`, `div`.`name`, IFNULL(`dcntr`.`name`, `ccntr`.`name`), ". 
+	   							"`r`.`slaLevel`, `eq`.`serviceNumber`, `em`.`name`, `emfg`.`name`, ". 
+       							"`re`.`user_guid`, `doc`.`name`, `r`.`engineer_guid` ". 
+							"FROM `requestEvents` AS `re` ". 
+    						"LEFT JOIN `requests` AS `r` ON `r`.`guid` = `re`.`request_guid` ". 
+    						"LEFT JOIN `contractDivisions` AS `div` ON `div`.`guid` = `r`.`contractDivision_guid` ".
+    						"LEFT JOIN `contracts` AS `c` ON `c`.`guid` = `div`.`contract_guid` ". 
+    						"LEFT JOIN `contragents` AS `dcntr` ON `dcntr`.`guid` = `div`.`contragent_guid` ".
+    						"LEFT JOIN `contragents` AS `ccntr` ON `ccntr`.`guid` = `c`.`contragent_guid` ".  
+    						"LEFT JOIN `equipment` AS `eq` ON `eq`.`guid` = `r`.`equipment_guid` ". 
+    						"LEFT JOIN `equipmentModels` AS `em` ON `em`.`guid` = `eq`.`equipmentModel_guid` ". 
+    						"LEFT JOIN `equipmentManufacturers` AS `emfg` ON `emfg`.`guid` = `em`.`equipmentManufacturer_guid` ". 
+    						"LEFT JOIN `documents` AS `doc` ON `doc`.`requestEvent_id` = `re`.`id` ".
+    						"WHERE `re`.`id` = @id");
+    $req1 = $db->prepare("UPDATE `requestEvents` SET `mailed` = 1 WHERE `mailed` = 0 AND @id := `id` ORDER BY `timestamp` LIMIT 1");
+} catch (PDOException $e) {
+	print("Ошибка MySQL ".$e->getMessage()."\n");
+	exit;
+}
+    						   
 $isOpened = array();
-while ($mysqli->query("UPDATE `requestEvents` SET `mailed` = 1 WHERE `mailed` = 0 AND @id := `id` LIMIT 1") && ($mysqli->affected_rows > 0)) {
-	if (!$req->execute()) {
-		print ("Ошибка MySQL ({$mysqli->errno})  {$mysqli->error}\n");
+while (true) {
+	try {
+		$req1->execute();
+		if (0 == $req1->rowCount())
+			break;
+		$req->execute(	);
+	} catch (PDOException $e) {
+		print("Ошибка MySQL ".$e->getMessage()."\n");
 		exit;
 	}
-	$req->store_result();
-	if ($req->fetch()) {
+	if ($row = $req->fetch(PDO::FETCH_NUM)) {
+		list($timestamp, $event, $evText, $newState, $reqId, $problem, $contId, $divId, $div, $contragent, 
+			 $slaLevel, $servNum, $eqModel, $eqMfg, $authorId, $document, $engId) = $row;
+		$contId = formatGuid($contId);
+		$divId = formatGuid($divId);
+		$authorId = formatGuid($authorId);
+		$engId = formatGuid($engId);
   		if ($event == 'changeState')
     		$event .= $newState;
   		$text = '';
 		$html = '';
 		if ($sendto[$event] == '')
 			continue;
+		$authorName = (isset($users[$authorId]) ? $users[$authorId]['name'] : 'Неизвестный');
+		$authorGender = (isset($users[$authorId]) ? $users[$authorId]['gender'] : 1);
 		switch($event) {
   			case 'open':
   				if ($servNum == 0 || $servNum == '')
@@ -125,24 +143,24 @@ while ($mysqli->query("UPDATE `requestEvents` SET `mailed` = 1 WHERE `mailed` = 
 				else
 					$eq = "{$eqMfg} {$eqModel}, сервисный номер {$servNum}";
 	    		$text = "- Появилась новая заявка №{$reqId}, уровень критичности - {$slaLevels[$slaLevel]}\r\n".
-	    			 	"  Автор: {$users[$authorId]['name']} ({$div}, {$contragent})\r\n".
+	    			 	"  Автор: {$authorName} ({$div}, {$contragent})\r\n".
 	    			 	"  Оборудование: {$eq}\r\n".
 	    			 	"  Проблема: {$problem}\r\n";
 				$problem = preg_replace('/\r?\n/', '<br>', htmlspecialchars($problem));
 	    		$html = "<li>Появилась новая заявка №{$reqId}, уровень критичности - {$slaLevels[$slaLevel]}<br>".
-	    			 	"Автор: {$users[$authorId]['name']} ({$div}, {$contragent})<br>".
+	    			 	"Автор: {$authorName} ({$div}, {$contragent})<br>".
 	    			 	"Оборудование: {$eq}<br>".
 	    			 	"Проблема: {$problem}";
 	    		$isOpened[] = $reqId;
 	    		break;
 			case 'changeState'.'accepted':
-				$text = "- {$users[$authorId]['name']} принял".($users[$authorId]['gender'] >= 0 ? '' : 'а')." заявку к исполнению\r\n";
-				$html = "<li>{$users[$authorId]['name']} принял".($users[$authorId]['gender'] >= 0 ? '' : 'а')." заявку к исполнению";
+				$text = "- {$authorName} принял".($authorGender >= 0 ? '' : 'а')." заявку к исполнению\r\n";
+				$html = "<li>{$authorName} принял".($authorGender >= 0 ? '' : 'а')." заявку к исполнению";
 				break;
 			case 'changeState'.'repaired':
-				$text = "- {$users[$authorId]['name']} отметил".($users[$authorId]['gender'] >= 0 ? '' : 'а')." заявку как выполненную\r\n".
+				$text = "- {$authorName} отметил".($authorGender >= 0 ? '' : 'а')." заявку как выполненную\r\n".
 					 	"  Если в течение трёх дней Вы не отмените закрытие заявки, то она будет закрыта автоматически\r\n";
-				$html = "<li>{$users[$authorId]['name']} отметил ".($users[$authorId]['gender'] >= 0 ? '' : 'а')." заявку как выполненную<br>".
+				$html = "<li>{$authorName} отметил ".($authorGender >= 0 ? '' : 'а')." заявку как выполненную<br>".
 					 	"Если в течение трёх дней Вы не отмените закрытие заявки, то она будет закрыта автоматически";
 				break;
 			case 'changeDate':
@@ -151,43 +169,53 @@ while ($mysqli->query("UPDATE `requestEvents` SET `mailed` = 1 WHERE `mailed` = 
 				$html = "<li>Контрольный срок завершения работ по заявке был перенесён на {$evText}";
 				break;
 			case 'comment':
-				$text = "- {$users[$authorId]['name']} добавил".($users[$authorId]['gender'] >= 0 ? '' : 'а')." комментарий:\r\n".
+				$text = "- {$authorName} добавил".($authorGender >= 0 ? '' : 'а')." комментарий:\r\n".
 						"  {$evText}";
 				$evText = preg_replace('/\r?\n/', '<br>', htmlspecialchars($evText));
-				$html = "<li>{$users[$authorId]['name']} добавил".($users[$authorId]['gender'] >= 0 ? '' : 'а')." комментарий:<br>".
+				$html = "<li>{$authorName} добавил".($authorGender >= 0 ? '' : 'а')." комментарий:<br>".
 						"{$evText}";
 				break;
 			case 'comment':
-				$text = "- {$users[$authorId]['name']} добавил".($users[$authorId]['gender'] >= 0 ? '' : 'а')." комментарий:\r\n".
+				$text = "- {$authorName} добавил".($authorGender >= 0 ? '' : 'а')." комментарий:\r\n".
 						"  {$evText}\n";
 				$evText = preg_replace('/\r?\n/', '<br>', htmlspecialchars($evText));
-				$html = "<li>{$users[$authorId]['name']} добавил".($users[$authorId]['gender'] >= 0 ? '' : 'а')." комментарий:<br>".
+				$html = "<li>{$authorName} добавил".($users[$authorId]['gender'] >= 0 ? '' : 'а')." комментарий:<br>".
 						"{$evText}";
 				break;
 			case 'addDocument':
-				$text = "- {$users[$authorId]['name']} добавил".($users[$authorId]['gender'] >= 0 ? '' : 'а')." файл '{$document}'\r\n";
-				$html = "<li>{$users[$authorId]['name']} добавил".($users[$authorId]['gender'] >= 0 ? '' : 'а')." файл '".htmlspecialchars($document)."'";
+				$text = "- {$authorName} добавил".($authorGender >= 0 ? '' : 'а')." файл '{$document}'\r\n";
+				$html = "<li>{$authorName} добавил".($authorGender >= 0 ? '' : 'а')." файл '".htmlspecialchars($document)."'";
 				break;
 			case 'eqChange':
-				$text = "- {$users[$authorId]['name']} изменил".($users[$authorId]['gender'] >= 0 ? '' : 'а')." оборудование\r\n".
+				$text = "- {$authorName} изменил".($authorGender >= 0 ? '' : 'а')." оборудование\r\n".
 						"  {$evText}\n";
 				$evText = preg_replace('/\r?\n/', '<br>', htmlspecialchars($evText));
-				$html = "<li>{$users[$authorId]['name']} изменил".($users[$authorId]['gender'] >= 0 ? '' : 'а')." оборудование <br>".
+				$html = "<li>{$authorName} изменил".($authorGender >= 0 ? '' : 'а')." оборудование <br>".
 						"{$evText}";
+				break;
 			case 'onWait':
-				$text = "- {$users[$authorId]['name']} приостановил".($users[$authorId]['gender'] >= 0 ? '' : 'а')." выполнение заявки\r\n".
+				$text = "- {$authorName} приостановил".($authorGender >= 0 ? '' : 'а')." выполнение заявки\r\n".
 						"  Причина: {$evText}\r\n";
 				$evText = preg_replace('/\r?\n/', '<br>', htmlspecialchars($evText));
-				$html = "<li>{$users[$authorId]['name']} приостановил".($users[$authorId]['gender'] >= 0 ? '' : 'а')." выполнение заявки<br>".
+				$html = "<li>{$authorName} приостановил".($authorGender >= 0 ? '' : 'а')." выполнение заявки<br>".
 						"Причина: {$evText}";
+				break;
 			case 'offWait':
-				$text = "- {$users[$authorId]['name']} возобновил".($users[$authorId]['gender'] >= 0 ? '' : 'а')." выполнение заявки\r\n".
+				$text = "- {$authorName} возобновил".($authorGender >= 0 ? '' : 'а')." выполнение заявки\r\n".
 						"  Примечание: {$evText}\r\n";
 				$evText = preg_replace('/\r?\n/', '<br>', htmlspecialchars($evText));
-				$html = "<li>{$users[$authorId]['name']} возобновил".($users[$authorId]['gender'] >= 0 ? '' : 'а')." выполнение заявки<br>".
+				$html = "<li>{$authorName} возобновил".($authorGender >= 0 ? '' : 'а')." выполнение заявки<br>".
 						"Примечание: {$evText}";
 				break;
-			break;
+			case 'changePartner':
+				$text = "- {$authorName} назначил".($authorGender >= 0 ? '' : 'а')." заявку партнёру {$evText}\r\n";
+				$evText = preg_replace('/\r?\n/', '<br>', htmlspecialchars($evText));
+				$html = "<li>{$authorName} назначил".($authorGender >= 0 ? '' : 'а')." заявку партнёру {$evText}<br>";
+				break;
+			case 'changeContact':
+				break;
+			case 'changeService':
+				break;
 		}
   		if ($text != '')
 	  		$msgList[$reqId][] = array('event' => $event,
@@ -198,56 +226,71 @@ while ($mysqli->query("UPDATE `requestEvents` SET `mailed` = 1 WHERE `mailed` = 
   								 	'divId' => $divId);
 	}
 }
-$req->close();
 
 // Обрабатываем остаток времени по заявкам
-$req = $mysqli->prepare("SELECT @id");
-$req->bind_result($id);
 $times = array();
-while ($mysqli->query("UPDATE `request` ".
-                    "SET `alarm` = 3 ".
-                    "WHERE `alarm` < 3 AND `currentState` IN ('accepted', 'received', 'fixed') ".
-                      "AND calcTime_v2(`id`,NOW())/`toRepair` >= 1 ".
-                      "AND @id := `id` ".
-                    "LIMIT 1") && ($mysqli->affected_rows > 0)) {
-	if (!$req->execute()) {
-		print ("Ошибка MySQL ({$mysqli->errno})  {$mysqli->error}\n");
-		exit;
-	}
-	$req->store_result();
-	if ($req->fetch())
-		$times[$id] = 'time00';
-}
-while ($mysqli->query("UPDATE `request` ".
-                    "SET `alarm` = 2 ".
-                    "WHERE `alarm` < 2 AND `currentState` IN ('accepted', 'received', 'fixed') ".
-                      "AND calcTime_v2(`id`,NOW())/`toRepair` >= 0.8 ".
-                      "AND @id := `id` ".
-                    "LIMIT 1")  && ($mysqli->affected_rows > 0)) {
-	if (!$req->execute()) {
-		print ("Ошибка MySQL ({$mysqli->errno})  {$mysqli->error}\n");
-		exit;
-	}
-	$req->store_result();
-	if ($req->fetch())
-    	$times[$id] = 'time20';
-}
-while ($mysqli->query("UPDATE `request` ".
-                    "SET `alarm` = 1 ".
-                    "WHERE `alarm` < 1 AND `currentState` IN ('accepted', 'received', 'fixed') ".
-                      "AND calcTime_v2(`id`,NOW())/`toRepair` >= 0.5 ".
-                      "AND @id := `id` ".
-                    "LIMIT 1") && ($mysqli->affected_rows > 0)) {
-	if (!$req->execute()) {
-		print ("Ошибка MySQL ({$mysqli->errno})  {$mysqli->error}\n");
-		exit;
-	}
-	$req->store_result();
-	if ($req->fetch())
-    	$times[$id] = 'time50';
-}
-*/ 
 
+try {
+	$req = $db->prepare("SELECT @id");
+	$req1 = $db->query("UPDATE `requests` ".
+                    	"SET `alarm` = 3 ".
+                    	"WHERE `alarm` < 3 AND `currentState` IN ('accepted', 'received', 'fixed') ".
+                      		"AND `onWait` = 0 AND calcTime_v3(`id`, NOW())/`toRepair` >= 1 AND @id := `id` ".
+                    	"LIMIT 1");
+	$req2 = $db->query("UPDATE `requests` ".
+                    	"SET `alarm` = 2 ".
+                    	"WHERE `alarm` < 2 AND `currentState` IN ('accepted', 'received', 'fixed') ".
+                      		"AND `onWait` = 0 AND calcTime_v3(`id`, NOW())/`toRepair` >= 0.8 AND @id := `id` ".
+                    	"LIMIT 1");
+	$req3 = $db->query("UPDATE `requests` ".
+                    	"SET `alarm` = 1 ".
+                    	"WHERE `alarm` < 1 AND `currentState` IN ('accepted', 'received', 'fixed') ".
+                      		"AND `onWait` = 0 AND calcTime_v3(`id`,NOW())/`toRepair` >= 0.5 AND @id := `id` ".
+                    	"LIMIT 1");
+} catch (PDOException $e) {
+	print("Ошибка MySQL ".$e->getMessage()."\n");
+	exit;
+}
+while (true) {
+	try {
+		$req1->execute();
+		if (0 == $req1->rowCount())
+			break;
+		$req->execute();
+	} catch (PDOException $e) {
+		print("Ошибка MySQL ".$e->getMessage()."\n");
+		exit;
+	}
+	if ($row = $req->fetch(PDO::FETCH_NUM))
+		$times[$row[0]] = 'time00';
+}
+while (true) {
+	try {
+		$req2->execute();
+		if (0 == $req1->rowCount())
+			break;
+		$req->execute();
+	} catch (PDOException $e) {
+		print("Ошибка MySQL ".$e->getMessage()."\n");
+		exit;
+	}
+	if ($row = $req->fetch(PDO::FETCH_NUM))
+		$times[$row[0]] = 'time20';
+}
+while (true) {
+	try {
+		$req1->execute();
+		if (0 == $req1->rowCount())
+			break;
+		$req->execute();
+	} catch (PDOException $e) {
+		print("Ошибка MySQL ".$e->getMessage()."\n");
+		exit;
+	}
+	if ($row = $req->fetch(PDO::FETCH_NUM))
+		$times[$row[0]] = 'time50';
+}
+ 
 // Автоматически закрываем заявки
 
 $soapParameters = array('login' => $soap_user, 'password' => $soap_pass, "cache_wsdl" => 0);
@@ -298,38 +341,48 @@ while ($row = $req->fetch(PDO::FETCH_NUM)) {
 	}
 	try {
 		$req1->execute(array('reqId' => $reqId));
+		$times[$reqId] = 'autoclose';
 		$req2->execute(array('reqGuid' => $reqGuid, 'userGuid' => $userGuid));
 	} catch (PDOException $e) {
 		print("Ошибка MySQL ".$e->getMessage()."\n");
 	} 
 }	
 
-/*
+
 // Выбираем заявки с предупреждениями по времени
-$req = $mysqli->prepare("SELECT `engeneer_id`, `contractDivisions_id`, `contactPersons_id` ".
-                         "FROM `request`".
-                         "WHERE `id` = ?");
-$req->bind_param('i', $id);
-$req->bind_result($engId, $divId, $contId);
-foreach ($times as $id => $event) {
-	if ($sendto[$event]== '')
-		continue;
-	if (!$req->execute()) {
-		print ("Ошибка MySQL ({$mysqli->errno})  {$mysqli->error}\n");
+try {
+	$req = $db->prepare("SELECT `engineer_guid`, `contractDivision_guid`, `contactPerson_guid` ".
+                         "FROM `requests` ".
+                         "WHERE `id` = :id");
+} catch (PDOException $e) {
+		print("Ошибка MySQL ".$e->getMessage()."\n");
 		exit;
-	}
-	$req->store_result();
-	if ($req->fetch()) {
+} 
+
+foreach ($times as $id => $event) {
+	if ($sendto[$event] == '')
+		continue;
+	try {
+		$req->execute(array('id' => $id));
+	} catch (PDOException $e) {
+		print("Ошибка MySQL ".$e->getMessage()."\n");
+		exit;
+	} 
+	if ($row = $req->fetch(PDO::FETCH_NUM)) {
+		$engId = formatGuid($row[0]);
+		$divId = formatGuid($row[1]);
+		$contId = formatGuid($row[2]);
+		$engineerName = (isset($users[$engId]) ? $users[$engId]['name'] : 'Неизвестный');
 		switch($event) {
 			case 'time00':
-				$text = "- !!! Заявка просрочена! Ответственный - {$users[$engId]['name']}\r\n";
-				$html = "<li><span class='error'>Заявка просрочена! Ответственный - {$users[$engId]['name']}</span>";
+				$text = "- !!! Заявка просрочена! Ответственный - {$engineerName}\r\n";
+				$html = "<li><span class='error'>Заявка просрочена! Ответственный - {$engineerName}</span>";
 				break;
 			case 'time20':
 				$text = "- !! По заявке осталось меньше 20% времени до контрольного срока завершения работ!\r\n".
-						"  Ответственный - {$users[$engId]['name']}\r\n";
+						"  Ответственный - {$engineerName}\r\n";
 				$html = "<li><span class='warn'>По заявке осталось меньше 20% времени до контрольного срока завершения работ!<br>".
-						"Ответственный - {$users[$engId]['name']}</span>";
+						"Ответственный - {$engineerName}</span>";
 				break;
 			case 'time50':
 				$text = "- !! По заявке осталось меньше 50% времени до контрольного срока завершения работ\r\n";
@@ -349,15 +402,8 @@ foreach ($times as $id => $event) {
  									 	'divId' => $divId);
 	}
 }
-$req->close();
 
 // Формируем список рассылки
-$req = $mysqli->prepare("SELECT `ac`.`partner_id` ".
-							"FROM `allowedContracts` AS `ac` ".
-							"LEFT JOIN `users` AS `u` ON `u`.`partner_id` = `ac`.`partner_id` ".
-							"WHERE `ac`.`contractDivisions_id` = ? AND `u`.`isDisabled` = 0");
-$req->bind_param('i', $divId);
-$req->bind_result($partnerId);
 $mails = array();
 $names = array();
 foreach ($msgList as $reqId => $msgs) {
@@ -383,7 +429,6 @@ foreach ($msgList as $reqId => $msgs) {
 				case 'engeneers':
 				case 'operators':
 				case 'admins':
-					print_r($userRights[$to]);
 					if (!isset($userRights[$to]))
 						break;
 					foreach ($userRights[$to] as $uid) {
@@ -392,28 +437,11 @@ foreach ($msgList as $reqId => $msgs) {
 						$mails[$uid][$reqId]['text'] .= $msg['text'];
 						$mails[$uid][$reqId]['html'] .= $msg['html'];
 					}
-					print_r($mails);
-					break;
-				case 'partners':
-					$divId = $msg['divId'];
-					if (!$req->execute()) {
-						print ("Ошибка MySQL ({$mysqli->errno})  {$mysqli->error}\n");
-						exit;
-					}
-					$req->store_result();
-					while ($req->fetch()) {
-						if (!isset($mails[$partnerId][$reqId]))
-							$mails[$partnerId][$reqId] = array('text' => '', 'html' => '');
-						$mails[$partnerId][$reqId]['text'] .= $msg['text'];
-						$mails[$partnerId][$reqId]['html'] .= $msg['html'];
-					}
 					break;
 			}
 		}
 	}
 }
-
-$req->close();
 
 foreach ($mails as $uid => $requests) {
 	print "----------------------\n";
@@ -441,9 +469,9 @@ foreach ($mails as $uid => $requests) {
 			$subj = "Открыта новая заявка №{$reqId}";
 		else 
 			$subj = "События по заявке №{$reqId}";
-		smtpmail($users[$uid]['email'], $users[$uid]['name'], $subj, $msg['body'], $msg['header']);
-		print "{$users[$uid]['email']} - {$users[$uid]['name']} - {$reqId}\n";
+//		smtpmail($users[$uid]['email'], $users[$uid]['name'], $subj, $msg['body'], $msg['header']);
+		print "{$users[$uid]['email']} - {$users[$uid]['name']} - {$reqId} - {$subj}\n{$mail['text']}\n";
 	}	
 }
- */
+
 ?>
