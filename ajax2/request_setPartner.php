@@ -4,6 +4,7 @@ header('Content-Type: application/json; charset=UTF-8');
 
 include 'common.php';
 include 'init.php';
+include 'smtp.php';
 
 $allowedTo = array('engineer', 'admin');
 
@@ -15,6 +16,39 @@ if (!in_array($rights, $allowedTo)) {
 $partnerGuid = $paramValues['partner'];
 if ('0' == $partnerGuid)
 	$partnerGuid = null;
+
+// Получаем текущего партнёра по заявке
+$cancelEmails = array();
+try {
+	$req = $db->prepare("SELECT `u`.`email`, `u`.`lastName`, `u`.`firstName`, `u`.`middleName` ".
+							"FROM `requests` AS `rq` ".
+							"JOIN `users` AS `u` ON `rq`.`id` = :requestId AND `u`.`partner_guid` = `rq`.`partner_guid` ".
+								"AND `u`.`isDisabled` = 0");
+	$req->execute(array('requestId' => $paramValues['request']));
+} catch (PDOException $e) {
+	echo json_encode(array('error' => 'Внутренняя ошибка сервера', 
+							'orig' => "MySQL error in line ".$e->getLine().': '.$e->getMessage()));
+	exit;
+}
+while ($row = $req->fetch(PDO::FETCH_NUM))
+	$cancelEmails[] = array('email' => $row[0], 'name' => nameWithInitials($row[1], $row[2], $row[3]));
+
+// Получаем нового партнёра по заявке
+$appointEmails = array();
+if (null != $partnerGuid) {
+	try {
+		$req = $db->prepare("SELECT `email`, `lastName`, `firstName`, `middleName` ".
+								"FROM `users` WHERE `partner_guid` = UNHEX(REPLACE(:partnerGuid, '-', '')) ".
+								"AND `isDisabled` = 0");
+		$req->execute(array('partnerGuid' => $partnerGuid));
+	} catch (PDOException $e) {
+		echo json_encode(array('error' => 'Внутренняя ошибка сервера', 
+								'orig' => "MySQL error in line ".$e->getLine().': '.$e->getMessage()));
+		exit;
+	}
+	while ($row = $req->fetch(PDO::FETCH_NUM))
+		$appointEmails[] = array('email' => $row[0], 'name' => nameWithInitials($row[1], $row[2], $row[3]));
+}
 
 try {
 // Получаем список заявок с проверкой прав доступа
@@ -69,7 +103,7 @@ $answer = $res->return->sd_requestevent_row;
 if (is_array($answer))
 	$answer = $answer[0];
 if (true != $answer->ResultSuccessful) {
-	echo json_encode(array('error' => "Заявке {$paramValues['request']} не может быть назхначена партнёру из-за ошибок связи с внутренней базой.",
+	echo json_encode(array('error' => "Заявке {$paramValues['request']} не может быть назначена партнёру из-за ошибок связи с внутренней базой.",
 							'err1C' => $res));
 	exit;
 }
@@ -92,6 +126,64 @@ try {
 	echo json_encode(array('error' => 'Внутренняя ошибка сервера', 
 							'orig' => "MySQL error in line ".$e->getLine().': '.$e->getMessage()));
 	exit;
+}
+
+if (count($cancelEmails) > 0) {
+	$msg = compose_mail("Отменено назначение вам заявки №{$paramValues['request']}".
+						"\r\n----\r\n".
+						"С уважением, служба технической поддержки «Со-Действие».\r\n".
+						"PS. Данное письмо сформировано автоматически. Пожалуйста, не отвечайте на него.",
+						"<meta http-equiv='Content-Type' content='text/html; charset=utf-8'>".
+						"<style><!--".
+						".header { font-size: 1.1em; font-weight: bold; } ".
+						".login { font-weight: bold; font-style: italic; } ".
+						".error { color: red; } ".
+						".warn { color: #FF5050; } ".
+						"--></style>".
+						"<div dir='ltr'>".
+						"Отменено назначение вам заявки №{$paramValues['request']}".
+						"<p>----<br>".
+						"С уважением, служба технической поддержки «Со-Действие».<br>".
+						"PS. Данное письмо сформировано автоматически. Пожалуйста, не отвечайте на него.".
+						"</div>");
+	$subj = "Отменено назначение вам заявки №{$paramValues['request']}";
+	foreach($cancelEmails as $user)
+		smtpmail($user['email'], $user['name'], $subj, $msg['body'], $msg['header']);
+}
+
+if (count($appointEmails) > 0) {
+	try {
+		$req = $db->prepare("SELECT `problem` FROM `requests` WHERE `id` = :requestId");
+		$req->execute(array('requestId' => $paramValues['request']));
+	} catch (PDOException $e) {
+		echo json_encode(array('error' => 'Внутренняя ошибка сервера', 
+								'orig' => "MySQL error in line ".$e->getLine().': '.$e->getMessage()));
+		exit;
+	}
+	if ($row = $req->fetch(PDO::FETCH_NUM)) {
+		$msg = compose_mail("Вам назначена новая заявка №{$paramValues['request']}\r\n".
+							$row[0].
+							"\r\n----\r\n".
+							"С уважением, служба технической поддержки «Со-Действие».\r\n".
+							"PS. Данное письмо сформировано автоматически. Пожалуйста, не отвечайте на него.",
+							"<meta http-equiv='Content-Type' content='text/html; charset=utf-8'>".
+							"<style><!--".
+							".header { font-size: 1.1em; font-weight: bold; } ".
+							".login { font-weight: bold; font-style: italic; } ".
+							".error { color: red; } ".
+							".warn { color: #FF5050; } ".
+							"--></style>".
+							"<div dir='ltr'>".
+							"<p>Вам назначена новая заявка №{$paramValues['request']}<p>".
+							nl2br(htmlspecialchars(strip_tags($row[0]))).
+							"<p>----<br>".
+							"С уважением, служба технической поддержки «Со-Действие».<br>".
+							"PS. Данное письмо сформировано автоматически. Пожалуйста, не отвечайте на него.".
+							"</div>");
+		$subj = "Вам назначена новая заявка №{$paramValues['request']}";
+		foreach($appointEmails as $user)
+			smtpmail($user['email'], $user['name'], $subj, $msg['body'], $msg['header']);
+	}
 }
 
 echo json_encode(array('Ok' => 'Ok'));
