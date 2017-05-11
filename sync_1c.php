@@ -5,6 +5,8 @@
 
 	include 'config/db.php';
 	include 'config/files.php';
+	include 'config/soap.php';
+	
 //	$dbHost = '127.0.0.1';
 //    $dbUser = 'root';
 //	$dbPort = 3306;
@@ -1548,10 +1550,14 @@
 	list($syncInMsg, $syncOutMsg) = $req->fetch(PDO::FETCH_NUM);
 	
 	`/sbin/mount.cifs //10.149.0.250/Exchange/83/ServiceDesk /mnt -o credentials=/root/admin.cred`;
-	if (file_exists('/mnt/Message_ЦЕН_SD.zip'))
-	    `/usr/bin/unzip -o /mnt/Message_ЦЕН_SD.zip -d /mnt`;
-	if (file_exists('/mnt/Message_ЦЕН_SD.xml')) {
-		$xml = simplexml_load_file('/mnt/Message_ЦЕН_SD.xml');
+	if (file_exists("/mnt/Message_ЦЕН_{$node_1c}.zip"))
+	    `/usr/bin/unzip -o /mnt/Message_ЦЕН_{$node_1c}.zip -d /mnt`;
+	if (file_exists("/mnt/Message_ЦЕН_{$node_1c}.xml")) {
+		if (file_exists("/mnt/Message_ЦЕН_{$node_1c}.zip"))
+			unlink("/mnt/Message_ЦЕН_{$node_1c}.zip");
+		$date = date('Y-m-d-H-i');
+		`/bin/cp /mnt/Message_ЦЕН_{$node_1c}.xml /var/log/sd-sync/Message_ЦЕН_{$node_1c}_$date.xml`;
+		$xml = simplexml_load_file("/mnt/Message_ЦЕН_{$node_1c}.xml");
 		if ('2.0' != $xml->attributes()->{'ВерсияФормата'}) {
 			print "Некорректная версия выгрузки (".$xml->attributes()->{'ВерсияФормата'}.")\n";
 		} else if ('' != $syncInMsg && $xml->{'ДанныеПоОбмену'}->attributes()->{'НомерИсходящегоСообщения'} <= $syncInMsg) {
@@ -1651,7 +1657,7 @@
 			$sync->addAttribute('ПереданоОбъектовФоновогоОбмена', '0');
 			$sync->addAttribute('КоличествоОбъектовДляФоновогоОбмена', '0');
 			$sync->addAttribute('ДобавлениеОбъектовИзФоновогоОбмена', '0');
-			$xml_ret->asXML('/mnt/Message_SD_ЦЕН.xml');
+			$xml_ret->asXML("/mnt/Message_{$node_1c}_ЦЕН.xml");
 			$req = $pdo->prepare("INSERT INTO `variables` (`name`, `value`) VALUES ('syncInMsg', :in), ('syncOutMsg', :out) ".
 						    			"ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)");
 			$req->execute(array('in' => $syncInMsg, 'out' => $syncOutMsg));
