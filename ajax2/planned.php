@@ -7,13 +7,16 @@ include 'init_soap.php';
 
 try {
 	$req = $db->prepare("SELECT DISTINCT `pr`.`id`, `pr`.`contractDivision_guid`, `pr`.`service_guid`, `pr`.`slaLevel`, ". 
-										"`pr`.`problem`, `u`.`user_guid`, `div`.`addProblem`, `c`.`guid` ". 
+										"`pr`.`problem`, IFNULL(`u`.`user_guid`, `uc`.`user_guid`), `div`.`addProblem`, `c`.`guid` ". 
 							"FROM `plannedRequests` AS `pr` ". 
 							"JOIN `contractDivisions` AS `div` ON `pr`.`contractDivision_guid` = `div`.`guid` AND `div`.`isDisabled` = 0 ". 
     						"JOIN `contracts` AS `c` ON `c`.`guid` = `div`.`contract_guid` AND `c`.`isActive` = 1 AND `c`.`isStopped` = 0 ".
     						"LEFT JOIN ( ". 
-								"SELECT `contractDivision_guid`, `user_guid` FROM `userContractDivisions` GROUP BY `contractDivision_guid` ". 
-							") AS `u` ON `u`.`contractDivision_guid` = `div`.`guid` ". 
+								"SELECT `contractDivision_guid`, `user_guid` FROM `userContractDivisions` GROUP BY `contractDivision_guid` ".
+							") AS `u` ON `u`.`contractDivision_guid` = `div`.`guid` ".
+    						"LEFT JOIN ( ". 
+								"SELECT `contract_guid`, `user_guid` FROM `userContracts` GROUP BY `contract_guid` ".
+							") AS `uc` ON `uc`.`contract_guid` = `div`.`contract_guid` ".
     						"WHERE `pr`.`nextDate` <= NOW() ". 
     							"AND (NOW() BETWEEN `c`.`contractStart` AND `c`.`contractEnd`)");
 	$req1 = $db->prepare("INSERT INTO `requests` (`problem`, `createdAt`, `reactBefore`, `fixBefore`, `repairBefore`, ".
