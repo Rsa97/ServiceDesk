@@ -163,7 +163,7 @@
 										'filters' => array('division' => '/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/',
 														   'equipment' => '/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/'),
 										'required' => array('division', 'equipment')),
-					'serviceList/get' => array('file' => 'serviceList_get.php', 
+					'serviceList/get' => array('file' => 'serviceList_getPDF.php', 
 										'get' => array('id'),
 										'filters' => array('id' => '/^\d+$/'),
 										'required' => array('id')),

@@ -408,23 +408,30 @@ $mails = array();
 $names = array();
 foreach ($msgList as $reqId => $msgs) {
 	foreach ($msgs as $msg) {
+		$ids = array();
 		foreach(split(',', $sendto[$msg['event']]) as $to) {
 			switch ($to) {
 				case 'contact':
 					if ($msg['contId'] == '')
 						break;
-					if (!isset($mails[$msg['contId']][$reqId]))
-						$mails[$msg['contId']][$reqId] = array('text' => '', 'html' => '');
-					$mails[$msg['contId']][$reqId]['text'] .= $msg['text'];
-					$mails[$msg['contId']][$reqId]['html'] .= $msg['html'];
+					if (!in_array($msg['contId'], $ids)) {
+						if (!isset($mails[$msg['contId']][$reqId]))
+							$mails[$msg['contId']][$reqId] = array('text' => '', 'html' => '');
+						$mails[$msg['contId']][$reqId]['text'] .= $msg['text'];
+						$mails[$msg['contId']][$reqId]['html'] .= $msg['html'];
+						$ids[] = $msg['contId'];
+					}
 					break;
 				case 'engeneer':
 					if ($msg['engId'] == '')
 						break;
-					if (!isset($mails[$msg['engId']][$reqId]))
-						$mails[$msg['engId']][$reqId] = array('text' => '', 'html' => '');
-					$mails[$msg['engId']][$reqId]['text'] .= $msg['text'];
-					$mails[$msg['engId']][$reqId]['html'] .= $msg['html'];
+					if (!in_array($msg['engId'])) {
+						if (!isset($mails[$msg['engId']][$reqId]))
+							$mails[$msg['engId']][$reqId] = array('text' => '', 'html' => '');
+						$mails[$msg['engId']][$reqId]['text'] .= $msg['text'];
+						$mails[$msg['engId']][$reqId]['html'] .= $msg['html'];
+						$ids[] = $msg['engId'];
+					}
 					break;
 				case 'engeneers':
 				case 'operators':
@@ -432,10 +439,13 @@ foreach ($msgList as $reqId => $msgs) {
 					if (!isset($userRights[$to]))
 						break;
 					foreach ($userRights[$to] as $uid) {
-						if (!isset($mails[$uid][$reqId]))
-							$mails[$uid][$reqId] = array('text' => '', 'html' => '');
-						$mails[$uid][$reqId]['text'] .= $msg['text'];
-						$mails[$uid][$reqId]['html'] .= $msg['html'];
+						if (!in_array($uid)) {
+							if (!isset($mails[$uid][$reqId]))
+								$mails[$uid][$reqId] = array('text' => '', 'html' => '');
+							$mails[$uid][$reqId]['text'] .= $msg['text'];
+							$mails[$uid][$reqId]['html'] .= $msg['html'];
+							$ids[] = $uid;
+						}
 					}
 					break;
 			}
