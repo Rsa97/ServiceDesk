@@ -1213,7 +1213,7 @@
 													   'repairedAt', '?contactPerson', 'contractDivision', 'slaLevel', '?engeneer', 
 													   '?equipment', '?service', 'solutionProblem', 'solution', 'solutionRecomendation', 
 													   'toReact', 'toFix', 'toRepair', 'dayType_work', 'dayType_weekend', 'startDayTime',
-													   'endDayTime', 'НомерSD', 'ПартнёрSD'));
+													   'endDayTime', 'НомерSD'));
 				list($problem) = 
 					parseXML($obj->{'Свойство'}, array('Неисправность'));
 				$currentState = $lastStates[$guid][0];
