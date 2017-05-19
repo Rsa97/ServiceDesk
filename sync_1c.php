@@ -1181,13 +1181,13 @@
 													 "`repairBefore`, `repairedAt`, `currentState`, `stateChangedAt`, ".
 													 "`contactPerson_guid`, `contractDivision_guid`, `slaLevel`, `engineer_guid`, ".
 													 "`equipment_guid`, `service_guid`, `onWait`, `solutionProblem`, `solution`, ".
-													 "`solutionRecomendation`, `toReact`, `toFix`, `toRepair`, `num1c`, `partner_guid`) ".
+													 "`solutionRecomendation`, `toReact`, `toFix`, `toRepair`, `num1c`) ".
 									"VALUES (UNHEX(REPLACE(:guid, '-', '')), :problem, :createdAt, :reactBefore, :reactedAt, :fixBefore, ".
 											":fixedAt, :repairBefore, :repairedAt, :currentState, :stateChangedAt, ".
 											"UNHEX(REPLACE(:contactPersonGuid, '-', '')), UNHEX(REPLACE(:contractDivisionGuid, '-', '')), ".
 											":slaLevel, UNHEX(REPLACE(:engineerGuid, '-', '')), UNHEX(REPLACE(:equipmentGuid, '-', '')), ".
 											"UNHEX(REPLACE(:serviceGuid, '-', '')), :onWait, :solutionProblem, :solution, :solutionRecomendation, ".
-											":toReact, :toFix, :toRepair, :num1c, UNHEX(REPLACE(:partnerGuid, '-', ''))) ".
+											":toReact, :toFix, :toRepair, :num1c) ".
 								"ON DUPLICATE KEY UPDATE `problem` = VALUES(`problem`), `createdAt` = VALUES(`createdAt`), `reactBefore` = VALUES(`reactBefore`), ".
 													 "`reactedAt` = VALUES(`reactedAt`), `fixBefore` = VALUES(`fixBefore`), `fixedAt` = VALUES(`fixedAt`), ".
 													 "`repairBefore` = VALUES(`repairBefore`), `repairedAt` = VALUES(`repairedAt`), `currentState` = VALUES(`currentState`), ".
@@ -1197,7 +1197,7 @@
 													 "`service_guid` = VALUES(`service_guid`), `onWait` = VALUES(`onWait`), `solutionProblem` = VALUES(`solutionProblem`), ".
 													 "`solution` = VALUES(`solution`), `solutionRecomendation` = VALUES(`solutionRecomendation`), ".
 													 "`toReact` = VALUES(`toReact`), `toFix` = VALUES(`toFix`), `toRepair` = VALUES(`toRepair`), ".
-													 "`num1c` = VALUES(`num1c`), `partner_guid` = VALUES(`partner_guid`)");
+													 "`num1c` = VALUES(`num1c`)");
 		$req1 = $db->prepare("INSERT INTO `requestEvents` (`timestamp`, `event`, `newState`, `request_guid`, `user_guid`) ".
 									"VALUES(:createdAt, 'open', 'received', UNHEX(REPLACE(:guid, '-', '')), ".
 											"UNHEX(REPLACE(:contactPersonGuid, '-', '')))");
@@ -1205,11 +1205,10 @@
 			if ('ДокументСсылка.СоД_ЗаявкаОтКлиента' == $obj->attributes()->{'Тип'}) {
 				list($guid, $num1c, $createdAt) = 
 					parseXML($obj->{'Ссылка'}->{'Свойство'}, array('{УникальныйИдентификатор}', 'Номер', 'Дата'));
-//				$npps[trim($obj->attributes()->{'Нпп'})] = $guid;
 				list($reactBefore, $reactedAt, $fixBefore, $fixedAt, $repairBefore, $repairedAt, 
 					 $contactPersonGuid, $contractDivisionGuid, $slaLevel, $engineerGuid, $equipmentGuid, $serviceGuid, 
 					 $solutionProblem, $solution, $solutionRecomendation, $toReact, $toFix, $toRepair, $dayType_work, $dayType_weekend,
-					 $startDayTime, $endDayTime, $number, $partnerGuid) = 
+					 $startDayTime, $endDayTime, $number) = 
 					parseXML($obj->{'ЗначениеПараметра'}, array('reactBefore', 'reactedAt', 'fixBefore', 'fixedAt', 'repairBefore', 
 													   'repairedAt', '?contactPerson', 'contractDivision', 'slaLevel', '?engeneer', 
 													   '?equipment', '?service', 'solutionProblem', 'solution', 'solutionRecomendation', 
@@ -1220,8 +1219,6 @@
 				$currentState = $lastStates[$guid][0];
 				$onWait = $lastStates[$guid][1];
 				$stateChangedAt = $lastStates[$guid][2];
-				if ('' == $partnerGuid)
-					$partnerGuid = null;
 				$slaLevel = (isset($levels[$slaLevel]) ? $levels[$slaLevel] : 'medium');
 				if (TEST) {
 					print "{$guid}\t{$number}\t{$num1c}\t{$createdAt}\n{$problem}\n{$reactBefore}\t{$reactedAt}\t{$fixBefore}\t{$fixedAt}\t{$repairBefore}\t".
@@ -1263,7 +1260,7 @@
 											'engineerGuid' => $engineerGuid, 'equipmentGuid' => $equipmentGuid, 'serviceGuid' => $serviceGuid,
 											'onWait' => $onWait, 'solutionProblem' => $solutionProblem, 'solution' => $solution, 
 											'solutionRecomendation' => $solutionRecomendation, 'toReact' => $toReact, 'toFix' => $toFix, 
-											'toRepair' => $toRepair, 'num1c' => $num1c, 'partnerGuid' => $partnerGuid));
+											'toRepair' => $toRepair, 'num1c' => $num1c));
 						if (!isset($prevStates[$guid])) {
 							$req1->execute(array('guid' => $guid, 'createdAt' => $createdAt, 'contactPersonGuid' => $contactPersonGuid));
 							$prevStates[$guid] = array('received', 0, $createdAt);
