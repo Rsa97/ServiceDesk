@@ -80,4 +80,48 @@ function calcTime($db, $div, $serv, $sla, $sql, $date = null) {
 				 'reactBefore' => $reactBefore, 'fixBefore' => $fixBefore, 'repairBefore' => $repairBefore, 'toReact' => $toReact, 
 				 'toFix' => $toFix, 'toRepair' => $toRepair);
 }
+
+function calcTime2($db, $div, $serv, $sla, $createdAt, $slaTime) {
+	preg_match('/(\d{4}-\d\d-\d\d)\s+(\d\d:\d\d:\d\d)/', $createdAt, $matches);
+	$createdDay = $matches[1];
+	$dayStart = $matches[2];
+	try {
+		$req = $db->prepare("SELECT DISTINCT `dss`.`startDayTime`, `dss`.`endDayTime`, `wc`.`date` ".
+								"FROM `contractDivisions` AS `cd` ".
+								"JOIN `contracts` AS `c` ON `cd`.`guid` = UNHEX(REPLACE(:divisionGuid, '-', '')) ".
+									"AND `c`.`guid` = `cd`.`contract_guid` AND `cd`.`isDisabled` = 0 ".
+								"JOIN `contractServices` AS `cs` ON `cs`.`contract_guid` = `cd`.`contract_guid` ".
+								"JOIN `divServicesSLA` AS `dss` ON `dss`.`service_guid` = UNHEX(REPLACE(:serviceGuid, '-', '')) ".
+									"AND `dss`.`contract_guid` = `c`.`guid` AND `dss`.`divType_guid` = `cd`.`type_guid` ".
+									"AND `dss`.`slaLevel` = :slaLevel ".
+								"JOIN `workCalendar` AS `wc` ON `wc`.`date` >= :created AND FIND_IN_SET(`wc`.`type`, `dss`.`dayType`) ".
+								"ORDER BY `wc`.`date` ");
+		$req->execute(array('divisionGuid' => $div, 'serviceGuid' => $serv, 'slaLevel' => $sla, 'created' => $createdDay));
+	} catch (PDOException $e) {
+		echo json_encode(array('error' => 'Внутренняя ошибка сервера', 
+								'orig' => "MySQL error".$e->getMessage()));
+		exit;
+	}
+	$slaTime *= 60;
+	$secs = 0;
+	while (($row = $req->fetch(PDO::FETCH_NUM))) {
+		list($startDayTime, $endDayTime, $day) = $row;
+		if ($createdDay != $day || $dayStart < $startDayTime)
+			$dayStart = $startDayTime;
+		if ($endDayTime == '00:00:00')
+			$endDayTime = '24:00:00';
+		preg_match('~(\d\d):(\d\d):(\d\d)~', $dayStart, $start);
+		preg_match('~(\d\d):(\d\d):(\d\d)~', $endDayTime, $end);
+		$daysecs = $end[1]*3600+$end[2]*60+$end[3]-$start[1]*3600-$start[2]*60-$start[3];
+		if ($daysecs < 0)
+			$daysecs = 0;
+		if ($secs+$daysecs > $slaTime) {
+			$doBefore = formatDateTime($day, $start, $slaTime-$secs, true);
+			break;
+		}
+		$secs += $daysecs;
+		$dayStart = '00:00:00';
+	}
+	return $doBefore;
+}
 ?>

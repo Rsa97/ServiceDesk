@@ -73,7 +73,7 @@ $html .= "<table class='head'><tbody>";
 $html .= "<tr><td><h1>СЕРВИСНЫЙ ЛИСТ №&nbsp;{$paramValues['id']}-01</h1>";
 $html .= "<h2>от ".date('d.m.Y')."<br>";
 $html .= "по заявке № {$paramValues['id']}</h2>";
-$html .= "<td class='barcode'>К**SЖ\D6\D1\CE-0Д!8n,%1\"l.LAЛ";
+$html .= "<td class='barcode'>";
 $html .= "</table>";
 $html .= "<h3>1. Данные Исполнителя</h3>";
 $html .= "<table><tbody>";

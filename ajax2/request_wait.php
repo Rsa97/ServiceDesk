@@ -4,6 +4,7 @@ header('Content-Type: application/json; charset=UTF-8');
 
 include 'common.php';
 include 'init.php';
+include 'func_calcTime.php';
 
 $allowedTo = array('engineer', 'admin', 'partner');
 
@@ -16,7 +17,9 @@ $cause = trim($paramValues['cause']);
 
 try {
 // Получаем список заявок с проверкой прав доступа
-	$req = $db->prepare("SELECT DISTINCT `rq`.`guid` AS `guid`, `rq`.`onWait` AS `onWait`, `rq`.`currentState` AS `state` ".
+	$req = $db->prepare("SELECT DISTINCT `rq`.`guid` AS `guid`, `rq`.`onWait` AS `onWait`, `rq`.`currentState` AS `state`, ".
+										"`rq`.`createdAt`, `rq`.`toFix`, `rq`.`toRepair`, `rq`.`contractDivision_guid`, ".
+										"`rq`.`service_guid`, `rq`.`slaLevel` ".
           					"FROM `requests` AS `rq` ".
             				"JOIN `contractDivisions` AS `div` ON `rq`.`id` = :requestId ".
             					"AND `rq`.`currentState` IN ('accepted','fixed') AND `div`.`guid` = `rq`.`contractDivision_guid` ".
@@ -35,18 +38,20 @@ try {
 	exit;
 }
 
-if (!($row = $req->fetch(PDO::FETCH_ASSOC))) {
+if (!($row = $req->fetch(PDO::FETCH_NUM))) {
 	echo json_encode(array('error' => 'Недостаточно прав.'));
 	exit;
 }	
-if (null === $row['guid']) {
+if (null === $row[0]) {
 	echo json_encode(array('error' => "Статус заявки {$paramValues['id']} не может быть изменён до синхронизации с внутренней базой."));
 	exit;
 }
 
-$guid = formatGuid($row['guid']);
-$onWait = (1 == $row['onWait'] ? 0 : 1);
-$state = $row['currentState'];
+list($guid, $onWait, $state, $createdAt, $toFix, $toRepair, $divGuid, $servGuid, $sla) = $row;
+$guid = formatGuid($guid);
+$divGuid = formatGuid($divGuid);
+$servGuid = formatGuid($servGuid);
+$onWait = (1 == $onWait ? 0 : 1);
 
 include 'init_soap.php';
 if (false === $soap) {
@@ -89,30 +94,48 @@ if (true != $answer->ResultSuccessful) {
 
 try {
 	$db->query('START TRANSACTION');
-	if (1 == $onWait) {
-		$req = $db->prepare("UPDATE `requests` SET `onWait` = :onWait WHERE `id` = :requestId");
-		$req->execute(array('onWait' => $onWait, 'requestId' => $paramValues['id']));
-	} else {
-		$req = $db->prepare("UPDATE `requests` AS `r` ".
-								"LEFT JOIN (".
-									"SELECT MAX(`timestamp`) AS `ts`, `request_guid` ".
-										"FROM `requestEvents` ".
-										"WHERE `request_guid` = UNHEX(REPLACE(:requestGuid, '-', '')) AND `event` = 'onWait' ".
-								") AS `re` ON `re`.`request_guid` = `r`.`guid` ".
-								"SET `r`.`onWait` = :onWait, ".
-									"`r`.`totalWait` = `r`.`totalWait`+TIME_TO_SEC(TIMEDIFF(:stateChangedAt, IFNULL(`re`.`ts`, :stateChangedAt)))/60 ".
-								"WHERE `id` = :requestId");
-		$req->execute(array('onWait' => $onWait, 'requestId' => $paramValues['id'], 'requestGuid' => $guid, 'stateChangedAt' => $time));
+	$tsDelta = 0;
+	if (0 == $onWait) {
+// Пробуем получить время последней приостановки заявки  
+		$req = $db->prepare("SELECT MAX(`timestamp`) ".
+								"FROM `requestEvents` ".
+								"WHERE `request_guid` = UNHEX(REPLACE(:requestGuid, '-', '')) AND 'onWait' = `event`");
+		$req->execute(array('requestGuid' => $guid));
+		if ($row = $req->fetch(PDO::FETCH_NUM)) {
+			$req = $db->prepare("SELECT calcTime_v4(:requestId, :startTime, NOW())");
+			$req->execute(array('requestId' => $paramValues['id'], 'startTime' => $row[0]));
+			if ($row = $req->fetch(PDO::FETCH_NUM))
+				$tsDelta = $row[0];
+			switch ($state) {
+				case 'accepted':
+					$toFix += $tsDelta;
+					$fixBefore = calcTime2($db, $divGuid, $servGuid, $sla, $createdAt, $toFix);
+				case 'fixed':
+					$toRepair += $tsDelta;
+					$repairBefore = calcTime2($db, $divGuid, $servGuid, $sla, $createdAt, $toRepair);
+					break;
+			}
+			$req = $db->prepare("UPDATE `requests` SET `toFix` = :toFix, `fixBefore` = :fixBefore, ".
+														"`toRepair` = :toRepair, `repairBefore` = :repairBefore, ".
+														"`totalWait` = `totalWait`+:delta ".
+									"WHERE `id` = :requestId");
+			$req->execute(array('toFix' => $toFix, 'fixBefore' => $fixBefore, 'toRepair' => $toRepair, 'repairBefore' => $repairBefore, 
+								'requestId' => $paramValues['id'], 'delta' => $tsDelta));
+		}
 	}
+	// Изменяем состояние запроса
+	$req = $db->prepare("UPDATE `requests` SET `onWait` = :onWait WHERE `id` = :requestId");
+	$req->execute(array('onWait' => $onWait, 'requestId' => $paramValues['id']));
 	$req = $db->prepare("INSERT INTO `requestEvents` (`timestamp`, `event`, `newState`, `request_guid`, `user_guid`, `text`) ".
 							"VALUES (:stateChangedAt, IF(:onWait = 1, 'onWait', 'offWait'), :state, UNHEX(REPLACE(:requestGuid, '-', '')), ".
 									"UNHEX(REPLACE(:userGuid, '-', '')), :cause)");
 	$req->execute(array('stateChangedAt' => $time, 'requestGuid' => $guid, 'userGuid' => $userGuid, 'cause' => $cause, 
-						'state' => $state, 'onWait' => $onWait));
+						'state' => $state, 'onWait' => $onWait)); 
 	$db->query('COMMIT');
 } catch (PDOException $e) {
 	echo json_encode(array('error' => 'Внутренняя ошибка сервера', 
 							'orig' => "MySQL error in line ".$e->getLine().': '.$e->getMessage()));
+	$db->query('ROLLBACK');
 	exit;
 }
 
