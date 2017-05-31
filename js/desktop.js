@@ -124,17 +124,15 @@ var selectPartnerBtn = [{text: 'Отменить',
 // Кнопки добавления задач в плановые
 var addProblemBtn = [{text: 'Отменить', 
                       click: function() { 
-//                            $('#addProblem button').removeProp('disabled');
                             $(this).dialog("close");
                           }},
 	                 {text: 'Сохранить',
 	                  click: function() {
-//						$('#addProblem').dialog('option', 'buttons', cardBtnWait);
-	                  	myPostJson('/ajax/addProblem.php', {op: 'setProblem', cId: $('#apContract').val(), divId: $('#apDivision').val(),
-	                  				problem: $('#apProblem').val().trim()},	null, null, function() { 
-//							$('#addProblem').dialog('option', 'buttons', addProblemBtn);
-							$('#addProblem').dialog('close');
-						});
+	                  	myPostJson('/ajax/problem/set/'+$('#apContract').val()+'/'+$('#apDivision').val(),
+	                  				{problem: $('#apProblem').val().trim()}, null, null, 
+	                  				function() { 
+									  $('#addProblem').dialog('close');
+									});
 	                  }} 
                     ];
        
@@ -219,7 +217,7 @@ function checkChanges() {
 		$('#card').dialog('option', 'buttons', cardBtnLook);
 }
 
-function myPostJson(url, param, onReady, onError, onAlways) {
+function myPostJson(url, param, onReady, onError, onAlways, nonStandard) {
   $.blockUI({message: '<img src="img/busy.gif"> Подождите...', 
   			 overlayCSS:  { 
         	  backgroundColor: '#000', 
@@ -236,19 +234,22 @@ function myPostJson(url, param, onReady, onError, onAlways) {
 	      if (typeof onError === 'function')
     	   	onError();
         } else {
-          for (var key in data)
-            if(data.hasOwnProperty(key)) {
-              if (key.substr(0, 1) == '_')
-                $('#'+key.substr(1)).val(data[key]);
-              else if (key.substr(0, 1) == '!') {
-              	if (data[key] == 1)
-              	  $('#'+key.substr(1)).show();
-              	else
-              	  $('#'+key.substr(1)).hide();
-              	$('#'+key.substr(1)).val(data[key]);
-              } else
-                $('#'+key).html(data[key]);
-            }
+          if (typeof nonStandard === 'function')
+          	nonStandard(data);
+          else
+            for (var key in data)
+              if(data.hasOwnProperty(key)) {
+                if (key.substr(0, 1) == '_')
+                  $('#'+key.substr(1)).val(data[key]);
+                else if (key.substr(0, 1) == '!') {
+              	  if (data[key] == 1)
+              	    $('#'+key.substr(1)).show();
+              	  else
+              	    $('#'+key.substr(1)).hide();
+              	  $('#'+key.substr(1)).val(data[key]);
+                } else
+                  $('#'+key).html(data[key]);
+              }
           if (typeof onReady === 'function')
             onReady(data);
         }
@@ -871,29 +872,46 @@ $(function() {
 	
   $('#workflow').on('click', '.btnAddProblem', function() {
 	$('#addProblem').dialog('open');
-	myPostJson('/ajax/addProblem.php', {op: 'getContragents'}, 
-	  function() {
-		$('#apContragent').trigger('change');
+	myPostJson('/ajax/dir/contragents', null, null, null, null,
+	  function(data) {
+	  	if (typeof data.contragent !== 'undefined')
+	  	  $('#apContragent').html(data.contragent).trigger('change');
 	  });
   });
 
   $('#apContragent').change(function() {
-	myPostJson('/ajax/addProblem.php', {op: 'getContracts', caId: $('#apContragent').val()}, 
-	  function() {
-		$('#apContract').trigger('change');
-	  });
+  	if ('*' == $(this).val()) {
+  	  $('#apContract').html('');
+  	  $('#apDivision').html('');
+  	  $('#apProblem').val('');
+  	} else
+	  myPostJson('/ajax/dir/contracts/'+$('#apContragent').val(), null, null, null, null, 
+	    function(data) {
+	  	  if (typeof data.contract !== 'undefined')
+		    $('#apContract').html(data.contract).trigger('change');
+	    });
   });
 
   $('#apContract').change(function() {
-	myPostJson('/ajax/addProblem.php', {op: 'getDivisions', cId: $('#apContract').val()}, 
-	  function() {
-		$('#apDivision').trigger('change');
-	  });
+  	if ('*' == $(this).val()) {
+  	  $('#apDivision').html('');
+  	  $('#apProblem').val('');
+  	} else
+	  myPostJson('/ajax/dir/divisions/'+$('#apContract').val(), null, null, null, null, 
+	    function(data) {
+	  	  if (typeof data.division !== 'undefined') {
+		    $('#apDivision').html(data.division);
+		    $('#apDivision option[value="*"]').remove();
+		    $('#apDivision').prepend('<option value="*" selected>Все').trigger('change');
+		  }
+	    });
   });
 
   $('#apDivision').change(function() {
-	myPostJson('/ajax/addProblem.php', {op: 'getProblem', cId: $('#apContract').val(), divId: $('#apDivision').val()},
-				null, null, function() { $('#addProblem').dialog('option', 'buttons', addProblemBtn); });
+  	if ('*' == $(this).val())
+  	  $('#apProblem').val('');
+  	else
+	  myPostJson('/ajax/problem/get/'+$('#apDivision').val());
   });
 	
 });
