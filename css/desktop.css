@@ -349,9 +349,14 @@ textarea#problem {
 	color: blue;
 	vertical-align: middle;
 }
+
 .blockMsg img {
 	margin: 1em;
 	vertical-align: middle;
+}
+
+tr.early {
+	color: #e77;
 }
 
 #selectPartnerList ul, #selectContactList ul, #selectServiceList ul {

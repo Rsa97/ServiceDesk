@@ -686,7 +686,7 @@ $(function() {
     timeoutSet = 1;      
   });
 
-  $('#workflow').on('click', '.btnAccept, .btnFixed, .btnClose, .btnDoNow', function() {
+  $('#workflow').on('click', '.btnAccept, .btnFixed, .btnClose', function() {
     var cmd = $(this).data('cmd');
     var list = '';
     $('.tab'+$('#workflow').tabs('option', 'active')+' :checked').each(function() {
@@ -700,6 +700,21 @@ $(function() {
                });
   });
   
+  $('#workflow').on('click', '.btnDoNow', function() {
+    var cmd = $(this).data('cmd');
+    var list = '';
+    $('.tab'+$('#workflow').tabs('option', 'active')+' :checked').each(function() {
+      if ($(this).data('preStart') == 1)
+      	list += $(this).parents('tr').attr('id')+',';
+    });
+    if (list == '')
+      return;
+    myPostJson('/ajax/request/'+cmd+'/'+list, null, null, null,
+               function() {
+                 setFilter();
+               });
+  });
+
   $('#workflow').on('click', '.btnRepaired', function() {
     var rows = $('.tab'+$('#workflow').tabs('option', 'active')+' :checked');
     if (rows.length > 1)
