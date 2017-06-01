@@ -7,7 +7,7 @@ include 'init.php';
 
 // Получаем список услуг
 try {
-	$req = $db->prepare("SELECT DISTINCT `srv`.`guid`, `srv`.`name` ".
+	$req = $db->prepare("SELECT DISTINCT `srv`.`guid`, `srv`.`name`, `srv`.`autoOnly` ".
 							"FROM `contractDivisions` AS `cd` ".
 							"JOIN `divServicesSLA` AS `dss` ON `cd`.`guid` = UNHEX(REPLACE(:divisionGuid, '-', '')) AND `cd`.`isDisabled` = 0 ".
 								"AND `dss`.`contract_guid` = `cd`.`contract_guid` AND `dss`.`divType_guid` = `cd`.`type_guid` ".
@@ -22,9 +22,9 @@ try {
 $services = '';
 $num = 0;
 while (($row = $req->fetch(PDO::FETCH_NUM))) {
-	list($servGuid, $servName) = $row;
+	list($servGuid, $servName, $autoOnly) = $row;
 	$servGuid = formatGuid($servGuid);
-	$services .= "<option value='{$servGuid}'>".htmlspecialchars($servName);
+	$services .= "<option value='{$servGuid}' data-autoonly={$autoOnly}>".htmlspecialchars($servName);
 	$num++;
 }
 if ($num > 1)

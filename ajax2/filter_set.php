@@ -147,7 +147,7 @@ while ($row = $req->fetch(PDO::FETCH_ASSOC))
   
 // Готовим списки заявок по каждому разделу
 try {
-	$req = $db->prepare("SELECT DISTINCT `rq`.`id`, `rq`.`currentState`, `rq`.`stateChangedAt`, `srv`.`shortName`, `srv`.`name`, ". 
+	$req = $db->prepare("SELECT DISTINCT `rq`.`id`, `rq`.`currentState`, `rq`.`stateChangedAt`, `srv`.`shortName`, `srv`.`name`, `srv`.`autoOnly`, ". 
 										"`rq`.`createdAt`, `rq`.`reactBefore`, `rq`.`fixBefore`, `rq`.`repairBefore`, `div`.`name`, ".
 										"`ca`.`name`, `e`.`lastName`, `e`.`firstName`, `e`.`middleName`, `e`.`email`, `e`.`phone`, ".
 										"`et`.`name`, `est`.`name`, `em`.`name`, `emf`.`name`, `eq`.`serviceNumber`, ".
@@ -211,7 +211,7 @@ foreach($statusGroup as $groupId) {
 	$tables[$groupId] = '';
 }
 while ($row = $req->fetch(PDO::FETCH_NUM)) {
-	list($id, $state, $stateTime, $srvSName, $srvName, $createdAt, $reactBefore, $fixBefore, $repairBefore, $div, $contragent, 
+	list($id, $state, $stateTime, $srvSName, $srvName, $srvAutoOnly, $createdAt, $reactBefore, $fixBefore, $repairBefore, $div, $contragent, 
 		 $engLN, $engGN, $engMN, $engEmail, $engPhone, $eqType, $eqSubType, $eqName, $eqMfg, $servNum, $serial, $contractNumber, 
 		 $contLN, $contGN, $contMN, $contEmail, $contPhone, $problem, $onWait, $reactedAt, $fixedAt, $repairedAt, $slaLevel, 
 		 $timeToReact, $timeToFix, $timeToRepair, $partnerName, $requestGuid, $onWaitAt, $reactPercent, $fixPercent, $repairPercent) = $row;
@@ -254,7 +254,7 @@ while ($row = $req->fetch(PDO::FETCH_NUM)) {
 		$repairPercent = floor($repairPercent*100);
 	}
 	$tables[$statusGroup[$state]] .= 
-		"<tr id='{$id}'".($repairPercent >= 100 ? " class='timeIsOut'" : "").">".
+		"<tr id='{$id}' data-autoonly={$srvAutoOnly}".($repairPercent >= 100 ? " class='timeIsOut'" : "").">".
 		"<td><input type='checkbox' class='checkOne'>".
 		"<abbr title='{$statusNames[$state]}'><span class='ui-icon {$statusIcons[$state]}'></span></abbr>".
 		(1 == $onWait ? "<abbr title='{$statusNames['onWait']}'><span class='ui-icon {$statusIcons['onWait']}'></span></abbr>" : "").

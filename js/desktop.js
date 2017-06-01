@@ -15,11 +15,19 @@ var cardBtnLook = [ {text: 'Сервисный лист',
                            }}
                   ];
 
+function myAlert(text) {
+  $.blockUI({message: "<div style='padding: 1em'>"+text+"<br><input type='button' id='myAlertOk' value='Ок'></div>",
+			 backgroundColor: '#000', 
+        	 opacity:         0.2, 
+        	 css: 			  { border: '3px solid #a00' } 
+			 });
+}
+
 function serviceNumSet() {
   if ($('#servNum').data('serv') != $('#servNum').val())
     myPostJson('/ajax/request/changeEq/'+openCard, {equipment: $('#servNum').data('id')}, null,
 	  function() {
-	    alert('Ошибка связи с сервером');
+	    myAlert('Ошибка связи с сервером');
 	  },
 	  function() {
 		$('#card').dialog('close');
@@ -35,7 +43,7 @@ function contactSet() {
         serviceNumSet();
 	  },
 	  function() {
-	    alert('Ошибка связи с сервером');
+	    myAlert('Ошибка связи с сервером');
 	  },
 	  function() {
 		$('#card').dialog('close');
@@ -45,19 +53,22 @@ function contactSet() {
 }
 
 function serviceSet() {
-  if ($('#service').data('id') != $('#service').val() ||
-    $('#level').data('id') != $('#level').val())
-  myPostJson('/ajax/request/sla/set/'+openCard+'/'+$('#service').val()+'/'+$('#level').val(), null, 
-	function() {
-	  contactSet();
-	},
-	function() {
-	  alert('Ошибка связи с сервером');
-	},
-	function() {
-	  $('#card').dialog('close');
-	});
-  else
+  if ($('#service').data('id') != $('#service').val() || $('#level').data('id') != $('#level').val()) {
+  	if (0 != $('#service option:selected').data('autoonly')) {
+  	  myAlert('Услуга "'+$('#service option:selected').text()+'" служебная. Измените её.');
+  	  return;
+  	}
+    myPostJson('/ajax/request/sla/set/'+openCard+'/'+$('#service').val()+'/'+$('#level').val(), null, 
+	  function() {
+	    contactSet();
+	  },
+	  function() {
+	    myAlert('Ошибка связи с сервером');
+	  },
+	  function() {
+	    $('#card').dialog('close');
+	  });
+  } else
 	contactSet();
 }
 
@@ -82,19 +93,19 @@ var cardBtnNew = [{text: 'Отменить',
                    {text: 'Создать', 
                    click: function() {
                             if ($('#division').val() == '*') {
-                              alert('Не выбран филиал');
+                              myAlert('Не выбран филиал');
                               return;
                             }
                             if ($('#problem').val().trim() == '') {
-                              alert('Не указана проблема');
+                              myAlert('Не указана проблема');
                               return;
                             }
                             if ($('#contact').val() == '*') {
-                              alert('Не выбран ответственный');
+                              myAlert('Не выбран ответственный');
                               return;
                             }
                             if ($('#service').val() == '*') {
-                              alert('Не выбрана услуга');
+                              myAlert('Не выбрана услуга');
                               return;
                             }
                             myPostJson('/ajax/request/new/'+$('#division').val()+'/'+$('#service').val()+'/'+$('#level').val()+'/'+$('#contact').val(),
@@ -150,11 +161,11 @@ var solutionBtn = [{text: 'Отменить',
                    			if ('' == Recomend)
                    				Recomend = 'Без рекомендаций';
                    			if (Problem.length < 10 || Solution.length < 10) {
-                   				alert('Минимальная длина текста - 10 символов!');
+                   				myAlert('Минимальная длина текста - 10 символов!');
                    				return;
                    			}
                    			if (Problem == Solution || Problem == Recomend || Solution == Recomend) {
-                   				alert('Тексты в полях не должны совпадать!');
+                   				myAlert('Тексты в полях не должны совпадать!');
                    				return;
                    			}
     						myPostJson('/ajax/request/Repaired/'+$('#solution').data('id'),
@@ -230,7 +241,7 @@ function myPostJson(url, param, onReady, onError, onAlways, nonStandard) {
       $.unblockUI();
       if (data !== null) {
         if (typeof data.error !== 'undefined') {
-          alert(data.error);
+          myAlert(data.error);
 	      if (typeof onError === 'function')
     	   	onError();
         } else {
@@ -262,7 +273,7 @@ function myPostJson(url, param, onReady, onError, onAlways, nonStandard) {
       if (typeof onError === 'function')
         onError();
       else
-        alert('Ошибка связи с сервером');
+        myAlert('Ошибка связи с сервером');
     })
     .always(function() {
       if (typeof onAlways === 'function')
@@ -294,7 +305,7 @@ function servNumLookup() {
 	  $('#selectEqList ul ul.single').show();
 	},
 	function() {
-	  alert('Ошибка связи с сервером');
+	  myAlert('Ошибка связи с сервером');
 	  $('#selectEq').dialog('close');
 	});       
   timeoutSet = 0;
@@ -312,7 +323,7 @@ $(function() {
   	.done(function(data) {
       if (data !== null) {
         if (typeof data.error !== 'undefined')
-          alert(data.error);
+          myAlert(data.error);
         if (typeof(data.isAdmin !== 'undefined') && data.isAdmin == 'ok') {
         	$("#user").append("&nbsp;<button id='admin'>Администрирование</button>");
 			$('#admin').button();
@@ -320,7 +331,7 @@ $(function() {
       }
 	})
     .fail(function() {
-        alert('Ошибка связи с сервером');
+        myAlert('Ошибка связи с сервером');
     });
   $('button').button();
   $('button').each(function() {
@@ -460,7 +471,7 @@ $(function() {
 		$('#selectEqList ul ul.single').show();
 	  },
 	  function() {
-		alert('Ошибка связи с сервером');
+		myAlert('Ошибка связи с сервером');
 		$('#selectEq').dialog('close');
 	  });       
   });
@@ -470,7 +481,7 @@ $(function() {
     $('#selectPartner').dialog('open');
 	myPostJson('/ajax/dir/partners/'+openCard, null, null,
 	  function() {
-		alert('Ошибка связи с сервером');
+		myAlert('Ошибка связи с сервером');
 		$('#selectPartner').dialog('close');
 	  });       
   });
@@ -483,7 +494,7 @@ $(function() {
 	  	$('#partner').val($(this).text());
 	  myPostJson('/ajax/request/partner/set/'+openCard+'/'+$(this).data('id'), null, null, 
 	  function() {
-		alert('Ошибка связи с сервером');
+		myAlert('Ошибка связи с сервером');
 		$('#card').dialog('close');
 	  });
   });
@@ -510,7 +521,7 @@ $(function() {
 		  $('#contragent').trigger('change');
   	  },
   	  function() {
-		alert('Ошибка связи с сервером');
+		myAlert('Ошибка связи с сервером');
 		$('#card').dialog('close');
  	  });
     cardMode = 'new';
@@ -540,7 +551,7 @@ $(function() {
 	  		$('#contract').trigger('change');
 	  },
 	  function() {
-		alert('Ошибка связи с сервером');
+		myAlert('Ошибка связи с сервером');
 		$('#card').dialog('close');
 	  });
   });
@@ -568,7 +579,7 @@ $(function() {
 	  		$('#division').trigger('change');
 	  },
 	  function() {
-		alert('Ошибка связи с сервером');
+		myAlert('Ошибка связи с сервером');
 		$('#card').dialog('close');
 	  });
   });
@@ -607,6 +618,7 @@ $(function() {
           if ($('#division').val() != '*')
 	        myPostJson('/ajax/dir/services/'+$('#division').val(), null,
 	          function() {
+	          	$('#service option[data-autoonly="1"]').remove();
 	            $('#service').parent().prev().addClass('active');
   	            $('#service').trigger('change');
          	    myPostJson('/ajax/dir/contacts/'+$('#division').val(), null,
@@ -614,18 +626,18 @@ $(function() {
           	        $('#contact').trigger('change');
           	  	  },
 	  			  function() {
-				    alert('Ошибка связи с сервером');
+				    myAlert('Ошибка связи с сервером');
 				    $('#card').dialog('close');
 	  			  });
 	          },
               function() {
-	            alert('Ошибка связи с сервером');
+	            myAlert('Ошибка связи с сервером');
 	            $('#card').dialog('close');
               });
    	    }
    	  },
 	  function() {
-		alert('Ошибка связи с сервером');
+		myAlert('Ошибка связи с сервером');
 		$('#card').dialog('close');
 	  });
   });
@@ -640,7 +652,7 @@ $(function() {
 		$('#level').trigger('change');
 	  },
 	  function() {
-		alert('Ошибка связи с сервером');
+		myAlert('Ошибка связи с сервером');
 		$('#card').dialog('close');
 	  });
   });
@@ -668,7 +680,7 @@ $(function() {
        		checkChanges();
 	  },
 	  function() {
-		alert('Ошибка связи с сервером');
+		myAlert('Ошибка связи с сервером');
 		$('#card').dialog('close');
 	  });
   });
@@ -687,7 +699,29 @@ $(function() {
     timeoutSet = 1;      
   });
 
-  $('#workflow').on('click', '.btnAccept, .btnFixed, .btnClose, .btnDoNow', function() {
+  $('#workflow').on('click', '.btnAccept', function() {
+    var cmd = $(this).data('cmd');
+    var list = '';
+    var errList = '';
+    var errs = 0;
+    $('.tab'+$('#workflow').tabs('option', 'active')+' :checked').each(function() {
+      if (0 != $(this).parents('tr').data('autoonly')) {
+        errs++;
+      	errList += ('' == errList ? '' : ', ')+$(this).parents('tr').attr('id');
+      } else
+        list += $(this).parents('tr').attr('id')+',';
+    });
+    if (errs > 0)
+      myAlert('Невозможно принять заявк'+(errs > 1 ? 'и' : 'у')+' '+errList+'. '+(errs > 1 ? 'Указанные услуги являются служебными.' : 'Указанная услуга является служебной.'));
+    if (list == '')
+      return;
+    myPostJson('/ajax/request/'+cmd+'/'+list, null, null, null,
+               function() {
+                 setFilter();
+               });
+  });
+
+  $('#workflow').on('click', '.btnFixed, .btnClose, .btnDoNow', function() {
     var cmd = $(this).data('cmd');
     var list = '';
     $('.tab'+$('#workflow').tabs('option', 'active')+' :checked').each(function() {
@@ -704,7 +738,7 @@ $(function() {
   $('#workflow').on('click', '.btnRepaired', function() {
     var rows = $('.tab'+$('#workflow').tabs('option', 'active')+' :checked');
     if (rows.length > 1)
-      alert('Выберите только одну заявку');
+      myAlert('Выберите только одну заявку');
     if (rows.length != 1)
       return;
   	var id = rows.first().parents('tr').attr('id');
@@ -713,7 +747,7 @@ $(function() {
 	$('#solution').dialog('option', 'title', 'Решение заявки '+('0000000'+id).substr(-7));
     myPostJson('/ajax/request/getSolution/'+id, null, null,
 	  function() {
-		alert('Ошибка связи с сервером');
+		myAlert('Ошибка связи с сервером');
 		$('#solution').dialog('close');
 	  });       
 	
@@ -727,7 +761,7 @@ $(function() {
     var cmd = $(this).data('cmd');
     var rows = $('.tab'+$('#workflow').tabs('option', 'active')+' :checked');
     if (rows.length > 1)
-      alert('Выберите только одну заявку');
+      myAlert('Выберите только одну заявку');
     if (rows.length != 1)
       return;
     var list = rows.first().parents('tr').attr('id');
@@ -770,7 +804,7 @@ $(function() {
 		  $('#level').data('id', $('#level').val());
         },
         function() {
-          alert('Ошибка связи с сервером');
+          myAlert('Ошибка связи с сервером');
           $('#card').dialog('close');
         },
         function() {
@@ -807,7 +841,7 @@ $(function() {
               dataType: 'json'})
         .done(function(data) {
           if (data === null || typeof data.error !== 'undefined') {
-            alert((typeof data.error !== 'undefined') ? data.error : 'Ошибка передачи файла');
+            myAlert((typeof data.error !== 'undefined') ? data.error : 'Ошибка передачи файла');
           } else {
             $('#file').val('');
             myPostJson('/ajax/request/view/'+openCard, null,
@@ -819,7 +853,7 @@ $(function() {
           }
         })
         .fail(function() {
-            alert('Ошибка передачи файла');
+            myAlert('Ошибка передачи файла');
         });
     }
   });
@@ -913,5 +947,10 @@ $(function() {
   	else
 	  myPostJson('/ajax/problem/get/'+$('#apDivision').val());
   });
+  
+  $(document).on('click', '#myAlertOk', function() { 
+    $.unblockUI(); 
+    return false; 
+  }); 
 	
 });

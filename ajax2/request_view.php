@@ -93,7 +93,7 @@ $have = 0;
 $services = '';
 if (in_array($rights, array('admin', 'engineer')) && 'received' == $state) {
 	try {
-		$req = $db->prepare("SELECT DISTINCT `srv`.`guid`, `srv`.`name` ".
+		$req = $db->prepare("SELECT DISTINCT `srv`.`guid`, `srv`.`name`, `srv`.`autoOnly` ".
 								"FROM `contractDivisions` AS `cd` ".
 								"JOIN `divServicesSLA` AS `dss` ON `cd`.`guid` = UNHEX(REPLACE(:divisionGuid, '-', '')) AND `cd`.`isDisabled` = 0 ".
 									"AND `dss`.`contract_guid` = `cd`.`contract_guid` AND `dss`.`divType_guid` = `cd`.`type_guid` ".
@@ -106,11 +106,11 @@ if (in_array($rights, array('admin', 'engineer')) && 'received' == $state) {
 		exit;
 	}
 	while (($row = $req->fetch(PDO::FETCH_NUM))) {
-		list($servGuid, $servName) = $row;
+		list($servGuid, $servName, $autoOnly) = $row;
 		$servGuid = formatGuid($servGuid);
 		if ($servGuid == $serviceGuid)
 			$have = 1;
-		$services .= "<option value='{$servGuid}'".($servGuid == $serviceGuid ? ' selected' : '').">".htmlspecialchars($servName);
+		$services .= "<option value='{$servGuid}' data-autoonly={$autoOnly}".($servGuid == $serviceGuid ? ' selected' : '').">".htmlspecialchars($servName);
 	}
 }
 if (0 == $have)
