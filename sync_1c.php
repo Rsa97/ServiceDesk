@@ -1266,6 +1266,27 @@
 						if (!isset($prevStates[$guid])) {
 							$req1->execute(array('guid' => $guid, 'createdAt' => $createdAt, 'contactPersonGuid' => $contactPersonGuid));
 							$prevStates[$guid] = array('received', 0, $createdAt);
+							$reqN = $db->prepare("SELECT `cd`.`name` AS `division`, IFNULL(`ca1`.`name`, `ca2`.`name`) AS `contragent`, ".
+														"`e`.`cellphone` AS `cellphone`, `cd`.`smsToDuty` AS `toDuty` ".
+													"FROM `contractDivisions` AS `cd` ".
+													"LEFT JOIN `contracts` AS `c` ON `cd`.`guid` = UNHEX(REPLACE(:divisionGuid, '-', '')) ".
+														"AND `c`.`guid` = `cd`.`contract_guid` ".
+													"LEFT JOIN `contragents` AS `ca1` ON `ca1`.`guid` = `cd`.`contragent_guid` ".
+													"LEFT JOIN `contragents` AS `ca2` ON `ca1`.`guid` = `c`.`contragent_guid` ".
+													"LEFT JOIN `users` AS `e` ON `u`.`guid` = `cd`.`engineer_guid`");
+							$reqN->execute(array('divisionGuid' => $contractDivisionGuid));
+							$sms = 'Новая заявка.';
+							$cellphone = '';
+							if ($rowN = $reqN->fetch(PDO::FETCH_ASSOC)) {
+								$sms .= ' '.$rowN['contragent'].'.'.$rowN['division'];
+								if (0 == $rowN['toDuty'])
+									$cellphone = $row['cellphone'];
+							}
+							if ('' == $cellphone)
+								sms_to_duty($sms);
+							else {
+								send_sms($sms, $cellphone);
+							}
 						}
 					} catch(PDOException $e) {
 						print $e->getMessage()."\n";  
