@@ -370,3 +370,12 @@ tr.early {
 	background-color: #0073ea;
 	color: #ffffff;
 } 
+
+#sendMethods td {
+	text-align: center;
+}
+
+#sendMethods td:nth-child(1) {
+	text-align: left;
+	font-weight: bold;
+}

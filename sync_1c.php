@@ -6,6 +6,7 @@
 	include 'config/db.php';
 	include 'config/files.php';
 	include 'config/soap.php';
+	include 'ajax2/sms.php';
 	
 //	$dbHost = '127.0.0.1';
 //    $dbUser = 'root';
@@ -595,43 +596,44 @@
 		if (!TEST)
 			$db->query("UPDATE `contractDivisions` SET `update` = 0");
 		$req = $db->prepare("INSERT INTO `contractDivisions` (`guid`, `name`, `email`, `phone`, `address`, `yurAddress`, ".
-											   "`contract_guid`, `contragent_guid`, `type_guid`, `isDisabled`, `update`) ". 
+											   "`contract_guid`, `contragent_guid`, `type_guid`, `isDisabled`, `update`, `engineer_guid`) ". 
 									"VALUES (UNHEX(REPLACE(:guid, '-', '')), :name, :email, :phone, :address, :yurAddress, ".
 											"UNHEX(REPLACE(:contractGuid, '-', '')), UNHEX(REPLACE(:contragentGuid, '-', '')), ".
-											"UNHEX(REPLACE(:typeGuid, '-', '')), 0, 1) ".
+											"UNHEX(REPLACE(:typeGuid, '-', '')), 0, 1, UNHEX(REPLACE(:engineerGuid, '-', ''))) ".
 								"ON DUPLICATE KEY UPDATE `name` = VALUES(`name`), `email` = VALUES(`email`), `phone` = VALUES(`phone`), ".
 								 						"`address` = VALUES(`address`), `yurAddress` = VALUES(`yurAddress`), ".
 											   			"`contract_guid` = VALUES(`contract_guid`), ".
 											   			"`contragent_guid` = VALUES(`contragent_guid`), `type_guid` = VALUES(`type_guid`), ".
-											   			"`isDisabled` = 0");
+											   			"`isDisabled` = 0, `engineer_guid` = VALUES(`engineer_guid`)");
 		$req2 = $db->prepare("UPDATE `contractDivisions` SET `update` = 1 WHERE `guid` = UNHEX(REPLACE(:guid, '-', ''))");  
 		foreach ($xml->{'Объект'} as $obj) {
 			if ('ДокументСсылка.СоД_СервисныйДоговор' == $obj->attributes()->{'Тип'}) {
 				list($contractGuid) = parseXML($obj->{'ЗначениеПараметра'}, array('УИДОсновногоСервисногоДоговора'));
 				list($divisions) = parseXML($obj->{'ТабличнаяЧасть'}, array('!Филиалы'));
 				foreach($divisions->{'Запись'} as $div) {
-					list($guid, $name, $email, $phone, $address, $contragentGuid, $typeGuid) = 
+					list($guid, $name, $email, $phone, $address, $contragentGuid, $typeGuid, $engineerGuid) = 
 						parseXML($div->{'ЗначениеПараметра'}, 
 								 array('УИДФилиала', 'НаименованиеФилиала', 'EmailФилиала', 'ТелефонФилиала', 'ПочтовыйАдресФилиала',
-								 	   '?Контрагент', '?ТипФилиала'));
+								 	   '?Контрагент', '?ТипФилиала', '?ОтветственныйИнженер'));
 					list($yurAddress) = parseXML($div->{'Свойство'}, array('АдресФилиала'));
 					if (TEST) {
 						print "{$guid}\t{$name}\t{$email}\t{$phone}\n\t{$address}\t{$yurAddress}\n\t{$contractGuid}\t{$contragentGuid}\n{$typeGuid}\t".$req->rowCount()."\n";
 						print "INSERT INTO `contractDivisions` (`guid`, `name`, `email`, `phone`, `address`, `yurAddress`,\n".
-											   "`contract_guid`, `contragent_guid`, `type_guid`, `isDisabled`, `update`)\n". 
+											   "`contract_guid`, `contragent_guid`, `type_guid`, `isDisabled`, `update`, `engineer_guid`)\n". 
 									"VALUES (UNHEX(REPLACE('{$guid}', '-', '')), '{$name}', '{$email}', '{$phone}', '{$address}', '{$yurAddress}',\n".
 											"UNHEX(REPLACE('{$contractGuid}', '-', '')), UNHEX(REPLACE('{$contragentGuid}', '-', '')),\n".
-											"UNHEX(REPLACE('{$typeGuid}', '-', '')), 0, 1)\n".
+											"UNHEX(REPLACE('{$typeGuid}', '-', '')), 0, 1, UNHEX(REPLACE(:engineerGuid, '-', '')))\n".
 								"ON DUPLICATE KEY UPDATE `name` = VALUES(`name`), `email` = VALUES(`email`), `phone` = VALUES(`phone`),\n".
 								 						"`address` = VALUES(`address`), `yurAddress` = VALUES(`yurAddress`),\n".
 											   			"`contract_guid` = VALUES(`contract_guid`),\n".
 											   			"`contragent_guid` = VALUES(`contragent_guid`), `type_guid` = VALUES(`type_guid`),\n".
-											   			"`isDisabled` = 0\n";
+											   			"`isDisabled` = 0, `engineer_guid` = VALUES(`engineer_guid`)\n";
 					} else {
 						try {
 							$req->execute(array('guid' => $guid, 'name' => $name, 'email' => $email, 'phone' => $phone, 
 												 'address' => $address, 'yurAddress' => $yurAddress, 'contractGuid' => $contractGuid,  
-												 'contragentGuid' => $contragentGuid, 'typeGuid' => $typeGuid));
+												 'contragentGuid' => $contragentGuid, 'typeGuid' => $typeGuid, 
+												 'engineerGuid' => $engineerGuid));
 							$req2->execute(array('guid' => $guid));
 						} catch(PDOException $e) {
 							print $e->getMessage()."\n";  

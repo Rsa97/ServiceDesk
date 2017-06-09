@@ -7,6 +7,7 @@
 					'user/logout' 	=> array('file' => 'user_logout.php'),
 					'user/isAdmin'  => array('file' => 'user_isAdmin.php'),
 					'user/name'		=> array('file' => 'user_name.php'),
+					'user/messageConfig/get' => array('file' => 'user_getMessageConfig.php'),
 					'time'			=> array('file' => 'time.php'),
 					'filter/build'  => array('file' => 'filter_build.php'),
 					'filter/set' 	=> array('file' => 'filter_set.php', 

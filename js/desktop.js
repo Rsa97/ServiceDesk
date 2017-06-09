@@ -82,6 +82,16 @@ var cardBtnChange = [{text: 'Отменить',
                      }}
                   ];
 
+var userSetupBtn = [{text: 'Отменить',
+				     click: function() {
+					   $(this).dialog("close");
+				     }},
+				     {text: 'Изменить', 
+                      click: function() {
+                  	    ;
+                     }}
+                   ];
+
 // Кнопки карточки заявки в режиме обмена с базой
 var cardBtnWait = [{text: 'Идёт запрос'}];
 
@@ -408,6 +418,15 @@ $(function() {
                      draggable: false,
                      buttons: addProblemBtn
               });
+  $('#userSetup').dialog({autoOpen: false,
+  						  title: 'Способы отправки сообщений',
+                     	  resizable: false,
+                     	  dialogClass: 'no-close',
+                     	  width: 660,
+                     	  modal: true,
+                     	  draggable: false,
+                     	  buttons: userSetupBtn,
+              	});
   
   $.datepicker.setDefaults({
 	monthNames: ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'],
@@ -618,7 +637,6 @@ $(function() {
           if ($('#division').val() != '*')
 	        myPostJson('/ajax/dir/services/'+$('#division').val(), null,
 	          function() {
-	          	$('#service option[data-autoonly="1"]').remove();
 	            $('#service').parent().prev().addClass('active');
   	            $('#service').trigger('change');
          	    myPostJson('/ajax/dir/contacts/'+$('#division').val(), null,
@@ -951,6 +969,14 @@ $(function() {
   $(document).on('click', '#myAlertOk', function() { 
     $.unblockUI(); 
     return false; 
-  }); 
+  });
+  
+  $('#setup').click(function() {
+  	$('#userSetup').dialog('open');
+  	myPostJson('/ajax/user/messageConfig/get/', null, null,
+  	  function() {
+  		$('#userSetup').dialog('close');
+  	  });
+  });
 	
 });

@@ -1,33 +1,11 @@
 <?php
 include 'config/db.php';
 include 'config/soap.php';
+include 'config/events.php';
+
 include 'ajax2/common.php';
 include 'ajax2/smtp.php';
 include 'ajax2/genderByName.php';
-
-$sendto = array('open'                   => 'engineers,admins',
-				'changeState'.'received' => '',
-           		'changeState'.'accepted' => '',
-          		'changeState'.'fixed'    => '',
-           		'changeState'.'repaired' => '',
-           		'changeState'.'closed'   => '',
-           		'changeState'.'canceled' => '',
-           		'unClose'                => 'engineer',
-           		'unCancel'               => 'engineers,admins',
-           		'onWait'                 => '',
-           		'offWait'                => '',
-           		'changeDate'             => '',
-           		'comment'                => 'engineer',
-           		'addDocument'            => 'engineer',
-           		'time50'                 => 'engineer',
-           		'time20'                 => 'engineer,admins',
-           		'time00'                 => 'engineer,admins',
-           		'autoclose'              => '',
-           		'eqChange'				 => '',
-           		'changePartner'			 => '',
-           		'changeContact'			 => '',
-           		'changeService'			 => ''
-          );
 
 // Подключаемся к MySQL
 try {

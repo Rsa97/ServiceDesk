@@ -19,7 +19,7 @@
   </head>
   <body>
     <div id='header'>
-      <img src='/img/logo.png' width='230px' height='48px'><div id='user'><span id='name'> </span><button id='logout'>Выйти</button></div>
+      <img src='/img/logo.png' width='230px' height='48px'><div id='user'><span id='name'> </span><!--<button id='setup'>Настройка</button>&nbsp;--><button id='logout'>Выйти</button></div>
     </div>
   	<div id='mainPage'>
 	  	<div id='topDiv'> </div>
@@ -287,6 +287,27 @@
 	  	<div id='selectPartnerList'></div>
 	  </div>
 	  <div id='newCardDiv' style='visibility:hidden'> </div>
+	  <div id='userSetup'>
+	  	<div id='userSetupMain'>
+          <span class='cardField ileft'>
+            <label for='userRole'>Роль в системе:</label>
+            <div class='cardInput ui-search ui-widget ui-widget-content ui-corner-all'><input id='userRole' type='text' class='ui-search-input' readonly></div>
+          </span>
+		  <span class='cardField iright'>
+            <label for='userEmail'>Адрес электронной почты:</label>
+            <div class='cardInput ui-search ui-widget ui-widget-content ui-corner-all'><input id='userEmail' type='text' class='ui-search-input' readonly></div>
+          </span>
+          <span class='cardField ileft'>
+            <label for='cellPhone'>Сотовый телефон:</label>
+            <div class='cardInput ui-search ui-widget ui-widget-content ui-corner-all'><input id='cellPhone' type='text' class='ui-search-input'></div>
+          </span>
+		  <span class='cardField iright'>
+            <label for='jabberUID'>Адрес Jabber/XMPP:</label>
+            <div class='cardInput ui-search ui-widget ui-widget-content ui-corner-all'><input id='jabberUID' type='text' class='ui-search-input'></div>
+          </span>
+          <div id='sendMethods'></div>
+        </div>
+	  </div> 
 	  <div id='workflowDiv'></div>
 	  <div id='bottomDiv'>© Содействие 2013-2015</div>
 	  </div>

@@ -2,6 +2,7 @@
 
 include 'api_init.php';
 include 'func_calcTime.php';
+include 'sms.php';
 
 $equipment = null;
 if (isset($paramValues['equipment']) && preg_match('/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/', $paramValues['equipment']))
@@ -141,6 +142,34 @@ try {
 	return_format($format, array('state' => 'error', 'text' => 'Внутренняя ошибка сервера (MySQL)', 
 								 'orig' => 'MySQL error '.$e->getMessage()));
 	exit;
+}
+
+try {
+	$req = $db->prepare("SELECT `cd`.`name` AS `division`, IFNULL(`ca1`.`name`, `ca2`.`name`) AS `contragent`, ".
+								"`e`.`cellphone` AS `cellphone`, `cd`.`smsToDuty` AS `toDuty` ".
+							"FROM `contractDivisions` AS `cd` ".
+							"LEFT JOIN `contracts` AS `c` ON `cd`.`guid` = UNHEX(REPLACE(:divisionGuid, '-', '')) ".
+								"AND `c`.`guid` = `cd`.`contract_guid` ".
+							"LEFT JOIN `contragents` AS `ca1` ON `ca1`.`guid` = `cd`.`contragent_guid` ".
+							"LEFT JOIN `contragents` AS `ca2` ON `ca1`.`guid` = `c`.`contragent_guid` ".
+							"LEFT JOIN `users` AS `e` ON `u`.`guid` = `cd`.`engineer_guid`");
+	$req->execute(array('divisionGuid' => $paramValues['division']));
+} catch (Exception $e) {
+	echo json_encode(array('error' => 'Внутренняя ошибка сервера',
+							'orig' => "MySQL error".$e->getMessage()));
+	exit;
+}
+$sms = 'Новая заявка.';
+$cellphone = '';
+if ($row = $req->fetch(PDO::FETCH_ASSOC)) {
+	$sms .= ' '.$row['contragent'].'.'.$row['division'];
+	if (0 == $row['toDuty'])
+		$cellphone = $row['cellphone'];
+}
+if ('' == $cellphone)
+	sms_to_duty($sms);
+else {
+	send_sms($sms, $cellphone);
 }
 
 return_format($format, array('state' => 'ok'));
