@@ -1266,7 +1266,7 @@
 						if (!isset($prevStates[$guid])) {
 							$req1->execute(array('guid' => $guid, 'createdAt' => $createdAt, 'contactPersonGuid' => $contactPersonGuid));
 							$prevStates[$guid] = array('received', 0, $createdAt);
-							$reqN = $db->prepare("SELECT `cd`.`name` AS `division`, IFNULL(`ca1`.`name`, `ca2`.`name`) AS `contragent`, ".
+							$reqN = $db->prepare("SELECT `cd`.`name` AS `division`, `ca1`.`name` AS `contragent1`, `ca2`.`name` AS `contragent2`, ".
 														"`e`.`cellphone` AS `cellphone`, `cd`.`smsToDuty` AS `toDuty` ".
 													"FROM `contractDivisions` AS `cd` ".
 													"LEFT JOIN `contracts` AS `c` ON `cd`.`guid` = UNHEX(REPLACE(:divisionGuid, '-', '')) ".
@@ -1278,9 +1278,9 @@
 							$sms = 'Новая заявка.';
 							$cellphone = '';
 							if ($rowN = $reqN->fetch(PDO::FETCH_ASSOC)) {
-								$sms .= ' '.$rowN['contragent'].'.'.$rowN['division'];
+								$sms .= ' '.('' == $rowN['contragent1'] ? $rowN['contragent2'] : $rowN['contragent1']).'. '.$rowN['division'];
 								if (0 == $rowN['toDuty'])
-									$cellphone = $row['cellphone'];
+									$cellphone = $rowN['cellphone'];
 							}
 							if ('' == $cellphone)
 								sms_to_duty($sms);

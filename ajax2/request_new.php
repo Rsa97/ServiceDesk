@@ -133,7 +133,7 @@ try {
 }
 
 try {
-	$req = $db->prepare("SELECT `cd`.`name` AS `division`, IFNULL(`ca1`.`name`, `ca2`.`name`) AS `contragent`, ".
+	$req = $db->prepare("SELECT `cd`.`name` AS `division`, `ca1`.`name` AS `contragent1`, `ca2`.`name` AS `contragent2`, ".
 								"`e`.`cellphone` AS `cellphone`, `cd`.`smsToDuty` AS `toDuty` ".
 							"FROM `contractDivisions` AS `cd` ".
 							"LEFT JOIN `contracts` AS `c` ON `cd`.`guid` = UNHEX(REPLACE(:divisionGuid, '-', '')) ".
@@ -150,7 +150,7 @@ try {
 $sms = 'Новая заявка.';
 $cellphone = '';
 if ($row = $req->fetch(PDO::FETCH_ASSOC)) {
-	$sms .= ' '.$row['contragent'].'.'.$row['division'];
+	$sms .= ' '.('' == $row['contragent1'] ? $row['contragent2'] : $row['contragent1']).'. '.$row['division'];
 	if (0 == $row['toDuty'])
 		$cellphone = $row['cellphone'];
 }
