@@ -148,11 +148,11 @@ try {
 	$req = $db->prepare("SELECT `cd`.`name` AS `division`, `ca1`.`name` AS `contragent1`, `ca2`.`name` AS `contragent2`, ".
 								"`e`.`cellphone` AS `cellphone`, `cd`.`smsToDuty` AS `toDuty` ".
 							"FROM `contractDivisions` AS `cd` ".
-							"LEFT JOIN `contracts` AS `c` ON `cd`.`guid` = UNHEX(REPLACE(:divisionGuid, '-', '')) ".
+							"JOIN `contracts` AS `c` ON `cd`.`guid` = UNHEX(REPLACE(:divisionGuid, '-', '')) ".
 								"AND `c`.`guid` = `cd`.`contract_guid` ".
 							"LEFT JOIN `contragents` AS `ca1` ON `ca1`.`guid` = `cd`.`contragent_guid` ".
 							"LEFT JOIN `contragents` AS `ca2` ON `ca1`.`guid` = `c`.`contragent_guid` ".
-							"LEFT JOIN `users` AS `e` ON `u`.`guid` = `cd`.`engineer_guid`");
+							"LEFT JOIN `users` AS `e` ON `e`.`guid` = `cd`.`engineer_guid`");
 	$req->execute(array('divisionGuid' => $paramValues['division']));
 } catch (Exception $e) {
 	echo json_encode(array('error' => 'Внутренняя ошибка сервера',
