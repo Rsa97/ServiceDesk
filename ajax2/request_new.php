@@ -157,7 +157,7 @@ if ($row = $req->fetch(PDO::FETCH_ASSOC)) {
 if ('' == $cellphone)
 	sms_to_duty($sms);
 else {
-	send_sms($sms, $cellphone);
+	send_sms($sms, '7'.$cellphone);
 }
 
 echo json_encode(array('ok' => 'ok')); 

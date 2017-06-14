@@ -1286,7 +1286,7 @@
 								if ('' == $cellphone)
 									sms_to_duty($sms);
 								else {
-									send_sms($sms, $cellphone);
+									send_sms($sms, '7'.$cellphone);
 								}
 							}
 						}
