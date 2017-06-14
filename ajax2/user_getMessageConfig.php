@@ -27,11 +27,12 @@ while ($row = $req->fetch(PDO::FETCH_ASSOC))
 
 $table .= '<tbody>';
 foreach($eventNames as $code => $name) {
-	$sendToRights = explode(',', $sendto[$code]);
-	if (in_array($rights, $sendToRights) || in_array($rights.'s', $sendToRights)) {
+	if (in_array($rights, $sendto[$code]) || in_array($rights.'s', $sendto[$code])) {
 		$table .= "<tr data-id='{$code}'><td>".htmlspecialchars($name);
 		foreach($sendMethodNames as $mCode => $mName)
-			$table .= "<td data-id='{$mCode}'><input type='checkbox'".(in_array($code, $enabled[$mCode]) ? ' checked' : '').">";
+			$table .= "<td data-id='{$mCode}'><input type='checkbox'".
+					  ((in_array($code, $enabled[$mCode]) || ('email' == $mCode &&  in_array($rights, $forcedSendTo[$code]))) ? ' checked' : '').
+					  (('email' == $mCode && in_array($rights, $forcedSendTo[$code])) ? ' disabled' : '').">";
 	}
 }
 
@@ -43,10 +44,10 @@ try {
 							'orig' => "MySQL error ".$e->getMessage()));
 	exit;
 }
-
 $row = $req->fetch(PDO::FETCH_ASSOC);
+$cellPhone = ('' != $row['cellPhone'] ? '+7'.$row['cellPhone'] : '');
 
 echo json_encode(array('sendMethods' => $table, '_userRole' => $rightNames[$rights], '_userEmail' => $row['email'], 
-					   '_cellPhone' => $row['cellphone'], '_jabberUID' => $row['jid']));
+					   '_cellPhone' => $cellPhone, '_jabberUID' => $row['jid']));
 exit;
 ?>

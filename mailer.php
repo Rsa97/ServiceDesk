@@ -2,10 +2,14 @@
 include 'config/db.php';
 include 'config/soap.php';
 include 'config/events.php';
+include 'config/jabber.php';
 
 include 'ajax2/common.php';
 include 'ajax2/smtp.php';
 include 'ajax2/genderByName.php';
+include 'ajax2/sms.php';
+
+include 'libphp-jabber/class.jabber.php'; 
 
 // Подключаемся к MySQL
 try {
@@ -33,12 +37,12 @@ if ($row = $req->fetch(PDO::FETCH_NUM)) {
 } 
 
 // Сброс статуса отправки всех событий! Только для разработки!
-//$db->query("UPDATE `requestEvents` SET `mailed` = 0");
-//$db->query("UPDATE `requests` SET `alarm` = 0");
+// $db->query("UPDATE `requestEvents` SET `mailed` = 0");
+// $db->query("UPDATE `requests` SET `alarm` = 0");
 
 // Получаем список администраторов, операторов, инженеров и партнёров
 try {
-	$req = $db->prepare("SELECT `guid`, `firstName`, `lastName`, `middleName`, `email`, IF(0 = `isDisabled`, `rights`, 'none')  FROM `users`");
+	$req = $db->prepare("SELECT `guid`, `firstName`, `lastName`, `middleName`, `email`, IF(0 = `isDisabled`, `rights`, 'none'), `cellPhone`, `jid` FROM `users` WHERE `isDisabled` = 0");
 	$req->execute();
 } catch (PDOException $e) {
 	print("Ошибка MySQL ".$e->getMessage()."\n");
@@ -49,7 +53,7 @@ $users = array();
 $userRights = array();
 
 while ($row = $req->fetch(PDO::FETCH_NUM)) {
-	list($uid, $givenName, $familyName, $middleName, $email, $rights) = $row;
+	list($uid, $givenName, $familyName, $middleName, $email, $rights, $cellPhone, $jid) = $row;
 	$uid = formatGuid($uid); 
   	if ($email != '') {
   		$rights .= 's';
@@ -58,11 +62,47 @@ while ($row = $req->fetch(PDO::FETCH_NUM)) {
 	$userRights[$rights][] = $uid;
   	$users[$uid] = array('name' => nameWithInitials($familyName, $givenName, $middleName),
 	  					 'email' => $email,
-	  					 'gender' => genderByNames($givenName, $middleName, $familyName));
+	  					 'gender' => genderByNames($givenName, $middleName, $familyName),
+						 'cellPhone' => $cellPhone,
+						 'jid' => $jid);
   }
 }
 
 $msgList = array();
+
+// Формируем список методов рассылки
+$sendList = array();
+try {
+	$req = $db->prepare("SELECT `user_guid`, `method`, `event` FROM `sendMethods`");
+	$req->execute();
+} catch (PDOException $e) {
+		print("Ошибка MySQL ".$e->getMessage()."\n");
+		exit;
+}
+
+while($row = $req->fetch()) {
+	list($userGuid, $method, $event) = $row;
+	$userGuid = formatGuid($userGuid);
+	if (!isset($sendList[$event]))
+		$sendList[$event] = array();
+	if (!isset($sendList[$event][$method]))
+		$sendList[$event][$method] = array();
+	$sendList[$event][$method][] = $userGuid;
+}
+
+foreach($forcedSendTo as $event => $rightsList) {
+	foreach($rightsList as $rights) {
+		$rights .= 's';
+		foreach($userRights[$rights] as $user) {
+			if (!isset($sendList[$event]))
+				$sendList[$event] = array();
+			if (!isset($sendList[$event]['email']))
+				$sendList[$event]['email'] = array();
+			if (!in_array($user, $sendList[$event]['email']))
+				$sendList[$event]['email'][] = $user;
+		}
+	}
+}
 
 // Обрабатываем события
 $i = 0;
@@ -110,8 +150,7 @@ while (true) {
     		$event .= $newState;
   		$text = '';
 		$html = '';
-		if ($sendto[$event] == '')
-			continue;
+		$sms = '';
 		$authorName = (isset($users[$authorId]) ? $users[$authorId]['name'] : 'Неизвестный');
 		$authorGender = (isset($users[$authorId]) ? $users[$authorId]['gender'] : 1);
 		switch($event) {
@@ -120,75 +159,80 @@ while (true) {
   					$eq = 'не указано';
 				else
 					$eq = "{$eqMfg} {$eqModel}, сервисный номер {$servNum}";
-	    		$text = "- Появилась новая заявка №{$reqId}, уровень критичности - {$slaLevels[$slaLevel]}\r\n".
+				$problem = preg_replace('/(?:\r?\n)+/', "\r\n", $problem);
+	    		$text = "- Поступила новая заявка №{$reqId}, уровень критичности - {$slaLevels[$slaLevel]}\r\n".
 	    			 	"  Автор: {$authorName} ({$div}, {$contragent})\r\n".
 	    			 	"  Оборудование: {$eq}\r\n".
 	    			 	"  Проблема: {$problem}\r\n";
-				$problem = preg_replace('/\r?\n/', '<br>', htmlspecialchars($problem));
-	    		$html = "<li>Появилась новая заявка №{$reqId}, уровень критичности - {$slaLevels[$slaLevel]}<br>".
+				$problem = preg_replace('/(?:\r?\n)+/', '<br>', htmlspecialchars($problem));
+	    		$html = "<li>Поступила новая заявка №{$reqId}, уровень критичности - {$slaLevels[$slaLevel]}<br>".
 	    			 	"Автор: {$authorName} ({$div}, {$contragent})<br>".
 	    			 	"Оборудование: {$eq}<br>".
 	    			 	"Проблема: {$problem}";
+				$dName = $contragent.(('' == $div || '' == $contragent) ? '' : '. ').$div.('' == $div ? '' : '. ');
+				$sms = "Новая заявка №{$reqId}. {$dName}Уровень критичности - {$slaLevels[$slaLevel]}";
 	    		$isOpened[] = $reqId;
 	    		break;
 			case 'changeState'.'accepted':
 				$text = "- {$authorName} принял".($authorGender >= 0 ? '' : 'а')." заявку к исполнению\r\n";
 				$html = "<li>{$authorName} принял".($authorGender >= 0 ? '' : 'а')." заявку к исполнению";
+				$sms = "{$authorName} принял".($authorGender >= 0 ? '' : 'а')." заявку №{$reqId} к исполнению";
 				break;
 			case 'changeState'.'repaired':
 				$text = "- {$authorName} отметил".($authorGender >= 0 ? '' : 'а')." заявку как выполненную\r\n".
 					 	"  Если в течение трёх дней Вы не отмените закрытие заявки, то она будет закрыта автоматически\r\n";
 				$html = "<li>{$authorName} отметил ".($authorGender >= 0 ? '' : 'а')." заявку как выполненную<br>".
 					 	"Если в течение трёх дней Вы не отмените закрытие заявки, то она будет закрыта автоматически";
+				$sms =  "{$authorName} отметил".($authorGender >= 0 ? '' : 'а')." заявку №{$reqId} как выполненную";
 				break;
 			case 'changeDate':
 				$text = "- Контрольный срок завершения работ по заявке был перенесён на {$evText}\r\n";
-				$evText = preg_replace('/\r?\n/', '<br>', htmlspecialchars($evText));
+				$evText = preg_replace('/(?:\r?\n)+/', '<br>', htmlspecialchars($evText));
 				$html = "<li>Контрольный срок завершения работ по заявке был перенесён на {$evText}";
+				$sms = "Контрольный срок завершения работ по заявке №{$reqId} был перенесён на {$evText}";
 				break;
 			case 'comment':
 				$text = "- {$authorName} добавил".($authorGender >= 0 ? '' : 'а')." комментарий:\r\n".
 						"  {$evText}";
-				$evText = preg_replace('/\r?\n/', '<br>', htmlspecialchars($evText));
+				$evText = preg_replace('/(?:\r?\n)+/', '<br>', htmlspecialchars($evText));
 				$html = "<li>{$authorName} добавил".($authorGender >= 0 ? '' : 'а')." комментарий:<br>".
 						"{$evText}";
-				break;
-			case 'comment':
-				$text = "- {$authorName} добавил".($authorGender >= 0 ? '' : 'а')." комментарий:\r\n".
-						"  {$evText}\n";
-				$evText = preg_replace('/\r?\n/', '<br>', htmlspecialchars($evText));
-				$html = "<li>{$authorName} добавил".($users[$authorId]['gender'] >= 0 ? '' : 'а')." комментарий:<br>".
-						"{$evText}";
+				$sms = "{$authorName} добавил".($authorGender >= 0 ? '' : 'а')." комментарий к заявке №{$reqId}"; 
 				break;
 			case 'addDocument':
 				$text = "- {$authorName} добавил".($authorGender >= 0 ? '' : 'а')." файл '{$document}'\r\n";
 				$html = "<li>{$authorName} добавил".($authorGender >= 0 ? '' : 'а')." файл '".htmlspecialchars($document)."'";
+				$sms = "{$authorName} добавил".($authorGender >= 0 ? '' : 'а')." файл '{$document}' к заявке №{$reqId}";
 				break;
 			case 'eqChange':
 				$text = "- {$authorName} изменил".($authorGender >= 0 ? '' : 'а')." оборудование\r\n".
 						"  {$evText}\n";
-				$evText = preg_replace('/\r?\n/', '<br>', htmlspecialchars($evText));
+				$evText = preg_replace('/(?:\r?\n)+/', '<br>', htmlspecialchars($evText));
 				$html = "<li>{$authorName} изменил".($authorGender >= 0 ? '' : 'а')." оборудование <br>".
 						"{$evText}";
+				$sms = "{$authorName} изменил".($authorGender >= 0 ? '' : 'а')." оборудование в заявке №{$reqId}";
 				break;
 			case 'onWait':
 				$text = "- {$authorName} приостановил".($authorGender >= 0 ? '' : 'а')." выполнение заявки\r\n".
 						"  Причина: {$evText}\r\n";
-				$evText = preg_replace('/\r?\n/', '<br>', htmlspecialchars($evText));
+				$evText = preg_replace('/(?:\r?\n)+/', '<br>', htmlspecialchars($evText));
 				$html = "<li>{$authorName} приостановил".($authorGender >= 0 ? '' : 'а')." выполнение заявки<br>".
 						"Причина: {$evText}";
+				$sms = "{$authorName} приостановил".($authorGender >= 0 ? '' : 'а')." выполнение заявки №{$reqId}";
 				break;
 			case 'offWait':
 				$text = "- {$authorName} возобновил".($authorGender >= 0 ? '' : 'а')." выполнение заявки\r\n".
 						"  Примечание: {$evText}\r\n";
-				$evText = preg_replace('/\r?\n/', '<br>', htmlspecialchars($evText));
+				$evText = preg_replace('/(?:\r?\n)+/', '<br>', htmlspecialchars($evText));
 				$html = "<li>{$authorName} возобновил".($authorGender >= 0 ? '' : 'а')." выполнение заявки<br>".
 						"Примечание: {$evText}";
+				$sms = "{$authorName} возобновил".($authorGender >= 0 ? '' : 'а')." выполнение заявки №{$reqId}";
 				break;
 			case 'changePartner':
 				$text = "- {$authorName} назначил".($authorGender >= 0 ? '' : 'а')." заявку партнёру {$evText}\r\n";
-				$evText = preg_replace('/\r?\n/', '<br>', htmlspecialchars($evText));
+				$evText = preg_replace('/(?:\r?\n)+/', '<br>', htmlspecialchars($evText));
 				$html = "<li>{$authorName} назначил".($authorGender >= 0 ? '' : 'а')." заявку партнёру {$evText}<br>";
+				$sms = "{$authorName} назначил".($authorGender >= 0 ? '' : 'а')." заявку №{$reqId} партнёру {$evText}";
 				break;
 			case 'changeContact':
 				break;
@@ -201,7 +245,8 @@ while (true) {
   								 	'html' => $html,
   								 	'contId' => $contId,
   								 	'engId' => $engId,
-  								 	'divId' => $divId);
+  								 	'divId' => $divId,
+									'sms' => $sms);
 	}
 }
 
@@ -338,8 +383,6 @@ try {
 } 
 
 foreach ($times as $id => $event) {
-	if ($sendto[$event] == '')
-		continue;
 	try {
 		$req->execute(array('id' => $id));
 	} catch (PDOException $e) {
@@ -355,20 +398,24 @@ foreach ($times as $id => $event) {
 			case 'time00':
 				$text = "- !!! Заявка просрочена! Ответственный - {$engineerName}\r\n";
 				$html = "<li><span class='error'>Заявка просрочена! Ответственный - {$engineerName}</span>";
+				$sms = "Заявка №{$reqId} просрочена! Ответственный - {$engineerName}";
 				break;
 			case 'time20':
 				$text = "- !! По заявке осталось меньше 20% времени до контрольного срока завершения работ!\r\n".
 						"  Ответственный - {$engineerName}\r\n";
 				$html = "<li><span class='warn'>По заявке осталось меньше 20% времени до контрольного срока завершения работ!<br>".
 						"Ответственный - {$engineerName}</span>";
+				$sms = "По заявке №{$reqId} осталось меньше 20% времени до контрольного срока завершения работ!";
 				break;
 			case 'time50':
 				$text = "- !! По заявке осталось меньше 50% времени до контрольного срока завершения работ\r\n";
 				$html = "<li><span class='warn'>По заявке осталось меньше 50% времени до контрольного срока завершения работ</span>";
+				$sms = "По заявке №{$reqId} осталось меньше 50% времени до контрольного срока завершения работ!";
 				break;
 			case 'autoclose':
 				$text = "- Заявка была закрыта автоматически по истечении контрольного срока\r\n";
 				$html = "<li>Заявка была закрыта автоматически по истечении контрольного срока";
+				$sms = "Заявка №{$reqId} была закрыта автоматически по истечении контрольного срока";
 				break;
 		}
 		if ($text != '')
@@ -377,38 +424,58 @@ foreach ($times as $id => $event) {
  									 	'html' => $html,
  									 	'contId' => $contId,
  									 	'engId' => $engId,
- 									 	'divId' => $divId);
+ 									 	'divId' => $divId,
+										'sms' => $sms);
 	}
 }
 
-// Формируем список рассылки
+// Формируем списки рассылки
 $mails = array();
 $names = array();
+$smss = array();
+$jabs = array();
 foreach ($msgList as $reqId => $msgs) {
 	foreach ($msgs as $msg) {
-		$ids = array();
-		foreach(split(',', $sendto[$msg['event']]) as $to) {
+		foreach($sendto[$msg['event']] as $to) {
 			switch ($to) {
-				case 'contact':
+				case 'client':
 					if ($msg['contId'] == '')
 						break;
-					if (!in_array($msg['contId'], $ids)) {
+					if (isset($sendList[$msg['event']]['email']) && in_array($msg['contId'], $sendList[$msg['event']]['email'])) {
 						if (!isset($mails[$msg['contId']][$reqId]))
 							$mails[$msg['contId']][$reqId] = array('text' => '', 'html' => '');
 						$mails[$msg['contId']][$reqId]['text'] .= $msg['text'];
 						$mails[$msg['contId']][$reqId]['html'] .= $msg['html'];
-						$ids[] = $msg['contId'];
+					}
+					if (isset($sendList[$msg['event']]['sms']) && in_array($msg['contId'], $sendList[$msg['event']]['sms'])) {
+						if (!isset($smss[$msg['contId']][$reqId]))
+							$smss[$msg['contId']][$reqId] = array();
+						$smss[$msg['contId']][$reqId][] .= $msg['sms'];
+					}
+					if (isset($sendList[$msg['event']]['jabber']) && in_array($msg['contId'], $sendList[$msg['event']]['jabber'])) {
+						if (!isset($jabs[$msg['contId']][$reqId]))
+							$jabs[$msg['contId']][$reqId] = '';
+						$jabs[$msg['contId']][$reqId] .= $msg['text'];
 					}
 					break;
 				case 'engeneer':
 					if ($msg['engId'] == '')
 						break;
-					if (!in_array($msg['engId'])) {
+					if (!in_array($msg['engId'], $sendList[$msg['event']]['email'])) {
 						if (!isset($mails[$msg['engId']][$reqId]))
 							$mails[$msg['engId']][$reqId] = array('text' => '', 'html' => '');
 						$mails[$msg['engId']][$reqId]['text'] .= $msg['text'];
 						$mails[$msg['engId']][$reqId]['html'] .= $msg['html'];
-						$ids[] = $msg['engId'];
+					}
+					if (!in_array($msg['engId'], $sendList[$msg['event']]['sms'])) {
+						if (!isset($smss[$msg['engId']][$reqId]))
+							$smss[$msg['engId']][$reqId] = array();
+						$smss[$msg['engId']][$reqId]['text'][] = $msg['sms'];
+					}
+					if (!in_array($msg['engId'], $sendList[$msg['event']]['jabber'])) {
+						if (!isset($jabs[$msg['engId']][$reqId]))
+							$jabs[$msg['engId']][$reqId] = '';
+						$jabs[$msg['engId']][$reqId] .= $msg['text'];
 					}
 					break;
 				case 'engeneers':
@@ -417,12 +484,21 @@ foreach ($msgList as $reqId => $msgs) {
 					if (!isset($userRights[$to]))
 						break;
 					foreach ($userRights[$to] as $uid) {
-						if (!in_array($uid)) {
+						if (isset($sendList[$msg['event']]['email']) && in_array($uid, $sendList[$msg['event']]['email'])) {
 							if (!isset($mails[$uid][$reqId]))
 								$mails[$uid][$reqId] = array('text' => '', 'html' => '');
 							$mails[$uid][$reqId]['text'] .= $msg['text'];
 							$mails[$uid][$reqId]['html'] .= $msg['html'];
-							$ids[] = $uid;
+						}
+						if (isset($sendList[$msg['event']]['sms']) && in_array($uid, $sendList[$msg['event']]['sms'])) {
+							if (!isset($smss[$uid][$reqId]))
+								$smss[$uid][$reqId] = array();
+							$smss[$uid][$reqId][] .= $msg['sms'];
+						}
+						if (isset($sendList[$msg['event']]['jabber']) && in_array($uid, $sendList[$msg['event']]['jabber'])) {
+							if (!isset($jabs[$uid][$reqId]))
+								$jabs[$uid][$reqId] = '';
+							$jabs[$uid][$reqId] .= $msg['text'];
 						}
 					}
 					break;
@@ -431,8 +507,9 @@ foreach ($msgList as $reqId => $msgs) {
 	}
 }
 
+// Рассылаем электронную почту 
 foreach ($mails as $uid => $requests) {
-	print "----------------------\n";
+//	print "----------------------\n";
 	if (!isset($users[$uid]) || $users[$uid]['email'] == '')
 		break;
 	foreach ($requests as $reqId => $mail) {
@@ -458,8 +535,48 @@ foreach ($mails as $uid => $requests) {
 		else 
 			$subj = "События по заявке №{$reqId}";
 		smtpmail($users[$uid]['email'], $users[$uid]['name'], $subj, $msg['body'], $msg['header']);
-		print "{$users[$uid]['email']} - {$users[$uid]['name']} - {$reqId} - {$subj}\n{$mail['text']}\n";
+//		print "{$users[$uid]['email']} - {$users[$uid]['name']} - {$reqId} - {$subj}\n{$mail['text']}\n";
 	}	
+}
+
+// Рассылаем SMS 
+foreach ($smss as $uid => $requests) {
+//	print "----------------------\n";
+	if (!isset($users[$uid]) || $users[$uid]['cellPhone'] == '')
+		break;
+	foreach ($requests as $reqId => $sms) {
+		foreach($sms as $message) {
+			send_sms('7'.$users[$uid]['cellPhone'], $message);
+//			print "7{$users[$uid]['cellPhone']} - {$message}\n";
+		}
+	}	
+}
+
+print_r($jabs);
+// Рассылаем сообщения в Jabber 
+$jabber = new Jabber();
+$jabber->server = $jaServer;
+$jabber->port = $jaPort;
+$jabber->username = $jaUser;
+$jabber->password = $jaPass;
+$jabber->resource = $jaResource;
+if ($jabber->Connect()) {
+    if ($jabber->SendAuth() && $jabber->SendPresence(null, null, 'online')) {
+		foreach ($jabs as $uid => $requests) {
+//			print "----------------------\n";
+			if (!isset($users[$uid]) || $users[$uid]['jid'] == '')
+				break;
+			foreach ($requests as $reqId => $text) {
+				if (in_array($reqId, $isOpened))
+					$subj = "Открыта новая заявка №{$reqId}";
+				else 
+					$subj = "События по заявке №{$reqId}";
+	    		$jabber->SendMessage($users[$uid]['jid'], 'normal', null, array('subject' => $subj, 'body' => $message));
+//				print "{$users[$uid]['jid']} - {$subj} - {$text}\n";
+			}	
+		}
+    }
+    $jabber->Disconnect();
 }
 
 ?>

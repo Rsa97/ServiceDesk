@@ -88,7 +88,31 @@ var userSetupBtn = [{text: 'Отменить',
 				     }},
 				     {text: 'Изменить', 
                       click: function() {
-                  	    ;
+                      	var cellPhone = $('#cellPhone').val().trim();
+                      	if ('' != cellPhone && !cellPhone.match(/^\+?[78]9\d{9}$/)) {
+                      		myAlert("Неверный номер сотового телефона");
+                      		return;
+                      	}
+                      	cellPhone = cellPhone.substr(-10);
+                      	var jid = $('#jabberUID').val().trim();
+                      	if ('' != jid && !jid.match(/^\S+@\S+/)) {
+                      		myAlert("Неверный адрес Jabber");
+                      		return;
+                      	} 
+                      	var data = '';
+                  	    $('#sendMethods tbody tr').each(function() {
+                  	    	var evt = $(this).data('id');
+                  	    	$(this).find('td').each(function() {
+                  	    		if ($(this).children('input').prop('checked'))
+                  	    			data += evt+','+$(this).data('id')+'|';
+                  	    	});
+                  	    });
+                  	   	myPostJson('/ajax/user/messageConfig/set/', {cellPhone:cellPhone, jid:jid, data:data},
+                  	   				null, null,
+                  	   				function() {
+                  	   					$('#userSetup').dialog('close');
+                  	   				}
+                  	   			  );
                      }}
                    ];
 
