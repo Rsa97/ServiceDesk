@@ -123,7 +123,7 @@ if ($errno != 49) {
 												"`email` = :email, `phone` = :phone, `partner_guid` = NULL, `loginDB` = 'ldap' ".
 								"WHERE `login` = :user");
 		$req->execute(array('fName' => $ret['firstName'], 'lName' => $ret['lastName'], 'mName' => $ret['middleName'],
-							'user' => $user, 'hash' => $newHash, 'rights' => $rights, 'email' => $ret['mail'], 
+							'user' => $user, 'hash' => $newHash, 'rights' => $ret['rights'], 'email' => $ret['mail'], 
 							'phone' => $phone));
 	} catch (PDOException $e) {
 		ldap_close($ldap);
