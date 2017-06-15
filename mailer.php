@@ -472,7 +472,7 @@ foreach ($msgList as $reqId => $msgs) {
 					if (!in_array($msg['engId'], $sendList[$msg['event']]['sms'])) {
 						if (!isset($smss[$msg['engId']][$reqId]))
 							$smss[$msg['engId']][$reqId] = array();
-						$smss[$msg['engId']][$reqId]['text'][] = $msg['sms'];
+						$smss[$msg['engId']][$reqId][] = $msg['sms'];
 					}
 					if (!in_array($msg['engId'], $sendList[$msg['event']]['jabber'])) {
 						if (!isset($jabs[$msg['engId']][$reqId]))
