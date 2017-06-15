@@ -445,6 +445,7 @@ $jabs = array();
 foreach ($msgList as $reqId => $msgs) {
 	foreach ($msgs as $msg) {
 		foreach($sendto[$msg['event']] as $to) {
+			print "{$reqId} - {$msg['event']} - {$to}\n"; 
 			switch ($to) {
 				case 'client':
 					if ($msg['contId'] == '')
@@ -454,16 +455,19 @@ foreach ($msgList as $reqId => $msgs) {
 							$mails[$msg['contId']][$reqId] = array('text' => '', 'html' => '');
 						$mails[$msg['contId']][$reqId]['text'] .= $msg['text'];
 						$mails[$msg['contId']][$reqId]['html'] .= $msg['html'];
+						print "\tclient - email - {$msg['contId']}\n";
 					}
 					if (isset($sendList[$msg['event']]['sms']) && in_array($msg['contId'], $sendList[$msg['event']]['sms'])) {
 						if (!isset($smss[$msg['contId']][$reqId]))
 							$smss[$msg['contId']][$reqId] = array();
 						$smss[$msg['contId']][$reqId][] = $msg['sms'];
+						print "\tclient - sms - {$msg['contId']}\n";
 					}
 					if (isset($sendList[$msg['event']]['jabber']) && in_array($msg['contId'], $sendList[$msg['event']]['jabber'])) {
 						if (!isset($jabs[$msg['contId']][$reqId]))
 							$jabs[$msg['contId']][$reqId] = '';
 						$jabs[$msg['contId']][$reqId] .= $msg['text'];
+						print "\tclient - jabber - {$msg['contId']}\n";
 					}
 					break;
 				case 'engineer':
@@ -474,16 +478,19 @@ foreach ($msgList as $reqId => $msgs) {
 							$mails[$msg['engId']][$reqId] = array('text' => '', 'html' => '');
 						$mails[$msg['engId']][$reqId]['text'] .= $msg['text'];
 						$mails[$msg['engId']][$reqId]['html'] .= $msg['html'];
+						print "\tengineer - email - {$msg['engId']}\n";
 					}
 					if (!in_array($msg['engId'], $sendList[$msg['event']]['sms'])) {
 						if (!isset($smss[$msg['engId']][$reqId]))
 							$smss[$msg['engId']][$reqId] = array();
 						$smss[$msg['engId']][$reqId][] = $msg['sms'];
-					}
+						print "\tengineer - sms - {$msg['engId']}\n";
+											}
 					if (!in_array($msg['engId'], $sendList[$msg['event']]['jabber'])) {
 						if (!isset($jabs[$msg['engId']][$reqId]))
 							$jabs[$msg['engId']][$reqId] = '';
 						$jabs[$msg['engId']][$reqId] .= $msg['text'];
+						print "\tengineer - jabber - {$msg['engId']}\n";
 					}
 					break;
 				case 'engineers':
@@ -497,16 +504,19 @@ foreach ($msgList as $reqId => $msgs) {
 								$mails[$uid][$reqId] = array('text' => '', 'html' => '');
 							$mails[$uid][$reqId]['text'] .= $msg['text'];
 							$mails[$uid][$reqId]['html'] .= $msg['html'];
+							print "{$to} - email - {$uid}\n";
 						}
 						if (isset($sendList[$msg['event']]['sms']) && in_array($uid, $sendList[$msg['event']]['sms'])) {
 							if (!isset($smss[$uid][$reqId]))
 								$smss[$uid][$reqId] = array();
 							$smss[$uid][$reqId][] = $msg['sms'];
+							print "{$to} - sms - {$uid}\n";
 						}
 						if (isset($sendList[$msg['event']]['jabber']) && in_array($uid, $sendList[$msg['event']]['jabber'])) {
 							if (!isset($jabs[$uid][$reqId]))
 								$jabs[$uid][$reqId] = '';
 							$jabs[$uid][$reqId] .= $msg['text'];
+							print "{$to} - jabber - {$uid}\n";
 						}
 					}
 					break;
