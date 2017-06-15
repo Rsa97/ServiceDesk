@@ -6,7 +6,7 @@ include 'common.php';
 include 'func_calcTime.php';
 include 'init.php';
 
-$allowedTo = array('admin');
+$allowedTo = array('admin', 'engineer');
 
 if (!in_array($rights, $allowedTo)) {
 	echo json_encode(array('error' => 'Недостаточно прав.'));

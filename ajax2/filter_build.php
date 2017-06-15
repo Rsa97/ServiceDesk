@@ -49,7 +49,7 @@ $buttons = array('received' => array('admin' => array('New', 'Accept', 'Cancel')
 				 'canceled' => array('admin' => array('UnCancel'),
 									 'client' => array(),
 									 'operator' => array(),
-									 'engineer' => array(),
+									 'engineer' => array('UnCancel'),
 									 'partner' => array()));
 
 $rights = $_SESSION['user']['rights'];
