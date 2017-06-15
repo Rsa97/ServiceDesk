@@ -71,7 +71,8 @@
 		case 'init':
 			$ret = array();
 			$req = $mysqli->prepare("SELECT `d`.`name`, `d`.`email`, `d`.`phone`, `d`.`address`, `d`.`yurAddress`, `t`.`name`, ". 
-											"`c`.`name`, `u`.`guid`, `d`.`isDisabled`, `o`.`guid` ". 
+											"`c`.`name`, `u`.`guid`, `d`.`isDisabled`, `o`.`guid`, `e`.`lastName`, `e`.`firstName`, ".
+											"`e`.`middleName`, `d`.`smsToDuty` ". 
 										"FROM `contractDivisions` AS `d` ". 
     									"LEFT JOIN `divisionTypes` AS `t` ON `t`.`guid` = `d`.`type_guid` ".
     									"LEFT JOIN `contragents` AS `c` ON `c`.`guid` = `d`.`contragent_guid` ".
@@ -86,15 +87,18 @@
 												"FROM `requests` ".
 												"WHERE `currentState` NOT IN ('closed','canceled') ".
 										") AS `o` ON `o`.`guid` = `d`.`guid` ".
+										"LEFT JOIN `users` AS `e` ON `e`.`guid` = `d`.`engineer_guid` ".
     									"WHERE `d`.`guid` = UNHEX(REPLACE(?, '-', ''))");
 			$req->bind_param('s', $id);
-			$req->bind_result($divName, $divEmail, $divTel, $divAddr, $divYurAddr, $divType, $contragent, $inUse, $disabled, $haveReq);	
+			$req->bind_result($divName, $divEmail, $divTel, $divAddr, $divYurAddr, $divType, $contragent, $inUse, $disabled, $haveReq,
+							  $engLName, $engFName, $engMName, $smsToDuty);	
 			if (!$req->execute() || !$req->fetch()) {
 				returnJson(array('error' => 'Внутренняя ошибка сервера.'));
 				exit;
 			}
 			$ret['main'] = array('dContragent' => $contragent, 'dType' => $divType, 'dTel' => $divTel, 'dEmail' => $divEmail, 
-								 'dAddr' => $divAddr, 'dYurAddr' => $divYurAddr);
+								 'dAddr' => $divAddr, 'dYurAddr' => $divYurAddr, 'dEngineer' => nameFull($engLName, $engFName, $engMName),
+								 'dSMS' => ((1 == $smsToDuty ? 'Дежурному' : 'Ответственному').' инженеру'));
 			$req->close();
 			$names = join(', ', getDivisionUsers($mysqli, $id));
 			$ret['main']['dUsers'] = $names;
@@ -108,6 +112,29 @@
 			returnJson($ret);
 			exit;
 			break;
+		case 'smsChange':
+			$req = $mysqli->prepare("UPDATE `contractDivisions` ".
+										"SET `smsToDuty` = 1-`smsToDuty` ".
+    									"WHERE `guid` = UNHEX(REPLACE(?, '-', ''))");
+			$req->bind_param('s', $id);
+			if (!$req->execute()) {
+				returnJson(array('error' => 'Внутренняя ошибка сервера.'));
+				exit;
+			}
+			$req->close();
+			$req = $mysqli->prepare("SELECT `smsToDuty` ".
+										"FROM `contractDivisions` ".
+										"WHERE `guid` = UNHEX(REPLACE(?, '-', ''))");
+			$req->bind_param('s', $id);
+			$req->bind_result($smsToDuty);
+			if (!$req->execute() || !$req->fetch()) {
+				returnJson(array('error' => 'Внутренняя ошибка сервера.'));
+				exit;
+			}
+			$req->close();
+			returnJson(array('dSMS' => ((1 == $smsToDuty ? 'Дежурному' : 'Ответственному').' инженеру')));
+			exit;
+			break; 
 		case 'getlists':
 			if (!isset($paramValues['field']) || !isset($paramValues['id']) ||($id = $paramValues['id']) < 0) {
 				returnJson(array('error' => 'Ошибка в параметрах.'));

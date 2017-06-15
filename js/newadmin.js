@@ -1530,7 +1530,7 @@ $(function() {
 			$('.divisionIcons').html(icons);
 			for (var key in data.main)
             	if(data.main.hasOwnProperty(key)) {
-           			$('#'+key).text(data.main[key]);
+       				$('#'+key).text(data.main[key]);
             	}
 		});
 		tableDefs['divisionEquipment'].ajax = 'ajax/adm/divisionEq/'+$(this).val()+'/';
@@ -1713,6 +1713,13 @@ $(function() {
 			});
 		});
 	});
+	
+	$('#dSMSChange').click(function() {
+		myJson('/ajax/adm/divisions/smsChange/'+$('#selDivision').val(), null, function(data) {
+			if (typeof data.dSMS !== 'undefined')
+   				$('#dSMS').text(data.dSMS);
+		});
+	});
 
 	function select2OptColor(opt) {
 	 	if ($(opt.element).hasClass('gray')) {
@@ -1731,4 +1738,5 @@ $(function() {
 		if ($(this).hasClass('hideonstart'))
 			$(this).next().hide();
 	});
+	
 });

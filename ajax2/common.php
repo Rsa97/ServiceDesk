@@ -20,8 +20,7 @@ function nameWithInitials($lastName, $givenName, $middleName) {
 
 function nameFull($lastName, $givenName, $middleName) {
 	return $lastName.
-			('' == $givenName ? '' : (' '.$givenName.
-										('' == $middleName ? '' : (' '.$middleName))));
+		   ('' == $givenName ? '' : (' '.$givenName.('' == $middleName ? '' : (' '.$middleName))));
 }
 
 function timeToSOAP($time) {

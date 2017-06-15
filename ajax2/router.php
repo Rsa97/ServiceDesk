@@ -242,7 +242,7 @@
 										'required' => array('contId', 'call')),
 					'adm/divisions' => array('file' => 'adm_divisions.php',
 										'get' => array('call', 'id'),
-										'filters' => array('call' => '/^init$/',
+										'filters' => array('call' => '/^(?:init|smsChange)$/',
 														   'id' => '/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/'),
 										'required' => array('call', 'id')),
 					'adm/divisionEq' => array('file' => 'adm_divisionEq.php',
