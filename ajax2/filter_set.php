@@ -240,9 +240,10 @@ while ($row = $req->fetch(PDO::FETCH_NUM)) {
 		$fixColor = ($fixedAt == '' ? ('rgb('.floor(255*$fixPercent).','.floor(255*(1-$fixPercent)).',0)') : '#808080');
 		$repairColor = ($state == 'closed' ? '#808080' : 
 						($repairedAt == '' ? ('rgb('.floor(255*$repairPercent).','.floor(255*(1-$repairPercent)).',0)') : 'yellow'));
-		$timeComment = ($reactedAt == '' ? ("Принять до ".date_format(date_create($reactBefore), 'd.m.Y H:i')) : 
+		$timeComment = ($reactedAt == '' ? (1 == $onWait ? ("Приостановлено ".date_format(date_create($onWaitAt), 'd.m.Y H:i')) :
+						("Принять до ".date_format(date_create($reactBefore), 'd.m.Y H:i'))) : 
 						("Принято ".date_format(date_create($reactedAt), 'd.m.Y H:i')))."\n".
-                     	($fixedAt == '' ? (1 == $onWait ? ("Приостановлено ".date_format(date_create($onWaitAt), 'd.m.Y H:i')) : 
+                     	($fixedAt == '' ? (1 == $onWait ? ('' == $reactedAt ? '' : ("Приостановлено ".date_format(date_create($onWaitAt), 'd.m.Y H:i'))) : 
                      	 ("Восстановить до ".date_format(date_create($fixBefore), 'd.m.Y H:i'))) : 
                      	 ("Восстановлено ".date_format(date_create($fixedAt), 'd.m.Y H:i')))."\n".
                      	($repairedAt == '' ? (1 == $onWait ? ('' == $fixedAt ? '' : ("Приостановлено ".date_format(date_create($onWaitAt), 'd.m.Y H:i'))) : 

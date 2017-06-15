@@ -1271,36 +1271,51 @@
 							} else {
 								if (1 == $prevStates[$guid][1]) { // Заявка снята с ожидания
 									try {
-										// Пробуем получить время последней приостановки заявки  
-										$reqX = $db->prepare("SELECT MAX(`timestamp`) ".
-																"FROM `requestEvents` ".
-																"WHERE `request_guid` = UNHEX(REPLACE(:requestGuid, '-', '')) AND 'onWait' = `event`");
+										// Получаем данные заявки
+										$reqX = $db->prepare("SELECT `createdAt`, `toReact`, `toFix`, `toRepair`, `contractDivision_guid`, ".
+																	"`service_guid`, `slaLevel` ".
+																"FROM `requests` ".
+																"WHERE `guid` = UNHEX(REPLACE(:requestGuid, '-', ''))");
 										$reqX->execute(array('requestGuid' => $guid));
-										if ($rowX = $reqX->fetch(PDO::FETCH_NUM)) {
-											$reqX = $db->prepare("SELECT calcTime_v4(:requestId, :startTime, NOW())");
-											$reqX->execute(array('requestId' => $paramValues['id'], 'startTime' => $rowX[0]));
-											if ($rowX = $reqX->fetch(PDO::FETCH_NUM))
-												$tsDelta = $rowX[0];
-											switch ($state) {
-												case 'received':
-												case 'accepted':
-													$toFix += $tsDelta;
-													$fixBefore = calcTime2($db, $divGuid, $servGuid, $sla, $createdAt, $toFix);
-												case 'fixed':
-													$toRepair += $tsDelta;
-													$repairBefore = calcTime2($db, $divGuid, $servGuid, $sla, $createdAt, $toRepair);
-													break;
+										if ($row = $reqX->fetch(PDO::FETCH_NUM)) {
+											list($createdAt, $toReact, $toFix, $toRepair, $divGuid, $servGuid, $sla) = $row;
+											$divGuid = formatGuid($divGuid);
+											$servGuid = formatGuid($servGuid);
+										// Пробуем получить время последней приостановки заявки  
+											$reqX = $db->prepare("SELECT MAX(`timestamp`) ".
+																	"FROM `requestEvents` ".
+																	"WHERE `request_guid` = UNHEX(REPLACE(:requestGuid, '-', '')) AND 'onWait' = `event`");
+											$reqX->execute(array('requestGuid' => $guid));
+											if ($rowX = $reqX->fetch(PDO::FETCH_NUM)) {
+												$reqX = $db->prepare("SELECT calcTime_v4(:requestId, :startTime, $evTime)");
+												$reqX->execute(array('requestId' => $paramValues['id'], 'startTime' => $rowX[0]));
+												if ($rowX = $reqX->fetch(PDO::FETCH_NUM))
+													$tsDelta = $rowX[0];
+												switch ($state) {
+													case 'received':
+														$toReact += $tsDelta;
+														$reactBefore = calcTime2($db, $divGuid, $servGuid, $sla, $createdAt, $toReact);
+													case 'accepted':
+														$toFix += $tsDelta;
+														$fixBefore = calcTime2($db, $divGuid, $servGuid, $sla, $createdAt, $toFix);
+													case 'fixed':
+														$toRepair += $tsDelta;
+														$repairBefore = calcTime2($db, $divGuid, $servGuid, $sla, $createdAt, $toRepair);
+														break;
+												}
+												$reqX = $db->prepare("UPDATE `requests` SET `toReact` = :toReact, `reactBefore` = :reactBefore, ".
+																							"`toFix` = :toFix, `fixBefore` = :fixBefore, ".
+																							"`toRepair` = :toRepair, `repairBefore` = :repairBefore, ".
+																							"`totalWait` = `totalWait`+:delta ".
+																		"WHERE `guid` = UNHEX(REPLACE(:requestGuid, '-', ''))");
+												$reqX->execute(array('toReact' => $toReact, 'reactBefore' => $reactBefore, 'toFix' => $toFix, 
+																	 'fixBefore' => $fixBefore, 'toRepair' => $toRepair, 'repairBefore' => $repairBefore, 
+																	 'requestGuid' => $guid, 'delta' => $tsDelta));
 											}
-											$reqX = $db->prepare("UPDATE `requests` SET `toFix` = :toFix, `fixBefore` = :fixBefore, ".
-																						"`toRepair` = :toRepair, `repairBefore` = :repairBefore, ".
-																						"`totalWait` = `totalWait`+:delta ".
-																	"WHERE `id` = :requestId");
-											$reqX->execute(array('toFix' => $toFix, 'fixBefore' => $fixBefore, 'toRepair' => $toRepair, 'repairBefore' => $repairBefore, 
-																'requestId' => $paramValues['id'], 'delta' => $tsDelta));
 										}
 									} catch(PDOException $e) {
 										print $e->getMessage()."\n";
-									}  
+									}
 								}
 								if ('_5Отменена' == $prevStates[$guid]) {
 									try {

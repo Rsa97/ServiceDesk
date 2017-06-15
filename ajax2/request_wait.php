@@ -18,7 +18,7 @@ $cause = trim($paramValues['cause']);
 try {
 // Получаем список заявок с проверкой прав доступа
 	$req = $db->prepare("SELECT DISTINCT `rq`.`guid` AS `guid`, `rq`.`onWait` AS `onWait`, `rq`.`currentState` AS `state`, ".
-										"`rq`.`createdAt`, `rq`.`toFix`, `rq`.`toRepair`, `rq`.`contractDivision_guid`, ".
+										"`rq`.`createdAt`, `rq`.`toReact`, `rq`.`toFix`, `rq`.`toRepair`, `rq`.`contractDivision_guid`, ".
 										"`rq`.`service_guid`, `rq`.`slaLevel` ".
           					"FROM `requests` AS `rq` ".
             				"JOIN `contractDivisions` AS `div` ON `rq`.`id` = :requestId ".
@@ -47,7 +47,7 @@ if (null === $row[0]) {
 	exit;
 }
 
-list($guid, $onWait, $state, $createdAt, $toFix, $toRepair, $divGuid, $servGuid, $sla) = $row;
+list($guid, $onWait, $state, $createdAt, $toReact, $toFix, $toRepair, $divGuid, $servGuid, $sla) = $row;
 $guid = formatGuid($guid);
 $divGuid = formatGuid($divGuid);
 $servGuid = formatGuid($servGuid);
@@ -108,6 +108,8 @@ try {
 				$tsDelta = $row[0];
 			switch ($state) {
 				case 'received':
+					$toReact += $tsDelta;
+					$reactBefore = calcTime2($db, $divGuid, $servGuid, $sla, $createdAt, $toReact);
 				case 'accepted':
 					$toFix += $tsDelta;
 					$fixBefore = calcTime2($db, $divGuid, $servGuid, $sla, $createdAt, $toFix);
@@ -116,12 +118,13 @@ try {
 					$repairBefore = calcTime2($db, $divGuid, $servGuid, $sla, $createdAt, $toRepair);
 					break;
 			}
-			$req = $db->prepare("UPDATE `requests` SET `toFix` = :toFix, `fixBefore` = :fixBefore, ".
-														"`toRepair` = :toRepair, `repairBefore` = :repairBefore, ".
+			$req = $db->prepare("UPDATE `requests` SET `toReact` = :toReact, `reactBefore` = :reactBefore, `toFix` = :toFix, ".
+														"`fixBefore` = :fixBefore, `toRepair` = :toRepair, `repairBefore` = :repairBefore, ".
 														"`totalWait` = `totalWait`+:delta ".
 									"WHERE `id` = :requestId");
-			$req->execute(array('toFix' => $toFix, 'fixBefore' => $fixBefore, 'toRepair' => $toRepair, 'repairBefore' => $repairBefore, 
-								'requestId' => $paramValues['id'], 'delta' => $tsDelta));
+			$req->execute(array('toFix' => $toFix, 'toReact' => $toReact, 'reactBefore' => $reactBefore, 'fixBefore' => $fixBefore, 
+								'toRepair' => $toRepair, 'repairBefore' => $repairBefore, 'requestId' => $paramValues['id'], 
+								'delta' => $tsDelta));
 		}
 	}
 	// Изменяем состояние запроса
