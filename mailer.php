@@ -431,6 +431,9 @@ foreach ($times as $id => $event) {
 	}
 }
 
+print "\n\n--- msgList ---\n";
+print_r($msgList);
+
 // Формируем списки рассылки
 $mails = array();
 $names = array();
