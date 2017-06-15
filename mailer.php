@@ -106,6 +106,9 @@ foreach($forcedSendTo as $event => $rightsList) {
 	}
 }
 
+print("\n\n--- sendList ---\n");
+print_r($sendList);
+
 // Обрабатываем события
 $i = 0;
 try {
@@ -564,7 +567,6 @@ foreach ($smss as $uid => $requests) {
 	}	
 }
 
-print_r($jabs);
 // Рассылаем сообщения в Jabber 
 $jabber = new Jabber();
 $jabber->server = $jaServer;
