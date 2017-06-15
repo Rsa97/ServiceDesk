@@ -22,7 +22,7 @@ try {
 										"`rq`.`service_guid`, `rq`.`slaLevel` ".
           					"FROM `requests` AS `rq` ".
             				"JOIN `contractDivisions` AS `div` ON `rq`.`id` = :requestId ".
-            					"AND `rq`.`currentState` IN ('accepted','fixed') AND `div`.`guid` = `rq`.`contractDivision_guid` ".
+            					"AND `rq`.`currentState` IN ('received','accepted','fixed') AND `div`.`guid` = `rq`.`contractDivision_guid` ".
             				"JOIN `contracts` AS `c` ON `c`.`guid` = `div`.`contract_guid` ".
             					"AND (NOW() BETWEEN `c`.`contractStart` AND `c`.`contractEnd` OR `rq`.`currentState` NOT IN ('closed', 'canceled')) ".
             				"LEFT JOIN `userContractDivisions` AS `ucd` ON `ucd`.`contractDivision_guid` = `rq`.`contractDivision_guid` ".
@@ -107,6 +107,7 @@ try {
 			if ($row = $req->fetch(PDO::FETCH_NUM))
 				$tsDelta = $row[0];
 			switch ($state) {
+				case 'received':
 				case 'accepted':
 					$toFix += $tsDelta;
 					$fixBefore = calcTime2($db, $divGuid, $servGuid, $sla, $createdAt, $toFix);

@@ -21,11 +21,11 @@ $btnIco = array('New' => 'ui-icon-document', 'Accept' => 'ui-icon-plus', 'Cancel
 				'Fixed' => 'ui-icon-wrench', 'Repaired' => 'ui-icon-check', 'Wait' => 'ui-icon-clock', 'UnClose' => 'ui-icon-alert',
 				'DoNow' => 'ui-icon-extlink', 'AddProblem' => 'ui-icon-info');
 
-$buttons = array('received' => array('admin' => array('New', 'Accept', 'Cancel'),
+$buttons = array('received' => array('admin' => array('New', 'Accept', 'Cancel', 'Wait'),
 									 'client' => array('New', 'Cancel'),
 									 'operator' => array('New', 'Cancel'),
-									 'engineer' => array('New', 'Accept', 'Cancel'),
-									 'partner' => array('Accept')),
+									 'engineer' => array('New', 'Accept', 'Cancel', 'Wait'),
+									 'partner' => array('Accept', 'Wait')),
 				 'accepted' => array('admin' => array('Fixed', 'Repaired', 'Wait'),
 									 'client' => array('Cancel'),
 									 'operator' => array('Cancel'),

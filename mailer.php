@@ -55,8 +55,6 @@ $userRights = array();
 while ($row = $req->fetch(PDO::FETCH_NUM)) {
 	list($uid, $givenName, $familyName, $middleName, $email, $rights, $cellPhone, $jid) = $row;
 	$uid = formatGuid($uid); 
-  	if ($email != '') {
-  		$rights .= 's';
   	if (!isset($userRights[$rights]))
 		$userRights[$rights] = array();
 	$userRights[$rights][] = $uid;
@@ -65,8 +63,12 @@ while ($row = $req->fetch(PDO::FETCH_NUM)) {
 	  					 'gender' => genderByNames($givenName, $middleName, $familyName),
 						 'cellPhone' => $cellPhone,
 						 'jid' => $jid);
-  }
 }
+
+print "--- users ---\n";
+print_r($users);
+print "\n\n--- userRights ---\n";
+print_r($userRights);
 
 $msgList = array();
 
@@ -507,8 +509,11 @@ foreach ($msgList as $reqId => $msgs) {
 	}
 }
 
+print "\n\n--- mails ---\n";
 print_r($mails);
+print "\n\n--- smss ---\n";
 print_r($smss);
+print "\n\n--- jabs ---\n";
 print_r($jabs);
 
 // Рассылаем электронную почту 

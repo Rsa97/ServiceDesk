@@ -7,6 +7,7 @@
 	include 'config/files.php';
 	include 'config/soap.php';
 	include 'ajax2/sms.php';
+	include 'ajax2/func_calcTime.php';
 	
 //	$dbHost = '127.0.0.1';
 //    $dbUser = 'root';
@@ -50,7 +51,6 @@
 			$pos = array_search($name, $fields);
 			$posObj = array_search('!'.$name, $fields);
 			$posNpp = array_search('?'.$name, $fields);
-//			print "{$name} => '{$pos}', '{$posObj}' -> '{$prop->{'Значение'}}', '{$posNpp}' -> '{$prop->{'Нпп'}}'\n";
 			if ($pos !== false) {
 				if (isset($prop->{'Значение'}))
 					$result[$pos] = trim($prop->{'Значение'});
@@ -90,21 +90,11 @@
 					list($date, $type) = parseXML($day->{'Свойство'}, array('ДатаКалендаря', 'ВидДня'));
 					$type = $dayTypes[$type];
 					$date = preg_replace('/T.*$/', '', $date);
-					if (TEST) {
-						print "{$date}\t{$type}\t".$req->rowCount()."\n";
-						print "INSERT INTO `workCalendar` (`date`, `type`) VALUES ('{$date}', '{$type}')\n".
-								"ON DUPLICATE KEY UPDATE `type` = VALUES(`type`)\n";
-					} else {
-						try {
-							$req->execute(array('date' => $date, 'type' => $type));
-						} catch(PDOException $e) {
-							print $e->getMessage()."\n";  
-						}
+					try {
+						$req->execute(array('date' => $date, 'type' => $type));
+					} catch(PDOException $e) {
+						print $e->getMessage()."\n";  
 					}
-					if (VERBOSE)
-						print "{$date}\t{$type}\t".(0 == $req->rowCount() ? 'skipped' : 'added/updated')."\n";
-					if (SHORT && (0 != $req->rowCount()))
-						print "+ {$date}\t{$type}\n";
 				}
 			}
 		}
@@ -119,22 +109,11 @@
 		foreach ($xml->{'Объект'} as $obj) {
 			if ('СправочникСсылка.СоД_КатегорииОборудования' == $obj->attributes()->{'Тип'}) {
 				list($guid, $name) = parseXML($obj->{'Ссылка'}->{'Свойство'}, array('{УникальныйИдентификатор}', 'Наименование'));
-//				$npps[trim($obj->attributes()->{'Нпп'})] = $guid;
-				if (TEST) {
-					print "{$guid}\t{$name}\t".$req->rowCount()."\n";
-					print "INSERT INTO `equipmentTypes` (`guid`, `name`) VALUES (UNHEX(REPLACE('{$guid}', '-', '')), '{$name}')\n".
-								"ON DUPLICATE KEY UPDATE `name` = VALUES(`name`)\n";
-				} else {
-					try {
-						$req->execute(array('guid' => $guid, 'name' => $name));
-					} catch(PDOException $e) {
-						print $e->getMessage()."\n";  
-					}
-				} 
-				if (VERBOSE)
-					print "{$guid}\t{$name}\t".(0 == $req->rowCount() ? 'skipped' : 'added/updated')."\n";
-				if (SHORT && (0 != $req->rowCount()))
-					print "+ {$guid}\t{$name}\n";
+				try {
+					$req->execute(array('guid' => $guid, 'name' => $name));
+				} catch(PDOException $e) {
+					print $e->getMessage()."\n";  
+				}
 			}
 		}
 		print "-------------------------------\n\n";
@@ -149,25 +128,13 @@
 		foreach ($xml->{'Объект'} as $obj) {
 			if ('СправочникСсылка.СоД_ТипыОборудования' == $obj->attributes()->{'Тип'}) {
 				list($guid, $name) = parseXML($obj->{'Ссылка'}->{'Свойство'}, array('{УникальныйИдентификатор}', 'Наименование'));
-//				$npps[trim($obj->attributes()->{'Нпп'})] = $guid;
 				list($parentGuid) = parseXML($obj->{'Свойство'}, array('?КатегорияОборудования'));
 				if ($parentGuid != NULL) {
-					if (TEST) {
-						print "{$guid}\t{$parentGuid}\t{$name}\t".$req->rowCount()."\n";
-						print "INSERT INTO `equipmentSubTypes` (`guid`, `name`, `equipmentType_guid`)\n".
-									"VALUES (UNHEX(REPLACE('{$guid}', '-', '')), '{$name}', UNHEX(REPLACE('{$parentGuid}', '-', '')))\n".
-								"ON DUPLICATE KEY UPDATE `name` = VALUES(`name`), `equipmentType_guid` = VALUES(`equipmentType_guid`)\n";
-					} else {
-						try {
-							$req->execute(array('guid' => $guid, 'name' => $name, 'parentGuid' => $parentGuid));
-						} catch(PDOException $e) {
-							print $e->getMessage()."\n";  
-						}
-					} 
-					if (VERBOSE)
-						print "{$guid}\t{$name}\t".(0 == $req->rowCount() ? 'skipped' : 'added/updated')."\n";
-					if (SHORT && (0 != $req->rowCount()))
-						print "+ {$guid}\t{$name}\n";
+					try {
+						$req->execute(array('guid' => $guid, 'name' => $name, 'parentGuid' => $parentGuid));
+					} catch(PDOException $e) {
+						print $e->getMessage()."\n";  
+					}
 				} else {
 					print "{$guid}\t{$name} => Неизвестный Нпп\n";
 				} 
@@ -1169,8 +1136,6 @@
 				}
 				if (!isset($lastStates[$guid]))
 					$lastStates[$guid] = array('received', 0, '0000-00-00 00:00:00');
-				if (VERBOSE || SHORT)
-					print "{$guid}\t{$lastStates[$guid][0]}\t{$lastStates[$guid][1]}\t{$lastStates[$guid][2]}\n";
 			}
 		}
 		print "-------------------------------\n\n";
@@ -1222,88 +1187,46 @@
 				$onWait = $lastStates[$guid][1];
 				$stateChangedAt = $lastStates[$guid][2];
 				$slaLevel = (isset($levels[$slaLevel]) ? $levels[$slaLevel] : 'medium');
-				if (TEST) {
-					print "{$guid}\t{$number}\t{$num1c}\t{$createdAt}\n{$problem}\n{$reactBefore}\t{$reactedAt}\t{$fixBefore}\t{$fixedAt}\t{$repairBefore}\t".
-						  "{$repairedAt}\n{$contactPersonGuid}\t{$contractDivisionGuid}\t{$engineerGuid}\t{$equipmentGuid}\t{$serviceGuid}\n".
-						  "{$slaLevel}\t{$currentState}\t{$onWait}\t{$stateChangedAt}\t{$toReact}\t{$toFix}\t{$toRepair}\n".
-						  "{$solutionProblem}\n{$solution}\n{$solutionRecomendation}\n".$req->rowCount()."\n";
-					print "INSERT INTO `requests` (`guid`, `problem`, `createdAt`, `reactBefore`, `reactedAt`, `fixBefore`, `fixedAt`\n".
-													 "`repairBefore`, `repairedAt`, `currentState`, `stateChangedAt`,\n".
-													 "`contactPerson_guid`, `contractDivision_guid`, `slaLevel`, `engineer_guid`,\n".
-													 "`equipment_guid`, `service_guid`, `onWait`, `solutionProblem`, `solution`,\n".
-													 "`solutionRecomendation`, `toReact`, `toFix`, `toRepair`, `num1c`)\n".
-									"VALUES (UNHEX(REPLACE('{$guid}', '-', '')), '{$problem}', '{$createdAt}', '{$reactBefore}', '{$reactedAt}', '{$fixBefore}',\n".
-											"'{$fixedAt}', '{$repairBefore}', '{$repairedAt}', '{$currentState}', '{$stateChangedAt}',\n".
-											"UNHEX(REPLACE('{$contactPersonGuid}', '-', '')), UNHEX(REPLACE('{$contractDivisionGuid}', '-', '')),\n".
-											":slaLevel, UNHEX(REPLACE('{$engineerGuid}', '-', '')), UNHEX(REPLACE('{$equipmentGuid}', '-', '')),\n".
-											"UNHEX(REPLACE('{$serviceGuid}', '-', '')), '{$onWait}', '{$solutionProblem}', '{$solution}', '{$solutionRecomendation}',\n".
-											"'{$toReact}', '{$toFix}', '{$toRepair}', '{$num1c}')\n".
-								"ON DUPLICATE KEY UPDATE `problem` = VALUES(`problem`), `createdAt` = VALUES(`createdAt`), `reactBefore` = VALUES(`reactBefore`),\n".
-													 "`reactedAt` = VALUES(`reactedAt`), `fixBefore` = VALUES(`fixBefore`), `fixedAt` = VALUES(`fixedAt`),\n".
-													 "`repairBefore` = VALUES(`repairBefore`), `repairedAt` = VALUES(`repairedAt`), `currentState` = VALUES(`currentState`),\n".
-													 "`stateChangedAt` = VALUES(`stateChangedAt`), `contactPerson_guid` = VALUES(`contactPerson_guid`),\n".
-													 "`contractDivision_guid` = VALUES(`contractDivision_guid`), `slaLevel` = VALUES(`slaLevel`),\n".
-													 "`engineer_guid` = VALUES(`engineer_guid`), `equipment_guid` = VALUES(`equipment_guid`),\n".
-													 "`service_guid` = VALUES(`service_guid`), `onWait` = VALUES(`onWait`), `solutionProblem` = VALUES(`solutionProblem`),\n".
-													 "`solution` = VALUES(`solution`), `solutionRecomendation` = VALUES(`solutionRecomendation`),\n".
-													 "`toReact` = VALUES(`toReact`), `toFix` = VALUES(`toFix`), `toRepair` = VALUES(`toRepair`),\n".
-													 "`num1c` = VALUES(`num1c`)\n";
-						if (!isset($prevStates[$guid]))
-							print "INSERT INTO `requestEvents` (`timestamp`, `event`, `newState`, `request_guid`, `user_guid`)\n".
-									"VALUES('{$createdAt}', 'open', 'received', UNHEX(REPLACE('{$guid}', '-', '')),\n".
-											"UNHEX(REPLACE('{$contactPersonGuid}', '-', '')))\n";
-				} else {
-					try {
-						$req->execute(array('guid' => $guid, 'problem' => $problem, 'createdAt' => $createdAt, 'reactBefore' => $reactBefore, 
-											'reactedAt' => $reactedAt, 'fixBefore' => $fixBefore, 'fixedAt' => $fixedAt,
-											'repairBefore' => $repairBefore, 'repairedAt' => $repairedAt, 'currentState' => $currentState, 
-											'stateChangedAt' => $stateChangedAt, 'contactPersonGuid' => $contactPersonGuid, 
-											'contractDivisionGuid' => $contractDivisionGuid, 'slaLevel' => $slaLevel, 
-											'engineerGuid' => $engineerGuid, 'equipmentGuid' => $equipmentGuid, 'serviceGuid' => $serviceGuid,
-											'onWait' => $onWait, 'solutionProblem' => $solutionProblem, 'solution' => $solution, 
-											'solutionRecomendation' => $solutionRecomendation, 'toReact' => $toReact, 'toFix' => $toFix, 
-											'toRepair' => $toRepair, 'num1c' => $num1c));
-						if (!isset($prevStates[$guid])) {
-							$req1->execute(array('guid' => $guid, 'createdAt' => $createdAt, 'contactPersonGuid' => $contactPersonGuid));
-							$prevStates[$guid] = array('received', 0, $createdAt);
-							if ('received' == $currentState) {
-								$reqN = $db->prepare("SELECT `cd`.`name` AS `division`, `ca1`.`name` AS `contragent1`, `ca2`.`name` AS `contragent2`, ".
-															"`e`.`cellphone` AS `cellphone`, `cd`.`smsToDuty` AS `toDuty` ".
-														"FROM `contractDivisions` AS `cd` ".
-														"JOIN `contracts` AS `c` ON `cd`.`guid` = UNHEX(REPLACE(:divisionGuid, '-', '')) ".
-															"AND `c`.`guid` = `cd`.`contract_guid` ".
-														"LEFT JOIN `contragents` AS `ca1` ON `ca1`.`guid` = `cd`.`contragent_guid` ".
-														"LEFT JOIN `contragents` AS `ca2` ON `ca1`.`guid` = `c`.`contragent_guid` ".
-														"LEFT JOIN `users` AS `e` ON `e`.`guid` = `cd`.`engineer_guid`");
-								$reqN->execute(array('divisionGuid' => $contractDivisionGuid));
-								$sms = 'Новая заявка.';
-								$cellphone = '';
-								if ($rowN = $reqN->fetch(PDO::FETCH_ASSOC)) {
-									$sms .= ' '.('' == $rowN['contragent1'] ? $rowN['contragent2'] : $rowN['contragent1']).'. '.$rowN['division'];
-									if (0 == $rowN['toDuty'])
-										$cellphone = $rowN['cellphone'];
-								}
-								if ('' == $cellphone)
-									sms_to_duty($sms);
-								else {
-									send_sms($sms, '7'.$cellphone);
-								}
+				try {
+					$req->execute(array('guid' => $guid, 'problem' => $problem, 'createdAt' => $createdAt, 'reactBefore' => $reactBefore, 
+										'reactedAt' => $reactedAt, 'fixBefore' => $fixBefore, 'fixedAt' => $fixedAt,
+										'repairBefore' => $repairBefore, 'repairedAt' => $repairedAt, 'currentState' => $currentState, 
+										'stateChangedAt' => $stateChangedAt, 'contactPersonGuid' => $contactPersonGuid, 
+										'contractDivisionGuid' => $contractDivisionGuid, 'slaLevel' => $slaLevel, 
+										'engineerGuid' => $engineerGuid, 'equipmentGuid' => $equipmentGuid, 'serviceGuid' => $serviceGuid,
+										'onWait' => $onWait, 'solutionProblem' => $solutionProblem, 'solution' => $solution, 
+										'solutionRecomendation' => $solutionRecomendation, 'toReact' => $toReact, 'toFix' => $toFix, 
+										'toRepair' => $toRepair, 'num1c' => $num1c));
+					if (!isset($prevStates[$guid])) {
+						$req1->execute(array('guid' => $guid, 'createdAt' => $createdAt, 'contactPersonGuid' => $contactPersonGuid));
+						$prevStates[$guid] = array('received', 0, $createdAt);
+						if ('received' == $currentState) {
+							$reqN = $db->prepare("SELECT `cd`.`name` AS `division`, `ca1`.`name` AS `contragent1`, `ca2`.`name` AS `contragent2`, ".
+														"`e`.`cellphone` AS `cellphone`, `cd`.`smsToDuty` AS `toDuty` ".
+													"FROM `contractDivisions` AS `cd` ".
+													"JOIN `contracts` AS `c` ON `cd`.`guid` = UNHEX(REPLACE(:divisionGuid, '-', '')) ".
+														"AND `c`.`guid` = `cd`.`contract_guid` ".
+													"LEFT JOIN `contragents` AS `ca1` ON `ca1`.`guid` = `cd`.`contragent_guid` ".
+													"LEFT JOIN `contragents` AS `ca2` ON `ca1`.`guid` = `c`.`contragent_guid` ".
+													"LEFT JOIN `users` AS `e` ON `e`.`guid` = `cd`.`engineer_guid`");
+							$reqN->execute(array('divisionGuid' => $contractDivisionGuid));
+							$sms = 'Новая заявка.';
+							$cellphone = '';
+							if ($rowN = $reqN->fetch(PDO::FETCH_ASSOC)) {
+								$sms .= ' '.('' == $rowN['contragent1'] ? $rowN['contragent2'] : $rowN['contragent1']).'. '.$rowN['division'];
+								if (0 == $rowN['toDuty'])
+									$cellphone = $rowN['cellphone'];
+							}
+							if ('' == $cellphone)
+								sms_to_duty($sms);
+							else {
+								send_sms($sms, '7'.$cellphone);
 							}
 						}
-					} catch(PDOException $e) {
-						print $e->getMessage()."\n";  
 					}
+				} catch(PDOException $e) {
+					print $e->getMessage()."\n";  
 				}
-				if (VERBOSE)
-					print "{$guid}\t{$number}\t{$num1c}\t{$createdAt}\n{$problem}\n{$reactBefore}\t{$reactedAt}\t{$fixBefore}\t{$fixedAt}\t{$repairBefore}\t".
-						  "{$repairedAt}\n{$contactPersonGuid}\t{$contractDivisionGuid}\t{$engineerGuid}\t{$equipmentGuid}\t{$serviceGuid}\n".
-						  "{$slaLevel}\t{$currentState}\t{$onWait}\t{$stateChangedAt}\t{$toReact}\t{$toFix}\t{$toRepair}\n".
-						  "{$solutionProblem}\n{$solution}\n{$solutionRecomendation}\n".(0 == $req->rowCount() ? 'skipped' : 'added/updated')."\n";
-				if (SHORT && (0 != $req->rowCount()))
-					print "+ {$guid}\t{$number}\t{$num1c}\t{$createdAt}\n{$problem}\n`{$reactBefore}`\t'{$reactedAt}'\t`{$fixBefore}`\t'{$fixedAt}'\t`{$repairBefore}`\t".
-						  "'{$repairedAt}'\n{$contactPersonGuid}\t{$contractDivisionGuid}\t{$engineerGuid}\t{$equipmentGuid}\t{$serviceGuid}\n".
-						  "{$slaLevel}\t{$currentState}\t{$onWait}\t{$stateChangedAt}\t{$toReact}\t{$toFix}\t{$toRepair}\n".
-						  "{$solutionProblem}\n{$solution}\n{$solutionRecomendation}\n";
 			}
 		}
 		print "-------------------------------\n\n";
@@ -1335,72 +1258,69 @@
 				usort($evList, function($a, $b) { return ($a[0] < $b[0] ? -1 : ($a[0] > $b[0] ? 1 : 0)); });
 				foreach ($evList as $evt) {
 					list($evTime, $evName, $evState, $evUser, $evComment, $equipmentGuid) = $evt;
-//					print "\t{$evTime}\t{$evName}\t{$evState}\t{$evUser}\t{$equipmentGuid}\t{$evComment}\n\t\t";
 					switch($evName) {
 						case 'Изменен статус заявки':
-							if ('_5Отменена' == $prevStates[$guid]) {
-								if (TEST) {
-									print "\t{$evTime}\t{$evName}\t{$evState}\t{$evComment}\t".$req->rowCount()."\n"; 
-									print "INSERT IGNORE INTO `requestEvents` (`timestamp`, `event`, `text`, `newState`, `request_guid`, `user_guid`)\n".
-											"VALUES ('{$evTime}', 'unCancel', '{$evComment}', '{$evState}', UNHEX(REPLACE('{$guid}', '-', '')),\n".
-													"UNHEX(REPLACE('{$evUser}', '-', '')))\n";
-								} else {
+							if ('_6Перенесена' == $evState) {
+								try {
+									$req->execute(array('time' => $evTime, 'event' => 'onWait', 'comment' => $evComment, 
+														'newState' => $prevStates[$guid][0], 'guid' => $guid, 'userGuid' => $evUser));
+								} catch(PDOException $e) {
+									print $e->getMessage()."\n";
+								}  
+								$prevStates[$guid] = array($prevStates[$guid][0], 1, $evTime);
+							} else {
+								if (1 == $prevStates[$guid][1]) { // Заявка снята с ожидания
+									try {
+										// Пробуем получить время последней приостановки заявки  
+										$reqX = $db->prepare("SELECT MAX(`timestamp`) ".
+																"FROM `requestEvents` ".
+																"WHERE `request_guid` = UNHEX(REPLACE(:requestGuid, '-', '')) AND 'onWait' = `event`");
+										$reqX->execute(array('requestGuid' => $guid));
+										if ($rowX = $reqX->fetch(PDO::FETCH_NUM)) {
+											$reqX = $db->prepare("SELECT calcTime_v4(:requestId, :startTime, NOW())");
+											$reqX->execute(array('requestId' => $paramValues['id'], 'startTime' => $rowX[0]));
+											if ($rowX = $reqX->fetch(PDO::FETCH_NUM))
+												$tsDelta = $rowX[0];
+											switch ($state) {
+												case 'received':
+												case 'accepted':
+													$toFix += $tsDelta;
+													$fixBefore = calcTime2($db, $divGuid, $servGuid, $sla, $createdAt, $toFix);
+												case 'fixed':
+													$toRepair += $tsDelta;
+													$repairBefore = calcTime2($db, $divGuid, $servGuid, $sla, $createdAt, $toRepair);
+													break;
+											}
+											$reqX = $db->prepare("UPDATE `requests` SET `toFix` = :toFix, `fixBefore` = :fixBefore, ".
+																						"`toRepair` = :toRepair, `repairBefore` = :repairBefore, ".
+																						"`totalWait` = `totalWait`+:delta ".
+																	"WHERE `id` = :requestId");
+											$reqX->execute(array('toFix' => $toFix, 'fixBefore' => $fixBefore, 'toRepair' => $toRepair, 'repairBefore' => $repairBefore, 
+																'requestId' => $paramValues['id'], 'delta' => $tsDelta));
+										}
+									} catch(PDOException $e) {
+										print $e->getMessage()."\n";
+									}  
+								}
+								if ('_5Отменена' == $prevStates[$guid]) {
 									try {
 										$req->execute(array('time' => $evTime, 'event' => 'unCancel', 'comment' => $evComment, 
 															'newState' => $evState, 'guid' => $guid, 'userGuid' => $evUser));
 									} catch(PDOException $e) {
 										print $e->getMessage()."\n";
 									}  
-								}
-								$evComment = '';
-							} else if ('_4Завершена' == $prevStates[$guid]) {
-								if (TEST) {
-									print "\t{$evTime}\t{$evName}\t{$evState}\t{$evComment}\t".$req->rowCount()."\n"; 
-									print "INSERT IGNORE INTO `requestEvents` (`timestamp`, `event`, `text`, `newState`, `request_guid`, `user_guid`)\n".
-											"VALUES ('{$evTime}', 'unClose', '{$evComment}', '{$evState}', UNHEX(REPLACE('{$guid}', '-', '')),\n".
-													"UNHEX(REPLACE('{$evUser}', '-', '')))\n";
-								} else {
+									$evComment = '';
+								} else if ('_4Завершена' == $prevStates[$guid]) {
 									try {
 										$req->execute(array('time' => $evTime, 'event' => 'unClose', 'comment' => $evComment, 
 															'newState' => $evState, 'guid' => $guid, 'userGuid' => $evUser));
 									} catch(PDOException $e) {
 										print $e->getMessage()."\n";
 									}  
-								}
-								$evComment = '';
-							}
-							if ('_6Перенесена' == $evState) {
-								if (TEST) {
-									print "\t{$evTime}\t{$evName}\t{$evState}\t{$evComment}\t".$req->rowCount()."\n"; 
-									print "INSERT IGNORE INTO `requestEvents` (`timestamp`, `event`, `text`, `newState`, `request_guid`, `user_guid`)\n".
-											"VALUES ('{$evTime}', 'onWait', '{$evComment}', '{$prevStates[$guid][0]}', UNHEX(REPLACE('{$guid}', '-', '')),\n".
-													"UNHEX(REPLACE('{$evUser}', '-', '')))\n";
+									$evComment = '';
 								} else {
-									try {
-										$req->execute(array('time' => $evTime, 'event' => 'onWait', 'comment' => $evComment, 
-															'newState' => $prevStates[$guid][0], 'guid' => $guid, 'userGuid' => $evUser));
-									} catch(PDOException $e) {
-										print $e->getMessage()."\n";
-									}  
-								}
-								$prevStates[$guid] = array($prevStates[$guid][0], 1, $evTime);
-							} else {
-								$evState = $states[$evState];
-								if (isset($prevStates[$guid])) {
-									if (TEST) {
-										if (1 == $prevStates[$guid][1]) {
-											print "\t{$evTime}\t{$evName}\t{$evState}\t{$evComment}\t".$req->rowCount()."\n"; 
-											print "INSERT IGNORE INTO `requestEvents` (`timestamp`, `event`, `text`, `newState`, `request_guid`, `user_guid`)\n".
-													"VALUES ('{$evTime}', 'offWait', '{$evComment}', '{$prevStates[$guid][0]}', UNHEX(REPLACE('{$guid}', '-', '')),\n".
-															"UNHEX(REPLACE('{$evUser}', '-', '')))\n";
-										}
-										if ($evState != $prevStates[$guid]) {
-											print "\t{$evTime}\t{$evName}\t{$evState}\t{$evComment}\t".$req->rowCount()."\n"; 
-											print "INSERT IGNORE INTO `requestEvents` (`timestamp`, `event`, `text`, `newState`, `request_guid`, `user_guid`)\n".
-													"VALUES ('{$evTime}', 'changeState', null, '{$evState}', UNHEX(REPLACE('{$guid}', '-', '')),\n".
-															"UNHEX(REPLACE('{$evUser}', '-', '')))\n";
-										}
-									} else { 
+									$evState = $states[$evState];
+									if (isset($prevStates[$guid])) {
 										try {
 											if (1 == $prevStates[$guid][1])
 												$req->execute(array('time' => $evTime, 'event' => 'offWait', 'comment' => $evComment, 
@@ -1412,8 +1332,8 @@
 											print $e->getMessage()."\n";  
 										}
 									}
+									$prevStates[$guid] = array($evState, 0, $evTime);
 								}
-								$prevStates[$guid] = array($evState, 0, $evTime);
 							}
 							break;
 						case 'Добавлен комментарий':
