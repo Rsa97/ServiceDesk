@@ -155,7 +155,7 @@ try {
 										"`co`.`phone`, CAST(`rq`.`problem` AS CHAR(1024)), `rq`.`onWait`, `rq`.`reactedAt`, ".
 										"IFNULL(`rq`.`fixedAt`, `rq`.`repairedAt`), `rq`.`repairedAt`, `rq`.`slaLevel`, `rq`.`toReact`, `rq`.`toFix`, ".
 										"`rq`.`toRepair`, `p`.`name`, `rq`.`guid`, `ow`.`onWaitAt`, ".
-										"IFNULL(`rq`.`reactRate`, calcTime_v3(`rq`.`id`, IFNULL(`rq`.`reactedAt`, NOW()))/`rq`.`toReact`), ".
+										"IFNULL(`rq`.`reactRate`, calcTime_v3(`rq`.`id`, IF(1 = `rq`.`onWait`, IFNULL(`ow`.`onWaitAt`, NOW()), IFNULL(`rq`.`reactedAt`, NOW()))/`rq`.`toReact`)), ".
 										"IFNULL(`rq`.`fixRate`, calcTime_v3(`rq`.`id`, IF(1 = `rq`.`onWait`, IFNULL(`ow`.`onWaitAt`, NOW()), IFNULL(`rq`.`fixedAt`, IFNULL(`rq`.`repairedAt`, NOW()))))/`rq`.`toFix`), ".
     									"IFNULL(`rq`.`repairRate`, calcTime_v3(`rq`.`id`, IF(1 = `rq`.`onWait`, IFNULL(`ow`.`onWaitAt`, NOW()), IFNULL(`rq`.`repairedAt`, NOW())))/`rq`.`toRepair`) ".
 	            			"FROM `requests` AS `rq` ".
