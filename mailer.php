@@ -546,7 +546,7 @@ foreach ($smss as $uid => $requests) {
 		break;
 	foreach ($requests as $reqId => $sms) {
 		foreach($sms as $message) {
-			send_sms('7'.$users[$uid]['cellPhone'], $message);
+			send_sms($message, '7'.$users[$uid]['cellPhone']);
 //			print "7{$users[$uid]['cellPhone']} - {$message}\n";
 		}
 	}	
