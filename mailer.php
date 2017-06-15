@@ -452,7 +452,7 @@ foreach ($msgList as $reqId => $msgs) {
 					if (isset($sendList[$msg['event']]['sms']) && in_array($msg['contId'], $sendList[$msg['event']]['sms'])) {
 						if (!isset($smss[$msg['contId']][$reqId]))
 							$smss[$msg['contId']][$reqId] = array();
-						$smss[$msg['contId']][$reqId][] .= $msg['sms'];
+						$smss[$msg['contId']][$reqId][] = $msg['sms'];
 					}
 					if (isset($sendList[$msg['event']]['jabber']) && in_array($msg['contId'], $sendList[$msg['event']]['jabber'])) {
 						if (!isset($jabs[$msg['contId']][$reqId]))
@@ -495,7 +495,7 @@ foreach ($msgList as $reqId => $msgs) {
 						if (isset($sendList[$msg['event']]['sms']) && in_array($uid, $sendList[$msg['event']]['sms'])) {
 							if (!isset($smss[$uid][$reqId]))
 								$smss[$uid][$reqId] = array();
-							$smss[$uid][$reqId][] .= $msg['sms'];
+							$smss[$uid][$reqId][] = $msg['sms'];
 						}
 						if (isset($sendList[$msg['event']]['jabber']) && in_array($uid, $sendList[$msg['event']]['jabber'])) {
 							if (!isset($jabs[$uid][$reqId]))
