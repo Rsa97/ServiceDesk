@@ -8,7 +8,7 @@ include 'init.php';
 $allowedTo = array('admin');
 
 if (!in_array($rights, $allowedTo)) {
-	echo json_encode(array('error' => 'Недостаточно прав.'));
+	echo json_encode(array('Ok' => 'Ok'));
 	exit;
 }
 

@@ -8,7 +8,7 @@ include 'init.php';
 $allowedTo = array('client', 'operator', 'engineer', 'admin', 'partner');
 $allowedFrom = "'fixed','accepted'";
 if ('client' == $rights)
-	$allowedFrom = 'received';
+	$allowedFrom = "'received'";
 if ('admin' == $rights)
 	$allowedFrom = "'received','fixed','accepted'";
 	

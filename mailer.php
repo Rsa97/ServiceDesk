@@ -458,7 +458,7 @@ foreach ($msgList as $reqId => $msgs) {
 						$jabs[$msg['contId']][$reqId] .= $msg['text'];
 					}
 					break;
-				case 'engeneer':
+				case 'engineer':
 					if ($msg['engId'] == '')
 						break;
 					if (!in_array($msg['engId'], $sendList[$msg['event']]['email'])) {
@@ -478,7 +478,7 @@ foreach ($msgList as $reqId => $msgs) {
 						$jabs[$msg['engId']][$reqId] .= $msg['text'];
 					}
 					break;
-				case 'engeneers':
+				case 'engineers':
 				case 'operators':
 				case 'admins':
 					if (!isset($userRights[$to]))
@@ -506,6 +506,10 @@ foreach ($msgList as $reqId => $msgs) {
 		}
 	}
 }
+
+print_r($mails);
+print_r($smss);
+print_r($jabs);
 
 // Рассылаем электронную почту 
 foreach ($mails as $uid => $requests) {

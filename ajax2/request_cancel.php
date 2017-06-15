@@ -8,7 +8,7 @@ include 'init.php';
 $allowedTo = array('client', 'operator', 'engineer', 'admin', 'partner');
 $allowedFrom = "'received','accepted'";
 if ('engineer' == $rights)
-	$allowedFrom = 'received';
+	$allowedFrom = "'received'";
 
 if (!in_array($rights, $allowedTo)) {
 	echo json_encode(array('error' => 'Недостаточно прав.'));
