@@ -127,7 +127,14 @@ try {
     						"LEFT JOIN `equipmentManufacturers` AS `emfg` ON `emfg`.`guid` = `em`.`equipmentManufacturer_guid` ". 
     						"LEFT JOIN `documents` AS `doc` ON `doc`.`requestEvent_id` = `re`.`id` ".
     						"WHERE `re`.`id` = @id");
-    $req1 = $db->prepare("UPDATE `requestEvents` SET `mailed` = 1 WHERE `mailed` = 0 AND @id := `id` ORDER BY `timestamp` LIMIT 1");
+    $req1 = $db->prepare("UPDATE `requestEvents` AS `re1` ".
+  							"JOIN ( ".
+								"SELECT MIN(`id`) AS `id` ". 
+	  								"FROM `requestEvents` ". 
+      								"WHERE `mailed` = 0 ".
+							") AS `re2` ON `re2`.`id` = `re1`.`id` ".
+    						"SET `re1`.`mailed` = 1 ". 
+    						"WHERE @id := `re1`.`id`");
 } catch (PDOException $e) {
 	print("Ошибка MySQL ".$e->getMessage()."\n");
 	exit;
