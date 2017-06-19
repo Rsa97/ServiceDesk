@@ -94,7 +94,6 @@ while($row = $req->fetch()) {
 
 foreach($forcedSendTo as $event => $rightsList) {
 	foreach($rightsList as $rights) {
-		$rights .= 's';
 		foreach($userRights[$rights] as $user) {
 			if (!isset($sendList[$event]))
 				$sendList[$event] = array();
@@ -480,20 +479,20 @@ foreach ($msgList as $reqId => $msgs) {
 				case 'engineer':
 					if ($msg['engId'] == '')
 						break;
-					if (!in_array($msg['engId'], $sendList[$msg['event']]['email'])) {
+					if (in_array($msg['engId'], $sendList[$msg['event']]['email'])) {
 						if (!isset($mails[$msg['engId']][$reqId]))
 							$mails[$msg['engId']][$reqId] = array('text' => '', 'html' => '');
 						$mails[$msg['engId']][$reqId]['text'] .= $msg['text'];
 						$mails[$msg['engId']][$reqId]['html'] .= $msg['html'];
 						print "\tengineer - email - {$msg['engId']}\n";
 					}
-					if (!in_array($msg['engId'], $sendList[$msg['event']]['sms'])) {
+					if (in_array($msg['engId'], $sendList[$msg['event']]['sms'])) {
 						if (!isset($smss[$msg['engId']][$reqId]))
 							$smss[$msg['engId']][$reqId] = array();
 						$smss[$msg['engId']][$reqId][] = $msg['sms'];
 						print "\tengineer - sms - {$msg['engId']}\n";
 											}
-					if (!in_array($msg['engId'], $sendList[$msg['event']]['jabber'])) {
+					if (in_array($msg['engId'], $sendList[$msg['event']]['jabber'])) {
 						if (!isset($jabs[$msg['engId']][$reqId]))
 							$jabs[$msg['engId']][$reqId] = '';
 						$jabs[$msg['engId']][$reqId] .= $msg['text'];

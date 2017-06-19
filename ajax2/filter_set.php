@@ -28,6 +28,13 @@ $statusIcons = array('received' => 'ui-icon-mail-closed',
 					 'planned' => 'ui-icon-calendar',
 					 'onWait' => 'ui-icon-clock');
 
+$sortOrder = array('received' => 'ASC',
+					 'accepted' => 'ASC',
+					 'repaired' => 'DESC',
+					 'closed' => 'DESC',
+					 'canceled' => 'DESC');
+
+
 // Строим фильтр, если данных нет, то берём из сессии или по умолчанию
 if (isset($paramValues['byDiv'])) {
 	$divGuid = substr($paramValues['byDiv'], 1);
@@ -254,7 +261,7 @@ while ($row = $req->fetch(PDO::FETCH_NUM)) {
 		$fixPercent = floor($fixPercent*100);
 		$repairPercent = floor($repairPercent*100);
 	}
-	$tables[$statusGroup[$state]] .= 
+	$str = 
 		"<tr id='{$id}' data-autoonly={$srvAutoOnly}".($repairPercent >= 100 ? " class='timeIsOut'" : "").">".
 		"<td><input type='checkbox' class='checkOne'>".
 		"<abbr title='{$statusNames[$state]}'><span class='ui-icon {$statusIcons[$state]}'></span></abbr>".
@@ -277,6 +284,10 @@ while ($row = $req->fetch(PDO::FETCH_NUM)) {
 				"<div class='scale' style='background-color: {$repairColor}; width: {$repairPercent}%';></div>".
 			"</div>".
 		"</abbr>";
+	if ('DESC' == $sortOrder[$statusGroup[$state]])
+		$tables[$statusGroup[$state]] = $str.$tables[$statusGroup[$state]];
+	else
+		$tables[$statusGroup[$state]] .= $str;
 	$counts[$statusGroup[$state]]++;
 }
 
