@@ -54,7 +54,8 @@ $userRights = array();
 
 while ($row = $req->fetch(PDO::FETCH_NUM)) {
 	list($uid, $givenName, $familyName, $middleName, $email, $rights, $cellPhone, $jid) = $row;
-	$uid = formatGuid($uid); 
+	$uid = formatGuid($uid);
+	$rights .= 's'; 
   	if (!isset($userRights[$rights]))
 		$userRights[$rights] = array();
 	$userRights[$rights][] = $uid;
@@ -94,6 +95,7 @@ while($row = $req->fetch()) {
 
 foreach($forcedSendTo as $event => $rightsList) {
 	foreach($rightsList as $rights) {
+		$rights .= 's';
 		foreach($userRights[$rights] as $user) {
 			if (!isset($sendList[$event]))
 				$sendList[$event] = array();
@@ -479,20 +481,20 @@ foreach ($msgList as $reqId => $msgs) {
 				case 'engineer':
 					if ($msg['engId'] == '')
 						break;
-					if (in_array($msg['engId'], $sendList[$msg['event']]['email'])) {
+					if (isset($sendList[$msg['event']]['email']) && in_array($msg['engId'], $sendList[$msg['event']]['email'])) {
 						if (!isset($mails[$msg['engId']][$reqId]))
 							$mails[$msg['engId']][$reqId] = array('text' => '', 'html' => '');
 						$mails[$msg['engId']][$reqId]['text'] .= $msg['text'];
 						$mails[$msg['engId']][$reqId]['html'] .= $msg['html'];
 						print "\tengineer - email - {$msg['engId']}\n";
 					}
-					if (in_array($msg['engId'], $sendList[$msg['event']]['sms'])) {
+					if (isset($sendList[$msg['event']]['sms']) && in_array($msg['engId'], $sendList[$msg['event']]['sms'])) {
 						if (!isset($smss[$msg['engId']][$reqId]))
 							$smss[$msg['engId']][$reqId] = array();
 						$smss[$msg['engId']][$reqId][] = $msg['sms'];
 						print "\tengineer - sms - {$msg['engId']}\n";
 											}
-					if (in_array($msg['engId'], $sendList[$msg['event']]['jabber'])) {
+					if (isset($sendList[$msg['event']]['jabber']) && in_array($msg['engId'], $sendList[$msg['event']]['jabber'])) {
 						if (!isset($jabs[$msg['engId']][$reqId]))
 							$jabs[$msg['engId']][$reqId] = '';
 						$jabs[$msg['engId']][$reqId] .= $msg['text'];
@@ -505,6 +507,7 @@ foreach ($msgList as $reqId => $msgs) {
 					if (!isset($userRights[$to]))
 						break;
 					foreach ($userRights[$to] as $uid) {
+						print "Check $uid\n";
 						if (isset($sendList[$msg['event']]['email']) && in_array($uid, $sendList[$msg['event']]['email'])) {
 							if (!isset($mails[$uid][$reqId]))
 								$mails[$uid][$reqId] = array('text' => '', 'html' => '');
