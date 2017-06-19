@@ -51,7 +51,7 @@ $userSName = nameWithInitials($_SESSION['user']['lastName'], $_SESSION['user']['
 
 $html = "<!DOCTYPE html><html><head>";
 $html .= "<style type='text/css'>";
-$html .= "body {width: 210mm; padding: 20mm 10mm 20mm 30mm; font-size: 8pt;} ";
+$html .= "body {width: 210mm; padding: 10mm 10mm 10mm 20mm; font-size: 8pt;} ";
 $html .= "h1 {font-size: 12pt; font-weight: bold; text-align: center; margin: 0;} ";
 $html .= "h2 {font-size: 10pt; font-weight: normal; text-align: center; margin: 0;} ";
 $html .= "h3 {font-size: 8pt; text-align: left; margin: 8pt 0 0 0;} ";
@@ -60,7 +60,7 @@ $html .= "table {border: 1px solid black; border-collapse: collapse; width: 100%
 $html .= "td {border: 1px solid black; padding: 0.2mm 1.9mm 0.2mm 1.9mm;} ";
 $html .= "td:nth-child(1) {width: 53mm;} ";
 $html .= "td:nth-child(2) {width: 116mm;} ";
-$html .= "td.frame {width: 100%; height: 26mm; vertical-align: top;} ";
+$html .= "td.frame {width: 100%; height: 15mm; vertical-align: top;} ";
 $html .= "table.sign, table.head {border: 0} ";
 $html .= "table.sign td {border: 0; text-align: center; width: 50%;} ";
 $html .= "table.head td {border: 0; text-align: center;} ";
@@ -94,6 +94,7 @@ $html .= "<table><tbody>";
 $html .= "<tr><td>Основание вызова<td>".htmlspecialchars('Договор '.$contractNumber);
 $html .= "<tr><td>Тип наряда<td>".htmlspecialchars($srvName);
 $html .= "<tr><td>Индивидуальный сервисный номер<td>".htmlspecialchars($servNum);
+$problem = preg_replace('/(\r?\n)+/', "\n", $problem);
 $html .= "<tr><td>Задача на оказание услуги<td>".nl2br(htmlspecialchars($problem));
 $html .= "<tr><td>Приоритет услуги<td>".htmlspecialchars($slaLevels[$slaLevel]);
 $date = '';
@@ -130,7 +131,7 @@ $html .= "</body></html>";
 //print $html;
 
 require_once '../mPDF/vendor/autoload.php';
-$mpdf = new mPDF('s','A4',8,'freesans',30,10,20,20);
+$mpdf = new mPDF('s','A4',8,'freesans',20,10,10,10);
 $mpdf->WriteHTML($html);
 $mpdf->Output("СЕРВИСНЫЙ_ЛИСТ_№_{$paramValues['id']}-01.pdf", 'I');
 

@@ -604,7 +604,7 @@ if ($jabber->Connect()) {
 					$subj = "Открыта новая заявка №{$reqId}";
 				else 
 					$subj = "События по заявке №{$reqId}";
-	    		$jabber->SendMessage($users[$uid]['jid'], 'normal', null, array('subject' => $subj, 'body' => $message));
+	    		$jabber->SendMessage($users[$uid]['jid'], 'normal', null, array('subject' => $subj, 'body' => $text));
 //				print "{$users[$uid]['jid']} - {$subj} - {$text}\n";
 			}	
 		}
