@@ -139,7 +139,7 @@ try {
 							"JOIN `contracts` AS `c` ON `cd`.`guid` = UNHEX(REPLACE(:divisionGuid, '-', '')) ".
 								"AND `c`.`guid` = `cd`.`contract_guid` ".
 							"LEFT JOIN `contragents` AS `ca1` ON `ca1`.`guid` = `cd`.`contragent_guid` ".
-							"LEFT JOIN `contragents` AS `ca2` ON `ca1`.`guid` = `c`.`contragent_guid` ".
+							"LEFT JOIN `contragents` AS `ca2` ON `ca2`.`guid` = `c`.`contragent_guid` ".
 							"LEFT JOIN `users` AS `e` ON `e`.`guid` = `cd`.`engineer_guid`");
 	$req->execute(array('divisionGuid' => $paramValues['division']));
 } catch (Exception $e) {
