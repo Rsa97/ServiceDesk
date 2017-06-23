@@ -586,6 +586,9 @@ foreach ($smss as $uid => $requests) {
 	}	
 }
 
+if (0 == count($jabs))
+	exit;
+
 // Рассылаем сообщения в Jabber 
 $jabber = new Jabber();
 $jabber->server = $jaServer;
