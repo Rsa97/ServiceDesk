@@ -116,7 +116,7 @@ try {
 	$req = $db->prepare("SELECT `re`.`timestamp`, `re`.`event`, `re`.`text`, `re`.`newState`, `r`.`id`, `r`.`problem`, ". 
 	   							"`r`.`contactPerson_guid`, `div`.`guid`, `div`.`name`, IFNULL(`dcntr`.`name`, `ccntr`.`name`), ". 
 	   							"`r`.`slaLevel`, `eq`.`serviceNumber`, `em`.`name`, `emfg`.`name`, ". 
-       							"`re`.`user_guid`, `doc`.`name`, `r`.`engineer_guid` ". 
+       							"`re`.`user_guid`, `doc`.`name`, `r`.`engineer_guid`, `r`.`isPlanned` ". 
 							"FROM `requestEvents` AS `re` ". 
     						"LEFT JOIN `requests` AS `r` ON `r`.`guid` = `re`.`request_guid` ". 
     						"LEFT JOIN `contractDivisions` AS `div` ON `div`.`guid` = `r`.`contractDivision_guid` ".
@@ -154,7 +154,7 @@ while (true) {
 	}
 	if ($row = $req->fetch(PDO::FETCH_NUM)) {
 		list($timestamp, $event, $evText, $newState, $reqId, $problem, $contId, $divId, $div, $contragent, 
-			 $slaLevel, $servNum, $eqModel, $eqMfg, $authorId, $document, $engId) = $row;
+			 $slaLevel, $servNum, $eqModel, $eqMfg, $authorId, $document, $engId, $isPlanned) = $row;
 		$contId = formatGuid($contId);
 		$divId = formatGuid($divId);
 		$authorId = formatGuid($authorId);
@@ -168,6 +168,8 @@ while (true) {
 		$authorGender = (isset($users[$authorId]) ? $users[$authorId]['gender'] : 1);
 		switch($event) {
   			case 'open':
+  				if (1 == $isPlanned)
+					break;
   				if ($servNum == 0 || $servNum == '')
   					$eq = 'не указано';
 				else
