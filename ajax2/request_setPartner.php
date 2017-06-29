@@ -5,6 +5,7 @@ header('Content-Type: application/json; charset=UTF-8');
 include 'common.php';
 include 'init.php';
 include 'smtp.php';
+include 'sms.php';
 
 $allowedTo = array('engineer', 'admin');
 
@@ -20,7 +21,7 @@ if ('0' == $partnerGuid)
 // Получаем текущего партнёра по заявке
 $cancelEmails = array();
 try {
-	$req = $db->prepare("SELECT `u`.`email`, `u`.`lastName`, `u`.`firstName`, `u`.`middleName` ".
+	$req = $db->prepare("SELECT `u`.`email`, `u`.`lastName`, `u`.`firstName`, `u`.`middleName`, `u`.`cellphone` ".
 							"FROM `requests` AS `rq` ".
 							"JOIN `users` AS `u` ON `rq`.`id` = :requestId AND `u`.`partner_guid` = `rq`.`partner_guid` ".
 								"AND `u`.`isDisabled` = 0");
@@ -31,13 +32,13 @@ try {
 	exit;
 }
 while ($row = $req->fetch(PDO::FETCH_NUM))
-	$cancelEmails[] = array('email' => $row[0], 'name' => nameWithInitials($row[1], $row[2], $row[3]));
+	$cancelEmails[] = array('email' => $row[0], 'name' => nameWithInitials($row[1], $row[2], $row[3]), 'sms' => $row[4]);
 
 // Получаем нового партнёра по заявке
 $appointEmails = array();
 if (null != $partnerGuid) {
 	try {
-		$req = $db->prepare("SELECT `email`, `lastName`, `firstName`, `middleName` ".
+		$req = $db->prepare("SELECT `email`, `lastName`, `firstName`, `middleName`, `cellphone` ".
 								"FROM `users` WHERE `partner_guid` = UNHEX(REPLACE(:partnerGuid, '-', '')) ".
 								"AND `isDisabled` = 0");
 		$req->execute(array('partnerGuid' => $partnerGuid));
@@ -47,7 +48,7 @@ if (null != $partnerGuid) {
 		exit;
 	}
 	while ($row = $req->fetch(PDO::FETCH_NUM))
-		$appointEmails[] = array('email' => $row[0], 'name' => nameWithInitials($row[1], $row[2], $row[3]));
+		$appointEmails[] = array('email' => $row[0], 'name' => nameWithInitials($row[1], $row[2], $row[3]), 'sms' => $row[4]);
 }
 
 try {
@@ -147,8 +148,11 @@ if (count($cancelEmails) > 0) {
 						"PS. Данное письмо сформировано автоматически. Пожалуйста, не отвечайте на него.".
 						"</div>");
 	$subj = "Отменено назначение вам заявки №{$paramValues['request']}";
-	foreach($cancelEmails as $user)
+	foreach($cancelEmails as $user) {
 		smtpmail($user['email'], $user['name'], $subj, $msg['body'], $msg['header']);
+		if ('' != $user['sms'])
+			send_sms("Отменено назначение вам заявки №{$paramValues['request']}", $user['sms']);
+	}
 }
 
 if (count($appointEmails) > 0) {
@@ -181,8 +185,11 @@ if (count($appointEmails) > 0) {
 							"PS. Данное письмо сформировано автоматически. Пожалуйста, не отвечайте на него.".
 							"</div>");
 		$subj = "Вам назначена новая заявка №{$paramValues['request']}";
-		foreach($appointEmails as $user)
+		foreach($appointEmails as $user) {
 			smtpmail($user['email'], $user['name'], $subj, $msg['body'], $msg['header']);
+			if ('' != $user['sms'])
+				send_sms("Вам назначена новая заявка №{$paramValues['request']}", $user['sms']);
+		}
 	}
 }
 
