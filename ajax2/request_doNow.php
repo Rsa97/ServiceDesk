@@ -32,7 +32,7 @@ try {
         					"FROM `plannedRequests` AS `pr` ".
             				"JOIN `contractDivisions` AS `div` ON FIND_IN_SET(`pr`.`id`, :list) ".
             					"AND `pr`.`contractDivision_guid` = `div`.`guid` ".
-            					"AND `pr`.`nextDate` <= DATE_ADD(NOW(), INTERVAL `pr`.`preStart` DAY)".
+            					"AND `pr`.`nextDate` <= DATE_ADD(NOW(), INTERVAL `pr`.`preStart` DAY) ".
             				"LEFT JOIN `contracts` AS `c` ON `c`.`guid` = `div`.`contract_guid` ".
             				"LEFT JOIN ( ".
             					"SELECT `contractDivision_guid`, MIN(`user_guid`) AS `user_guid` ".
@@ -46,7 +46,7 @@ try {
             				") AS `cu` ON `cu`.`contract_guid` = `c`.`guid` ".
             				"LEFT JOIN (".
             					"SELECT `guid` FROM `users` WHERE `login` = 'robot' ".
-            				") AS `du` ".
+            				") AS `du` ON TRUE ".
           					"WHERE  NOW() BETWEEN `c`.`contractStart` AND `c`.`contractEnd`");
 	$req1 = $db->prepare("INSERT INTO `requests` (`problem`, `createdAt`, `reactBefore`, `fixBefore`, `repairBefore`, ".
 												"`currentState`, `contactPerson_guid`, `contractDivision_guid`, `slaLevel`, ".
