@@ -61,10 +61,10 @@ try {
 	$req3 = $db->prepare("INSERT INTO `requestEvents` (`timestamp`, `event`, `newState`, `request_guid`, `user_guid`) ".
 								"VALUES (:createdAt, 'open', 'received', UNHEX(REPLACE(:requestGuid, '-', '')), ".
 									"UNHEX(REPLACE(:contactGuid, '-', '')))");
-    $req4 = $mysqli->prepare("UPDATE `plannedRequests` SET `nextDate` = `nextDate` + INTERVAL `intervalYears` YEAR + ".
+    $req4 = $db->prepare("UPDATE `plannedRequests` SET `nextDate` = `nextDate` + INTERVAL `intervalYears` YEAR + ".
     								"INTERVAL `intervalMonths` MONTH + INTERVAL `intervalWeeks` WEEK + INTERVAL `intervalDays` DAY ".
 									"WHERE `id` = :id");
-	$req5 = $mysqli->prepare("UPDATE `contractDivisions` SET `addProblem` = '' WHERE `guid` = UNHEX(REPLACE(:divisionGuid, '-', ''))"); 
+	$req5 = $db->prepare("UPDATE `contractDivisions` SET `addProblem` = '' WHERE `guid` = UNHEX(REPLACE(:divisionGuid, '-', ''))"); 
 
 	$req->execute(array('list' => $list));
 } catch (PDOException $e) {
