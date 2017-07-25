@@ -351,7 +351,7 @@ $count = 0;
 while ($row = $req->fetch(PDO::FETCH_NUM)) {
 	list($id, $slaLevel, $srvSName, $srvName, $nextDate, $contragent, $div, $problem, $canPreStart, $divProblem) = $row;
   	$table .= 
-		"<tr id='t{$id}'>".
+		"<tr id='{$id}'>".
 			"<td><input type='checkbox' class='checkOne'".(0 == $canPreStart ? " disabled" : "").">".
 				"<abbr title='".$statusNames['planned']."'><span class='ui-icon ".$statusIcons['planned']."'></span></abbr>".
 			"<td>{$slaLevels[$slaLevel]}".

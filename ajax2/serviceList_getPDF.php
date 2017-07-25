@@ -9,10 +9,10 @@ try {
 										 "`div`.`name`, IFNULL(`divca`.`name`, `cca`.`name`), `cont`.`lastName`, `cont`.`firstName`, ".
 										 "`cont`.`middleName`, `cont`.`phone`, `cont`.`email`, `rq`.`problem`, `srv`.`name`, ".
 										 "`eq`.`serviceNumber`, `rq`.`slaLevel`, `rq`.`createdAt`, `rq`.`repairedAt`, `rq`.`solution`, ".
-										 "`rq`.`solutionProblem`, `rq`.`solutionRecomendation` ".
+										 "`rq`.`solutionProblem`, `rq`.`solutionRecomendation`, `rq`.`guid` ".
           					"FROM `requests` AS `rq` ".
             				"JOIN `contractDivisions` AS `div` ON `rq`.`id` = :requestId ".
-            					"AND `rq`.`currentState` IN ('repaired', 'closed') AND `div`.`guid` = `rq`.`contractDivision_guid` ".
+            					"AND `rq`.`currentState` IN ('accepted', 'fixed', 'repaired', 'closed') AND `div`.`guid` = `rq`.`contractDivision_guid` ".
             				"JOIN `contracts` AS `c` ON `c`.`guid` = `div`.`contract_guid` ".
             					"AND (NOW() BETWEEN `c`.`contractStart` AND `c`.`contractEnd` OR `rq`.`currentState` NOT IN ('closed', 'canceled')) ".
             				"LEFT JOIN `contragents` AS `divca` ON `divca`.`guid` = `div`.`contragent_guid` ".
@@ -40,14 +40,35 @@ try {
 }
 
 list($engLN, $engFN, $engMN, $partnerName, $partnerAddress, $contractNumber, $div, $contragent, $contLN, $contFN, $contMN,
-	 $contPhone, $contEmail, $problem, $srvName, $servNum, $slaLevel, $createdAt, $repairedAt, $sol, $solProblem, $solRecomend) = $row;
+	 $contPhone, $contEmail, $problem, $srvName, $servNum, $slaLevel, $createdAt, $repairedAt, $sol, $solProblem, $solRecomend,
+	 $requestGuid) = $row;
+	 
 $engineerName = nameFull($engLN, $engFN, $engMN);
 $engineerSName = nameWithInitials($engLN, $engFN, $engMN);
 $contactName = nameFull($contLN, $contFN, $contMN);
 $contactSName = nameWithInitials($contLN, $contFN, $contMN);
-
 $userName = nameFull($_SESSION['user']['lastName'], $_SESSION['user']['firstName'], $_SESSION['user']['middleName']);
 $userSName = nameWithInitials($_SESSION['user']['lastName'], $_SESSION['user']['firstName'], $_SESSION['user']['middleName']);
+
+$requestGuid = formatGuid($requestGuid);
+
+$barcode = '';
+$barcodeHash = '';
+include 'init_soap.php';
+if (false !== $soap) {
+	try {
+		$soapReq = array('sd_request_table' => array(array('GUID' => $requestGuid)));
+		$res = $soap->sd_Request_getBarcode($soapReq);
+		$answer = $res->return->sd_request_row;
+		if (is_array($answer))
+			$answer = $answer[0];
+		if (1 == $answer->ResultSuccessful) {
+			$barcode = $answer->barcode;
+			$barcodeHash = $answer->barcodehash;
+		}
+	} catch (Exception $e) {
+	}
+}
 
 $html = "<!DOCTYPE html><html><head>";
 $html .= "<style type='text/css'>";
@@ -66,14 +87,15 @@ $html .= "table.sign td {border: 0; text-align: center; width: 50%;} ";
 $html .= "table.head td {border: 0; text-align: center;} ";
 $html .= "span.bold {font-weight: bold;} ";
 $html .= "span.small {font-size: 6pt;} ";
-$html .= ".barcode {font-family: code128; text-align: center; font-size: 40pt;} ";
+$html .= ".barcode {font-family: code128; text-align: center; font-size: 48pt;} ";
 $html .= "</style></head><body>";
 
 $html .= "<table class='head'><tbody>";
-$html .= "<tr><td><h1>СЕРВИСНЫЙ ЛИСТ №&nbsp;{$paramValues['id']}-01</h1>";
+$html .= "<tr><td rowspan='2'><h1>СЕРВИСНЫЙ ЛИСТ №&nbsp;{$paramValues['id']}-01</h1>";
 $html .= "<h2>от ".date('d.m.Y')."<br>";
 $html .= "по заявке № {$paramValues['id']}</h2>";
-$html .= "<td class='barcode'>";
+$html .= "<td class='barcode'>".htmlspecialchars($barcode);
+$html .= "<tr><td>".htmlspecialchars($barcodeHash);
 $html .= "</table>";
 $html .= "<h3>1. Данные Исполнителя</h3>";
 $html .= "<table><tbody>";
