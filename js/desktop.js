@@ -6,7 +6,8 @@ var servNumLookupTimeout, timeoutSet = 0;
 var cardBtnLook = [ {text: 'Сервисный лист',
 					 click: function() {
 					 			var cell1 = $('tr#'+openCard+' .cell1').find('.ui-icon');
-					 			if (cell1.hasClass('ui-icon-help') || cell1.hasClass('ui-icon-check'))
+					 			if (cell1.hasClass('ui-icon-help') || cell1.hasClass('ui-icon-check') ||
+					 				cell1.hasClass('ui-icon-mail-open') || cell1.hasClass('ui-icon-wrench'))
 									window.open('/ajax/serviceList/get/'+openCard, 'Сервисный лист');
 					 		}},
 					{text: 'Закрыть', 
