@@ -77,9 +77,9 @@ try {
 foreach ($req->fetchAll(PDO::FETCH_NUM) as $row) {
 	list($id, $divId, $srvId, $slaLevel, $problem, $clientId, $divProblem, $contId) = $row;
 	$clientId = formatGuid($clientId);
-	$divId = formaiGuid($divId);
-	$srvId = formaiGuid($srvId);
-	$contId = formaiGuid($contId);
+	$divId = formatGuid($divId);
+	$srvId = formatGuid($srvId);
+	$contId = formatGuid($contId);
 	$time = calcTime($divId, $srvId, $slaLevel, 1);
 	$soapTime = timeToSOAP($time['createdAt']);
 	
