@@ -32,7 +32,8 @@ $sortOrder = array('received' => 'ASC',
 					 'accepted' => 'ASC',
 					 'repaired' => 'DESC',
 					 'closed' => 'DESC',
-					 'canceled' => 'DESC');
+					 'canceled' => 'DESC',
+					 'toClose' => 'DESC');
 
 
 // Строим фильтр, если данных нет, то берём из сессии или по умолчанию
