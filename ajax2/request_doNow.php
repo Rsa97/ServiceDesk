@@ -80,7 +80,7 @@ foreach ($req->fetchAll(PDO::FETCH_NUM) as $row) {
 	$divId = formatGuid($divId);
 	$srvId = formatGuid($srvId);
 	$contId = formatGuid($contId);
-	$time = calcTime($divId, $srvId, $slaLevel, 1);
+	$time = calcTime($db, $divId, $srvId, $slaLevel, 1);
 	$soapTime = timeToSOAP($time['createdAt']);
 	
 	$problem .= "\n".$divProblem;
