@@ -5,7 +5,8 @@ define('DUTYDB_LOGIN', 'asterisk');
 define('DUTYDB_PASS', 'grand8');
 
 function send_sms($message, $cellphone) {
-	if ('sd-dev-1c' == $dbName) {
+	global $dbName;
+	if ('sd' != $dbName) {
 		error_log("Send SMS '{$message}' to {$cellphone}");
 		return;
 	}
@@ -24,7 +25,6 @@ function send_sms($message, $cellphone) {
 }
 
 function sms_to_duty($message) {
-	global $dbName;
 	try {
 		$db = new PDO('mysql:host='.DUTYDB_HOST.';dbname='.DUTYDB_NAME.';charset=UTF8;', DUTYDB_LOGIN, DUTYDB_PASS,
 				  	array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION));

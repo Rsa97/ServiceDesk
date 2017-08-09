@@ -106,12 +106,12 @@ foreach ($req->fetchAll(PDO::FETCH_NUM) as $row) {
 		try {
 			$soapReq = array('sd_request_table' => array(array('CodeNodeSiteSD' => $node_1c,
 															   'NumberSD' => $reqId,
-															   'createdAt' => $createdAt,
+															   'createdAt' => $soapTime,
 															   'contractDivision_guid' => $divId,
 															   'contactPerson_guid' => $clientId, 
 															   'contract_guid' => $contId, 
 														 	   'slaLevel' => $slaLevel,  
-														 	   'service_guid' => $servId, 
+														 	   'service_guid' => $srvId, 
 														 	   'equipment_guid' => null,
 														 	   'Problem' => $problem,
 														 	   'onWait' => 0)));

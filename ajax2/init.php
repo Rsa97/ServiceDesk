@@ -22,7 +22,6 @@ if ('cli' != php_sapi_name()) {
 	$byActive = ($rights == 'admin' ? 0 : 1);
 	$byEngineer = ($rights == 'engineer' ? 1 : 0);
 }
-
 // Подключаемся к MySQL
 try {
 	$db = new PDO("mysql:host={$dbHost};port={$dbPort};dbname={$dbName};charset=UTF8;", $dbUser, $dbPass,
