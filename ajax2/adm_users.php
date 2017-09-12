@@ -216,6 +216,8 @@
 			$msg = compose_mail("Информационное сообщение от службы технической поддержки «Со-Действие»\r\n".
     							"Уважаем{$gender} {$to1}, ваш пароль был сброшен.\r\n".
     							"\r\n".
+    							"Ваше имя пользователя: {$user}\r\n".
+    							"\r\n".
     							"Для задания нового пароля перейдите по ссылке\r\n".
     							"http://sd.sodrk.ru/ajax/user/changePass/{$paramValues['id']}/{$hash}\r\n".
     							"\r\n".
@@ -230,6 +232,8 @@
 								"<div dir='ltr'>".
     							"<span class='header'>Информационное сообщение от службы технической поддержки «Со-Действие»</span>".
     							"<p>Уважаем{$gender} {$to1}, ваш пароль был сброшен.".
+    							"<p>".
+    							"<p>Ваше имя пользователя: <span class='login'>{$user}</span>".
     							"<p>".
     							"Для задания нового пароля перейдите по ссылке<br>".
     							"<a href='http://sd.sodrk.ru/ajax/user/changePass/{$paramValues['id']}/{$hash}'>http://sd.sodrk.ru/ajax/user/changePass/{$paramValues['id']}/{$hash}</a>".
