@@ -56,4 +56,5 @@ $statusNames = array('received' => 'Получена',
 					 'onWait' => 'Ожидание комплектующих');
 
 
+
 ?>
