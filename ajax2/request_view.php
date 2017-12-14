@@ -11,9 +11,8 @@ try {
 	$req = $db->prepare("SELECT `rq`.`id`, `rq`.`currentState`, `rq`.`stateChangedAt`, `srv`.`shortName`, `srv`.`name`, ".
 								"`rq`.`createdAt`, `rq`.`repairBefore`, `div`.`name`, `ca`.`name`, `e`.`lastName`, ".
 								"`e`.`firstName`, `e`.`middleName`, `e`.`email`, `e`.`phone`, `et`.`name`, `est`.`name`, ".
-								"`em`.`name`, `emf`.`name`, `eq`.`serviceNumber`, `eq`.`serialNumber`, `co`.`lastName`, ".
-								"`co`.`firstName`, `co`.`middleName`, `co`.`email`, `co`.`phone`, `rq`.`fixBefore`, ".
-								"`rq`.`repairBefore`, CAST(`rq`.`problem` AS CHAR(8192)), `rq`.`slaLevel`, `co`.`address`, ".
+								"`em`.`name`, `emf`.`name`, `eq`.`serviceNumber`, `eq`.`serialNumber`, `rq`.`fixBefore`, ".
+								"`rq`.`repairBefore`, CAST(`rq`.`problem` AS CHAR(8192)), `rq`.`slaLevel`, ".
                         		"`rq`.`solutionProblem`, `rq`.`solution`,  `rq`.`solutionRecomendation`, `div`.`guid`, ".
                         		"`c`.`number`, `rq`.`repairedAt`, `ca`.`guid`, `c`.`guid`, `c`.`number`, `div`.`address`, ".
                         		"`rq`.`guid`, `p`.`name`, `rq`.`service_guid`, `rq`.`contractDivision_guid`, ".
@@ -26,7 +25,6 @@ try {
             				"LEFT JOIN `userContracts` AS `uc` ON `uc`.`contract_guid` = `c`.`guid` ".
             				"LEFT JOIN `services` AS `srv` ON `srv`.`guid` = `rq`.`service_guid` ".
 	            			"LEFT JOIN `users` AS `e` ON `e`.`guid` = `rq`.`engineer_guid` ".
-    	        			"LEFT JOIN `users` AS `co` ON `co`.`guid` = `rq`.`contactPerson_guid` ".
         	    			"LEFT JOIN `equipment` AS `eq` ON `eq`.`guid` = `rq`.`equipment_guid` ".
             				"LEFT JOIN `equipmentModels` AS `em` ON `em`.`guid` = `eq`.`equipmentModel_guid` ".
             				"LEFT JOIN `equipmentSubTypes` AS `est` ON `est`.`guid` = `em`.`equipmentSubType_guid` ".
@@ -50,10 +48,9 @@ try {
 	exit;
 }
 list($id, $state, $stateTime, $srvSName, $serviceName, $createdAt, $repairBefore, $div, $contragent, $engLN, $engGN, $engMN, $engEmail, 
-	 $engPhone, $eqType, $eqSubType, $eqName, $eqMfg, $servNum, $serial, $contactLN, $contactGN, $contactMN, $contactEmail, $contactPhone, 
-	 $fixBefore, $repairBefore, $problem, $slaLevel, $contactAddress, $solProblem, $sol, $solRecomend, $divGuid, $contractNumber, 
-	 $repairedAt, $contragentGuid, $contractGuid, $contractNumber, $divAddress, $requestGuid, $partnerName, $serviceGuid, $divisionGuid,
-	 $contactGuid, $equipmentGuid) = $row;
+	 $engPhone, $eqType, $eqSubType, $eqName, $eqMfg, $servNum, $serial, $fixBefore, $repairBefore, $problem, $slaLevel, 
+	 $solProblem, $sol, $solRecomend, $divGuid, $contractNumber, $repairedAt, $contragentGuid, $contractGuid, $contractNumber, 
+	 $divAddress, $requestGuid, $partnerName, $serviceGuid, $divisionGuid, $contactGuid, $equipmentGuid) = $row;
 $requestGuid = formatGuid($requestGuid);
 $engName = nameWithInitials($engLN, $engGN, $engMN);
 $createTime = date_timestamp_get(date_create($createdAt));
@@ -149,7 +146,8 @@ $result['level'] = $levels;
 
 // Получаем список контактных лиц
 $have = 0;
-$contacts = '';  
+$contacts = '';
+$curContact = null;
 if (in_array($rights, array('admin')) && 'received' == $state) {
 	try {
 		$req = $db->prepare("SELECT `u`.`guid`, `u`.`firstName`, `u`.`lastName`, `u`.`middleName`, `u`.`email`, `u`.`phone`, `u`.`address` ".

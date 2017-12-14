@@ -37,6 +37,14 @@ $inGroupSortOrder = array('received' => 'ASC',
 					 'closed' => 'DESC',
 					 'canceled' => 'DESC',
 					 'toClose' => 'DESC');
+					 
+$groupStatus = array('received' => "'received','preReceived'",
+				 	'accepted' => "'accepted'",
+				 	'fixed'	=> "'fixed'",
+				 	'repaired' => "'repaired'",
+				 	'closed' => "'closed'",
+				 	'canceled' => "'canceled'");
+					 
 
 $slaLevels = array('critical' => 'Критический', 'high' => 'Высокий', 'medium' => 'Средний', 'low' => 'Низкий');
 
